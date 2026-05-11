@@ -19,13 +19,15 @@ type IconName =
   | "pdf"
   | "personSearch"
   | "plus"
+  | "refresh"
   | "search"
   | "send"
   | "sheet"
   | "shield"
   | "sparkles"
   | "terminal"
-  | "timeline";
+  | "timeline"
+  | "alert";
 
 type IconProps = {
   className?: string;
@@ -143,6 +145,13 @@ export function Icon({ className = "h-5 w-5", name }: IconProps) {
           <path className={iconClassName} d="M12 5v14M5 12h14" />
         </svg>
       );
+    case "refresh":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <path className={iconClassName} d="M20 5v5h-5" />
+          <path className={iconClassName} d="M19 10a7 7 0 1 0 1.4 6.6" />
+        </svg>
+      );
     case "listAlt":
       return (
         <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
@@ -231,6 +240,14 @@ export function Icon({ className = "h-5 w-5", name }: IconProps) {
       return (
         <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
           <path className={iconClassName} d="m6 12 4 4 8-8" />
+        </svg>
+      );
+    case "alert":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <circle className={iconClassName} cx="12" cy="12" r="8.5" />
+          <path className={iconClassName} d="M12 8v5" />
+          <path className={iconClassName} d="M12 16.5h.01" />
         </svg>
       );
     default:

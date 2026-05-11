@@ -4,14 +4,19 @@ import { AppFooter } from "./AppFooter";
 type AppShellProps = {
   centered?: boolean;
   children: ReactNode;
+  showFooter?: boolean;
 };
 
-export function AppShell({ centered = false, children }: AppShellProps) {
+export function AppShell({ centered = false, children, showFooter = true }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background text-on-surface">
       <main
         className={`relative overflow-hidden px-gutter py-margin ${
-          centered ? "flex min-h-[calc(100vh-89px)] items-center justify-center" : "min-h-[calc(100vh-89px)]"
+          centered
+            ? `flex ${showFooter ? "min-h-[calc(100vh-89px)]" : "min-h-screen"} items-center justify-center`
+            : showFooter
+              ? "min-h-[calc(100vh-89px)]"
+              : "min-h-screen"
         }`}
       >
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -21,7 +26,7 @@ export function AppShell({ centered = false, children }: AppShellProps) {
         </div>
         <div className="relative z-10 w-full">{children}</div>
       </main>
-      <AppFooter />
+      {showFooter ? <AppFooter /> : null}
     </div>
   );
 }

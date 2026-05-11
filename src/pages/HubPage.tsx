@@ -1,30 +1,12 @@
-import { WorkspaceHeader } from "../components/hub/WorkspaceHeader";
-import { WorkspaceSidebar } from "../components/hub/WorkspaceSidebar";
 import { AiSearchCard } from "../components/hub/cards/AiSearchCard";
 import { CriticalTasksCard } from "../components/hub/cards/CriticalTasksCard";
 import { RecentOpenedCard } from "../components/hub/cards/RecentOpenedCard";
 import { InsightsStrip } from "../components/hub/InsightsStrip";
-import { useLocation } from "react-router-dom";
-
-type HubLocationState = {
-  email?: string;
-};
-
-const deals = [
-  { colorClassName: "bg-primary", complete: true, name: "Project Alpha" },
-  { colorClassName: "bg-[#6b87c8]", name: "Project Beta" },
-  { colorClassName: "bg-muted", name: "Logistics Merger" },
-];
-
-const initiatives = [
-  { icon: "personSearch" as const, name: "Q4 Recruiting" },
-  { icon: "terminal" as const, name: "Software Migration" },
-];
-
-const tools = [
-  { icon: "timeline" as const, name: "Meeting Timeline" },
-  { icon: "folderOpen" as const, name: "Global Vault" },
-];
+import { WorkspaceHeader } from "../components/hub/WorkspaceHeader";
+import { WorkspaceLayout } from "../components/hub/WorkspaceLayout";
+import { WorkspaceSidebar } from "../components/hub/WorkspaceSidebar";
+import { workspaceDeals, workspaceInitiatives, workspaceTools } from "../data/workspace";
+import { useWorkspaceSession } from "../hooks/useWorkspaceSession";
 
 const tasks = [
   {
@@ -114,38 +96,30 @@ const recentInsights = [
 const aiSuggestions = ['"Compare Q3 EBITDA across Alpha and Beta"', '"Summarize recent legal risks"'];
 
 export function HubPage() {
-  const location = useLocation();
-  const state = (location.state ?? {}) as HubLocationState;
+  const { email, navigationState } = useWorkspaceSession();
 
   return (
-    <div className="relative h-screen overflow-hidden bg-background text-on-surface">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[14%] top-[18%] h-[22rem] w-[22rem] rounded-full bg-tertiary-fixed/20 blur-3xl" />
-        <div className="absolute right-[10%] top-[10%] h-[24rem] w-[24rem] rounded-full bg-primary-fixed/20 blur-3xl" />
-        <div className="absolute bottom-[8%] left-[34%] h-[28rem] w-[28rem] rounded-full bg-surface-container-high/80 blur-3xl" />
-      </div>
-
-      <div className="relative z-10 flex h-full min-h-0">
+    <WorkspaceLayout
+      sidebar={
         <WorkspaceSidebar
-          deals={deals}
-          email={state.email}
-          initiatives={initiatives}
-          tools={tools}
+          deals={workspaceDeals}
+          email={email}
+          initiatives={workspaceInitiatives}
+          navigationState={navigationState}
+          tools={workspaceTools}
         />
+      }
+    >
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 pb-10">
+        <WorkspaceHeader />
 
-        <main className="workspace-scrollbar-hidden flex-1 overflow-y-auto px-8 py-8">
-          <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 pb-10">
-            <WorkspaceHeader />
-
-            <div className="grid grid-cols-12 gap-6">
-              <CriticalTasksCard assignees={["AT", "JD"]} tasks={tasks} />
-              <RecentOpenedCard items={recentFiles} />
-              <AiSearchCard suggestions={aiSuggestions} />
-              <InsightsStrip items={recentInsights} />
-            </div>
-          </div>
-        </main>
+        <div className="grid grid-cols-12 gap-6">
+          <CriticalTasksCard assignees={["AT", "JD"]} tasks={tasks} />
+          <RecentOpenedCard items={recentFiles} />
+          <AiSearchCard suggestions={aiSuggestions} />
+          <InsightsStrip items={recentInsights} />
+        </div>
       </div>
-    </div>
+    </WorkspaceLayout>
   );
 }
