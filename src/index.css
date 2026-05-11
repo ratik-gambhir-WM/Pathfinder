@@ -1,20 +1,90 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --color-wm-navy: #080756;
-  --color-wm-navy-soft: #11105f;
-  --color-wm-gold: #f4b223;
-  --color-wm-ink: #18181b;
-  --color-wm-muted: #71717a;
-  --color-wm-border: #e4e4e7;
-  --color-wm-panel: #ffffff;
-  --color-wm-canvas: #fbfbfa;
-  --font-sans:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  --color-accent: #5c80bc;
+  --color-text-main: #1c2826;
+  --color-surface: #f8faf5;
+  --color-surface-dim: #d8dbd6;
+  --color-surface-bright: #f8faf5;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4ef;
+  --color-surface-container: #ecefe9;
+  --color-surface-container-high: #e7e9e4;
+  --color-surface-container-highest: #e1e3de;
+  --color-on-surface: #191c1a;
+  --color-on-surface-variant: #414942;
+  --color-inverse-surface: #2e312e;
+  --color-inverse-on-surface: #eff1ec;
+  --color-outline: #717971;
+  --color-outline-variant: #c1c9bf;
+  --color-surface-tint: #376847;
+  --color-primary: #326341;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #4a7c58;
+  --color-on-primary-container: #e1ffe4;
+  --color-inverse-primary: #9ed3a9;
+  --color-secondary: #506353;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d0e5d1;
+  --color-on-secondary-container: #546757;
+  --color-tertiary: #3e5983;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #57729d;
+  --color-on-tertiary-container: #f5f6ff;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #b9efc4;
+  --color-primary-fixed-dim: #9ed3a9;
+  --color-on-primary-fixed: #00210d;
+  --color-on-primary-fixed-variant: #1e5030;
+  --color-secondary-fixed: #d2e8d4;
+  --color-secondary-fixed-dim: #b7ccb8;
+  --color-on-secondary-fixed: #0d1f13;
+  --color-on-secondary-fixed-variant: #384b3c;
+  --color-tertiary-fixed: #d5e3ff;
+  --color-tertiary-fixed-dim: #acc8f7;
+  --color-on-tertiary-fixed: #001b3c;
+  --color-on-tertiary-fixed-variant: #2b4770;
+  --color-background: #f8faf5;
+  --color-on-background: #191c1a;
+  --color-surface-variant: #e1e3de;
+
+  --font-heading: "Playfair Display", serif;
+  --font-body: "DM Sans", sans-serif;
+
+  --radius-sm: 0.25rem;
+  --radius-default: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  --spacing-base: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-gutter: 20px;
+  --spacing-margin: 40px;
+
+  --shadow-glass: 0 8px 32px rgba(117, 120, 116, 0.08);
+  --shadow-glass-hover: 0 12px 48px rgba(28, 40, 38, 0.1);
 }
 
 @layer base {
+  :root {
+    color-scheme: light;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -22,14 +92,12 @@
   html {
     min-width: 320px;
     min-height: 100%;
-    background: var(--color-wm-canvas);
-    color: var(--color-wm-ink);
-    font-family: var(--font-sans);
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-text-size-adjust: 100%;
+    background:
+      radial-gradient(circle at top right, rgba(183, 204, 184, 0.28), transparent 35%),
+      radial-gradient(circle at bottom left, rgba(213, 227, 255, 0.38), transparent 32%),
+      var(--color-background);
+    color: var(--color-on-surface);
+    font-family: var(--font-body);
   }
 
   body,
@@ -38,8 +106,139 @@
     margin: 0;
   }
 
+  body {
+    background: transparent;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
   button,
   input {
     font: inherit;
+  }
+
+  ::selection {
+    background: rgba(74, 124, 88, 0.18);
+  }
+}
+
+@layer components {
+  .type-h1 {
+    font-family: var(--font-heading);
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .type-h2 {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .type-h3 {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .type-body-lg {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .type-body-sm {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .type-label {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.05em;
+  }
+
+  .glass-panel {
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.65);
+    box-shadow: var(--shadow-glass);
+    backdrop-filter: blur(16px);
+  }
+
+  .workspace-card {
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    background: rgba(248, 250, 245, 0.72);
+    box-shadow: 0 8px 32px rgba(28, 40, 38, 0.05);
+    backdrop-filter: blur(16px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+  }
+
+  .workspace-card:hover {
+    box-shadow: var(--shadow-glass-hover);
+    transform: scale(1.005);
+  }
+
+  .chip-card {
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: var(--shadow-glass);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .chip-card:hover {
+    box-shadow: var(--shadow-glass-hover);
+    transform: translateY(-2px);
+  }
+
+  .workspace-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  .workspace-scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  .type-display {
+    font-family: var(--font-heading);
+    font-size: clamp(42px, 5vw, 58px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+
+  .type-subtle {
+    font-family: var(--font-body);
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
   }
 }
