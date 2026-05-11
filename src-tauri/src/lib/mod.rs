@@ -1,14 +1,15 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 pub mod parsers;
+pub mod commands;
+pub mod helix_client;
+pub mod openai_client;
+mod utils;
 
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, SubmenuBuilder};
 
 const APP_NAME: &str = "Pathfinder";
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+
 
 fn build_app_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<tauri::menu::Menu<R>> {
     let about_metadata = AboutMetadataBuilder::new()
@@ -71,7 +72,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![commands::greet])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

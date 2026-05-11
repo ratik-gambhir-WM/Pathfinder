@@ -13,6 +13,7 @@ default-run = "path-finder"
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "path_finder_lib"
+path = "src/lib/mod.rs"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -34,3 +35,5 @@ pptx-to-md = "0.4.0"
 chrono = "0.4"
 helix-rs = "0.1"
 dotenvy = "0.15"
+anyhow = "1.0.102"
+tiktoken-rs = "0.11.0"
