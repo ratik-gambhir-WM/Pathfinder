@@ -3,8 +3,8 @@ use serde::Serialize;
 use serde_json::Value;
 use std::{env, process};
 
-use path_finder_lib::helix_client::{GetUserByEmailInput, InsertUserInput, HelixClient};
-use path_finder_lib::openai_client::OpenAiClient;
+use pathfinder_lib::helix_client::{GetUserByEmailInput, InsertUserInput, HelixClient};
+use pathfinder_lib::openai_client::OpenAiClient;
 
 const APP_NAME: &str = "DataRoomCLI";
 
@@ -63,4 +63,3 @@ Commands:
 "
     );
 }
-

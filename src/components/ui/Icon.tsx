@@ -1,6 +1,8 @@
 type IconName =
   | "arrowRight"
   | "bookmark"
+  | "chevronDown"
+  | "chevronRight"
   | "check"
   | "checkCircle"
   | "dashboard"
@@ -15,6 +17,7 @@ type IconName =
   | "listAlt"
   | "mail"
   | "more"
+  | "notification"
   | "openInNew"
   | "pdf"
   | "personSearch"
@@ -25,6 +28,7 @@ type IconName =
   | "sheet"
   | "shield"
   | "sparkles"
+  | "settings"
   | "terminal"
   | "timeline"
   | "alert";
@@ -57,6 +61,18 @@ export function Icon({ className = "h-5 w-5", name }: IconProps) {
         <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
           <path className={iconClassName} d="M5 12h13" />
           <path className={iconClassName} d="m13 6 6 6-6 6" />
+        </svg>
+      );
+    case "chevronRight":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <path className={iconClassName} d="m9 6 6 6-6 6" />
+        </svg>
+      );
+    case "chevronDown":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <path className={iconClassName} d="m6 9 6 6 6-6" />
         </svg>
       );
     case "shield":
@@ -198,6 +214,19 @@ export function Icon({ className = "h-5 w-5", name }: IconProps) {
         <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
           <circle className={iconClassName} cx="11" cy="11" r="6" />
           <path className={iconClassName} d="m16 16 4.5 4.5" />
+        </svg>
+      );
+    case "notification":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <path className={iconClassName} d="M8 17.5h8M9 17.5v-5a3 3 0 0 1 6 0v5M7 17.5h10l-1.2-1.8a3.2 3.2 0 0 1-.5-1.8v-1.4a5.3 5.3 0 1 0-10.6 0v1.4c0 .64-.18 1.27-.52 1.8z" />
+        </svg>
+      );
+    case "settings":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <circle className={iconClassName} cx="12" cy="12" r="3.1" />
+          <path className={iconClassName} d="m12 3.8 1 1.8 2.1.4 1.4-1.4 1.8 1.8-1.4 1.4.4 2.1 1.8 1-1.8 1.8-1.8-1-.4 2.1 1.4 1.4-1.8 1.8-1.4-1.4-2.1.4-1 1.8-1.8-1.8-2.1-.4-1.4 1.4-1.8-1.8 1.4-1.4-.4-2.1-1.8-1 1.8-1.8 1.8 1 .4-2.1-1.4-1.4 1.8-1.8 1.4 1.4 2.1-.4z" />
         </svg>
       );
     case "send":

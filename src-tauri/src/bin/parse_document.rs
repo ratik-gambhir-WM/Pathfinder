@@ -7,8 +7,8 @@ use std::fs;
 use std::process;
 use docx_rust::DocxFile;
 use walkdir::WalkDir;
-use path_finder_lib::parsers::image_parser::describe_and_embed_image_file;
-use path_finder_lib::parsers::docx_parser::parse_docx_file;
+use pathfinder_lib::parsers::image_parser::describe_and_embed_image_file;
+use pathfinder_lib::parsers::docx_parser::parse_docx_file;
 
 
 

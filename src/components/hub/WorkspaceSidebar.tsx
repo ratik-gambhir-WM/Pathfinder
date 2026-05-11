@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import {
+  getDataRoomPath,
   getDealRoomPath,
   getTeamLabel,
   WorkspaceDeal,
@@ -11,6 +12,7 @@ import { Icon } from "../ui/Icon";
 
 type WorkspaceSidebarProps = {
   activeDealId?: string;
+  activeSection?: "data-room" | "deal-room";
   deals: WorkspaceDeal[];
   email?: string;
   initiatives?: WorkspaceSidebarTool[];
@@ -20,14 +22,15 @@ type WorkspaceSidebarProps = {
 };
 
 const dealRoomSidebarLinks = [
-  { icon: "dashboard" as const, label: "Deal Room" },
+  { icon: "dashboard" as const, key: "deal-room" as const, label: "Deal Room" },
   { icon: "timeline" as const, label: "Meeting Timeline" },
-  { icon: "folderOpen" as const, label: "Data Room Vault" },
+  { icon: "folderOpen" as const, key: "data-room" as const, label: "Data Room Vault" },
   { icon: "grid" as const, label: "Synthesis Canvas" },
 ];
 
 export function WorkspaceSidebar({
   activeDealId,
+  activeSection = "deal-room",
   deals,
   email,
   initiatives = [],
@@ -113,24 +116,23 @@ export function WorkspaceSidebar({
             </>
           ) : (
             <nav className="space-y-2">
-              {dealRoomSidebarLinks.map((link, index) => {
-                const isPrimaryLink = index === 0;
+              {dealRoomSidebarLinks.map((link) => {
+                if (activeDeal && "key" in link) {
+                  const destination = link.key === "deal-room" ? getDealRoomPath(activeDeal.room.id) : getDataRoomPath(activeDeal.room.id);
 
-                if (isPrimaryLink && activeDeal) {
                   return (
                     <NavLink
-                      className={({ isActive }) =>
+                      className={() =>
                         [
                           "flex items-center gap-3 rounded-[22px] px-5 py-4 transition",
-                          isActive
+                          activeSection === link.key
                             ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(74,124,88,0.06)]"
                             : "text-text-main hover:bg-white/40",
                         ].join(" ")
                       }
-                      end
                       key={link.label}
                       state={navigationState}
-                      to={getDealRoomPath(activeDeal.room.id)}
+                      to={destination}
                     >
                       <Icon className="h-6 w-6" name={link.icon} />
                       <span className="text-[12px] font-semibold">{link.label}</span>

@@ -255,6 +255,10 @@ export function getDealRoomPath(dealId: string) {
   return `/hub/deals/${dealId}`;
 }
 
+export function getDataRoomPath(dealId: string) {
+  return `/hub/deals/${dealId}/data-room`;
+}
+
 export function getTeamLabel(email?: string) {
   const teamName = email?.split("@")[0]?.replace(/[._-]/g, " ") ?? "Analyst Team";
 

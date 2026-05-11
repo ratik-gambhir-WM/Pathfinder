@@ -3,6 +3,30 @@
 version = 4
 
 [[package]]
+name = "Pathfinder"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "calamine",
+ "chrono",
+ "docx-rust",
+ "dotenvy",
+ "helix-rs",
+ "pdf-extract",
+ "pptx-to-md",
+ "reqwest 0.12.28",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+ "tiktoken-rs",
+ "tokio",
+ "walkdir",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3078,30 +3102,6 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-link 0.2.1",
-]
-
-[[package]]
-name = "path-finder"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "calamine",
- "chrono",
- "docx-rust",
- "dotenvy",
- "helix-rs",
- "pdf-extract",
- "pptx-to-md",
- "reqwest 0.12.28",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
- "tiktoken-rs",
- "tokio",
- "walkdir",
 ]
 
 [[package]]

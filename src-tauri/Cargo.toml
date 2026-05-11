@@ -1,10 +1,10 @@
 [package]
-name = "path-finder"
+name = "Pathfinder"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
-default-run = "path-finder"
+default-run = "Pathfinder"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,7 +12,7 @@ default-run = "path-finder"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "path_finder_lib"
+name = "pathfinder_lib"
 path = "src/lib/mod.rs"
 crate-type = ["staticlib", "cdylib", "rlib"]
 

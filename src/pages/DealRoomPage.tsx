@@ -24,6 +24,7 @@ export function DealRoomPage() {
       sidebar={
         <WorkspaceSidebar
           activeDealId={deal.room.id}
+          activeSection="deal-room"
           deals={workspaceDeals}
           email={email}
           mode="deal-room"
