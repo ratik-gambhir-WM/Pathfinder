@@ -1,26 +1,10 @@
 use helix_rs::{HelixDB, HelixDBClient};
-use serde::Serialize;
 use serde_json::Value;
 
-
-#[derive(Debug, PartialEq, Eq, Serialize)]
-pub struct InsertUserInput {
-    pub name: String,
-    pub email: String,
-    #[serde(rename = "apiKey")]
-    pub api_key: String,
-}
-
-#[derive(Debug, PartialEq, Eq, Serialize)]
-pub struct GetUserByEmailInput {
-    pub email: String,
-}
-
+use crate::models::user::{GetUserByEmailInput, InsertUserInput};
 
 pub struct HelixClient {
-    pub helix_db: HelixDB
-
-
+    pub helix_db: HelixDB,
 }
 
 impl HelixClient {
@@ -37,7 +21,8 @@ impl HelixClient {
     ) -> Result<(), String> {
         let input = build_insert_user_input(name, email, api_key)?;
 
-        let result: Value = self.helix_db
+        let result: Value = self
+            .helix_db
             .query("InsertUser", &input)
             .await
             .map_err(|err| err.to_string())?;
@@ -51,7 +36,8 @@ impl HelixClient {
     pub async fn get_user(&self, email: Option<&String>) -> Result<(), String> {
         let input = build_get_user_by_email_input(email)?;
 
-        let result: Value = self.helix_db
+        let result: Value = self
+            .helix_db
             .query("GetUserByEmail", &input)
             .await
             .map_err(|err| err.to_string())?;
@@ -148,12 +134,7 @@ mod tests {
 
         let input = build_get_user_by_email_input(Some(&email)).unwrap();
 
-        assert_eq!(
-            input,
-            GetUserByEmailInput {
-                email,
-            }
-        );
+        assert_eq!(input, GetUserByEmailInput { email });
     }
 
     #[test]

@@ -3,11 +3,11 @@ use std::{fs, path::Path};
 use base64::{engine::general_purpose, Engine as _};
 use chrono::Utc;
 use serde_json::{json, Value};
-use crate::utils::get_token_count;
 
 const DEFAULT_RESPONSES_MODEL: &str = "gpt-5.5";
 const DEFAULT_RESPONSES_PROMPT: &str = "Provide a helpful response.";
 const DEFAULT_SYSTEM_INSTRUCTIONS: &str = "You are a helpful assistant.";
+const DEFAULT_EMBEDDING_MODEL: &str = "text-embedding-3-small";
 
 pub struct OpenAiClient<'a> {
     api_key: &'a str,
@@ -21,12 +21,17 @@ pub enum ResponsesFileInput<'a> {
         mime_type: &'a str,
         data_base64: &'a str,
     },
+    ImageData {
+        mime_type: &'a str,
+        data_base64: &'a str,
+        detail: Option<&'a str>,
+    },
     FilePath(&'a Path),
 }
 
 impl<'a> OpenAiClient<'a> {
     pub fn new(api_key: &'a str) -> Self {
-        OpenAiClient {api_key }
+        OpenAiClient { api_key }
     }
 
     pub async fn gen_model_response(
@@ -35,8 +40,6 @@ impl<'a> OpenAiClient<'a> {
         system_instructions: Option<&str>,
         model: Option<&str>,
     ) -> Result<String, String> {
-        let token_count = get_token_count(prompt);
-        println!("Token count: {}", token_count);
         self.gen_model_response_with_files(prompt, system_instructions, model, None)
             .await
     }
@@ -70,7 +73,7 @@ impl<'a> OpenAiClient<'a> {
 
         if let Some(file_inputs) = file_inputs {
             for file_input in file_inputs {
-                content.push(build_file_input_item(file_input)?);
+                content.push(build_input_item(file_input)?);
             }
         }
 
@@ -115,23 +118,46 @@ impl<'a> OpenAiClient<'a> {
             .ok_or_else(|| "OpenAI responses API did not include output text".to_string())
     }
 
-    pub async fn gen_document_embeddings(
+    pub async fn gen_file_embeddings(&self, content: &str) -> Result<(), String> {
+        let embedding = self.gen_embedding(content, None).await?;
+        let embedded_at = Utc::now().to_rfc3339();
+        println!(
+            "embedded document at {embedded_at}; vector dimensions: {}",
+            embedding.len()
+        );
+
+        for embed in embedding {
+            let string = embed.to_string();
+            println!("embedded document at {string}");
+        }
+
+        Ok(())
+    }
+
+    pub async fn gen_embedding(
         &self,
         content: &str,
-    ) -> Result<(), String> {
+        model: Option<&str>,
+    ) -> Result<Vec<f64>, String> {
         let openai_client: reqwest::Client = reqwest::Client::new();
+        let model = model.unwrap_or(DEFAULT_EMBEDDING_MODEL).trim();
+
         if content.trim().is_empty() {
             return Err("cannot embed empty document content".to_string());
+        }
+
+        if model.is_empty() {
+            return Err("model cannot be empty".to_string());
         }
 
         let response = openai_client
             .post("https://api.openai.com/v1/embeddings")
             .bearer_auth(self.api_key)
             .json(&json!({
-            "model": "text-embedding-3-small",
-            "input": content,
-            "encoding_format": "float"
-        }))
+                "model": model,
+                "input": content,
+                "encoding_format": "float"
+            }))
             .send()
             .await
             .map_err(|err| format!("failed to call OpenAI embeddings API: {err}"))?;
@@ -148,39 +174,14 @@ impl<'a> OpenAiClient<'a> {
             ));
         }
 
-        let response_json: serde_json::Value = serde_json::from_str(&response_body)
+        let response_json: Value = serde_json::from_str(&response_body)
             .map_err(|err| format!("failed to parse OpenAI embeddings response: {err}"))?;
 
-        let embedding_values = response_json["data"]
-            .get(0)
-            .and_then(|item| item["embedding"].as_array())
-            .ok_or_else(|| "OpenAI embeddings response did not include an embedding".to_string())?;
-
-        let embedding: Vec<f64> = embedding_values
-            .iter()
-            .map(|value| {
-                value
-                    .as_f64()
-                    .ok_or_else(|| "OpenAI embedding contained a non-number value".to_string())
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let embedded_at = Utc::now().to_rfc3339();
-        println!(
-            "embedded document at {embedded_at}; vector dimensions: {}",
-            embedding.len()
-        );
-
-        for embed in embedding {
-            let string = embed.to_string();
-            println!("embedded document at {string}");
-        }
-
-        Ok(())
+        extract_embedding(&response_json)
     }
 }
 
-fn build_file_input_item(file_input: &ResponsesFileInput<'_>) -> Result<Value, String> {
+fn build_input_item(file_input: &ResponsesFileInput<'_>) -> Result<Value, String> {
     match file_input {
         ResponsesFileInput::FileId(file_id) => {
             let file_id = file_id.trim();
@@ -231,6 +232,33 @@ fn build_file_input_item(file_input: &ResponsesFileInput<'_>) -> Result<Value, S
                 "file_data": build_base64_data_url(mime_type, data_base64),
             }))
         }
+        ResponsesFileInput::ImageData {
+            mime_type,
+            data_base64,
+            detail,
+        } => {
+            let mime_type = mime_type.trim();
+            let data_base64 = data_base64.trim();
+            let detail = detail.unwrap_or("auto").trim();
+
+            if mime_type.is_empty() {
+                return Err("mime_type cannot be empty".to_string());
+            }
+
+            if data_base64.is_empty() {
+                return Err("image_data cannot be empty".to_string());
+            }
+
+            if detail.is_empty() {
+                return Err("image detail cannot be empty".to_string());
+            }
+
+            Ok(json!({
+                "type": "input_image",
+                "image_url": build_base64_data_url(mime_type, data_base64),
+                "detail": detail,
+            }))
+        }
         ResponsesFileInput::FilePath(path) => {
             let file_bytes = fs::read(path)
                 .map_err(|err| format!("failed to read file input {}: {err}", path.display()))?;
@@ -239,10 +267,8 @@ fn build_file_input_item(file_input: &ResponsesFileInput<'_>) -> Result<Value, S
                 .and_then(|name| name.to_str())
                 .ok_or_else(|| format!("failed to derive filename from {}", path.display()))?;
             let mime_type = infer_file_mime_type(path);
-            let file_data = build_base64_data_url(
-                mime_type,
-                &general_purpose::STANDARD.encode(file_bytes),
-            );
+            let file_data =
+                build_base64_data_url(mime_type, &general_purpose::STANDARD.encode(file_bytes));
 
             Ok(json!({
                 "type": "input_file",
@@ -319,14 +345,33 @@ fn extract_response_text(response_json: &Value) -> Option<String> {
     }
 }
 
+fn extract_embedding(response_json: &Value) -> Result<Vec<f64>, String> {
+    let embedding_values = response_json["data"]
+        .get(0)
+        .and_then(|item| item["embedding"].as_array())
+        .ok_or_else(|| "OpenAI embeddings response did not include an embedding".to_string())?;
+
+    embedding_values
+        .iter()
+        .map(|value| {
+            value
+                .as_f64()
+                .ok_or_else(|| "OpenAI embedding contained a non-number value".to_string())
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{env, time::{SystemTime, UNIX_EPOCH}};
+    use std::{
+        env,
+        time::{SystemTime, UNIX_EPOCH},
+    };
 
     #[test]
     fn build_file_input_item_uses_input_file_type_for_file_id() {
-        let item = build_file_input_item(&ResponsesFileInput::FileId("file-123")).unwrap();
+        let item = build_input_item(&ResponsesFileInput::FileId("file-123")).unwrap();
 
         assert_eq!(
             item,
@@ -339,7 +384,7 @@ mod tests {
 
     #[test]
     fn build_file_input_item_wraps_base64_payload_in_data_url() {
-        let item = build_file_input_item(&ResponsesFileInput::FileData {
+        let item = build_input_item(&ResponsesFileInput::FileData {
             filename: "draconomicon.pdf",
             mime_type: "application/pdf",
             data_base64: "YWJjMTIz",
@@ -357,6 +402,25 @@ mod tests {
     }
 
     #[test]
+    fn build_input_item_wraps_image_payload_as_input_image() {
+        let item = build_input_item(&ResponsesFileInput::ImageData {
+            mime_type: "image/png",
+            data_base64: "YWJjMTIz",
+            detail: Some("high"),
+        })
+        .unwrap();
+
+        assert_eq!(
+            item,
+            json!({
+                "type": "input_image",
+                "image_url": "data:image/png;base64,YWJjMTIz",
+                "detail": "high",
+            })
+        );
+    }
+
+    #[test]
     fn build_file_input_item_reads_file_path_as_input_file_data_url() {
         let unique = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -365,7 +429,7 @@ mod tests {
         let file_path = env::temp_dir().join(format!("openai-client-test-{unique}.pdf"));
         fs::write(&file_path, b"abc123").unwrap();
 
-        let item = build_file_input_item(&ResponsesFileInput::FilePath(&file_path)).unwrap();
+        let item = build_input_item(&ResponsesFileInput::FilePath(&file_path)).unwrap();
 
         assert_eq!(
             item,

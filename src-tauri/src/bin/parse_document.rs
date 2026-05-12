@@ -1,25 +1,21 @@
 use chrono::Utc;
 use helix_rs::{HelixDB, HelixDBClient, HelixError};
+use pathfinder_lib::parsers::docx::parse_docx_file;
 use serde_json::json;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::env;
 use std::fs;
+use std::path::Path;
 use std::process;
-use docx_rust::DocxFile;
 use walkdir::WalkDir;
-use pathfinder_lib::parsers::image_parser::describe_and_embed_image_file;
-use pathfinder_lib::parsers::docx_parser::parse_docx_file;
-
-
 
 const APP_NAME: &str = "DataRoomCLI";
 
 const CHUNK_TOKENS: usize = 1000; // good default
 const MAX_BYTE_CHUNK: usize = CHUNK_TOKENS * 4;
-const CHUNK_OVERLAP: usize = 100; // preserve context
 
 struct TextChunk {
-    chunk_index: i32,
+    _chunk_index: i32,
     content: String,
 }
 
@@ -41,7 +37,7 @@ async fn main() {
         }
         // Some("ingest") => ingest_data_room(args.get(2), &helix_db, &openai_client).await,
         Some("walk") => walk(args.get(2)).await,
-        Some("docx") => parse_docx(args.get(2)).await,
+        Some("docx") => parse_docx(args.get(2).unwrap().to_string()).await,
         Some(command) => Err(format!("unknown command: {command}")),
     };
 
@@ -68,24 +64,26 @@ Commands:
     );
 }
 
-async fn parse_docx(path: Option<&String>) -> Result<(), String> {
+async fn parse_docx(path: String) -> Result<(), String> {
     println!("PARSE DOCX");
+    let path: &Path = Path::new(&path);
+    parse_docx_file(&path).map_err(|err| err.to_string())?;
 
-    for file in WalkDir::new(path.unwrap())
-        .into_iter()
-        .filter_map(Result::ok)
-    {
-        let file_path = file.path();
-        let file_name = file_path.display();
-        if !file_path.is_file() {
-            println!("NOT FILE");
-            continue;
-        } else {
-            parse_docx_file(&file_path).map_err(|err| err.to_string())?;
-            break;
-
-        }
-    }
+    // for file in WalkDir::new(path)
+    //     .into_iter()
+    //     .filter_map(Result::ok)
+    // {
+    //     let file_path = file.path();
+    //     let file_name = file_path.display();
+    //     if !file_path.is_file() {
+    //         println!("NOT FILE");
+    //         continue;
+    //     } else {
+    //         parse_docx_file(&file_path).map_err(|err| err.to_string())?;
+    //         break;
+    //
+    //     }
+    // }
     Ok(())
 }
 
@@ -96,7 +94,6 @@ async fn walk(path: Option<&String>) -> Result<(), String> {
         .into_iter()
         .filter_map(Result::ok)
     {
-        let mut succeeded_files: HashSet<String> = HashSet::new();
         let mut failed_files: HashSet<String> = HashSet::new();
         let file_path = file.path();
         let file_name = file_path.display();
@@ -133,7 +130,7 @@ async fn walk(path: Option<&String>) -> Result<(), String> {
 
 fn build_text_chunk(content: &str, chunk_index: i32) -> TextChunk {
     TextChunk {
-        chunk_index,
+        _chunk_index: chunk_index,
         content: content.to_string(),
     }
 }
@@ -141,20 +138,18 @@ fn build_text_chunk(content: &str, chunk_index: i32) -> TextChunk {
 async fn chunk(file_content: &str) -> Vec<TextChunk> {
     let mut chunk_vec: Vec<TextChunk> = Vec::new();
     let chunk_limit = file_content.len().div_ceil(MAX_BYTE_CHUNK) as i32;
-    let mut remaining_chunks_str = file_content;
     println!("limit: {}", chunk_limit.to_string(),);
     let mut current = String::new();
     let mut chunk_index: i32 = 1;
     let mut offset: usize = 0;
     while chunk_index < chunk_limit {
         let (chunk, remaining_chunks) = &file_content.split_at(offset + MAX_BYTE_CHUNK);
-        remaining_chunks_str = remaining_chunks;
         println!("chunk: {}", chunk,);
         println!("CHUNK INDEX: {}", chunk_index.to_string(),);
         chunk_index += 1;
 
-        if (chunk_index == chunk_limit) {
-            println!("remaiining chunk: {}", remaining_chunks_str,);
+        if chunk_index == chunk_limit {
+            println!("remaiining chunk: {}", remaining_chunks,);
             chunk_vec.push(build_text_chunk(chunk, chunk_index));
         }
         offset += MAX_BYTE_CHUNK;

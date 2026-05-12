@@ -2,13 +2,8 @@ use std::path::Path;
 
 use anyhow::Result;
 use calamine::{open_workbook_auto, Data, Reader};
-use serde::Serialize;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-pub struct SpreadsheetTextChunk {
-    pub chunk_index: usize,
-    pub content: String,
-}
+use crate::models::document::SpreadsheetTextChunk;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct SpreadsheetRow {

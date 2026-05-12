@@ -1,17 +1,21 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-pub mod parsers;
+pub mod clients;
 pub mod commands;
-pub mod helix_client;
-pub mod openai_client;
-mod utils;
+pub mod errors;
+pub mod models;
+pub mod parsers;
+pub mod services;
+pub mod state;
+pub mod utils;
 
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, SubmenuBuilder};
 
+use crate::commands::users::greet;
+
 const APP_NAME: &str = "Pathfinder";
 
-
-
-fn build_app_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<tauri::menu::Menu<R>> {
+fn build_app_menu<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+) -> tauri::Result<tauri::menu::Menu<R>> {
     let about_metadata = AboutMetadataBuilder::new()
         .name(Some(APP_NAME))
         .version(Some(app.package_info().version.to_string()))
@@ -72,7 +76,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![commands::greet])
+        .invoke_handler(tauri::generate_handler![greet])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
