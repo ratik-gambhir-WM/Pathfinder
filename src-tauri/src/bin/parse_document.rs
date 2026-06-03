@@ -1,30 +1,36 @@
-use chrono::Utc;
-use helix_rs::{HelixDB, HelixDBClient, HelixError};
-use pathfinder_lib::parsers::docx::parse_docx_file;
-use serde_json::json;
-use std::collections::HashSet;
-use std::env;
-use std::fs;
-use std::path::Path;
-use std::process;
+use base64::{engine::general_purpose, Engine as _};
+use pathfinder_lib::{
+    clients::openai::{OpenAiClient, ResponsesFileInput},
+    parsers::docx::parse_docx_file,
+    utils::openai_api_key,
+};
+
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+    process,
+};
 use walkdir::WalkDir;
+use pathfinder_lib::common::CollectedFile;
 
 const APP_NAME: &str = "DataRoomCLI";
+const DEFAULT_DOCUMENT_SUMMARY_MODEL: &str = "gpt-5.5";
+const MAX_FILE_BYTES: usize = 50 * 1024 * 1024;
+const MAX_TOTAL_REQUEST_FILE_BYTES: usize = 50 * 1024 * 1024;
+const DOCUMENT_SUMMARY_SYSTEM_PROMPT: &str = r#"You summarize collections of attached business documents.
 
-const CHUNK_TOKENS: usize = 1000; // good default
-const MAX_BYTE_CHUNK: usize = CHUNK_TOKENS * 4;
+Rely on the attached files as the primary source of truth. Produce a concise but complete synthesis
+of the full document set, call out important details from individual files when relevant, and note
+any gaps, contradictions, or follow-up questions. If some files were skipped, mention the impact.
 
-struct TextChunk {
-    _chunk_index: i32,
-    content: String,
-}
+Use Markdown with short sections and clear headings."#;
+
+
 
 #[tokio::main]
 async fn main() {
     let _ = dotenvy::dotenv();
     let args: Vec<String> = env::args().collect();
-    // let helix_db: HelixDB = HelixDB::new(Some("http://localhost"), Some(6969), None);
-    // let openai_client = reqwest::Client::new();
 
     let result = match args.get(1).map(String::as_str) {
         None | Some("-h") | Some("--help") | Some("help") => {
@@ -35,9 +41,14 @@ async fn main() {
             println!("{APP_NAME} {}", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
-        // Some("ingest") => ingest_data_room(args.get(2), &helix_db, &openai_client).await,
-        Some("walk") => walk(args.get(2)).await,
-        Some("docx") => parse_docx(args.get(2).unwrap().to_string()).await,
+        Some("docx") => match args.get(2) {
+            Some(path) => parse_docx(path.to_string()).await,
+            None => Err("missing docx path".to_string()),
+        },
+        Some("summarize") => match args.get(2) {
+            Some(path) => summarize_dir(path.to_string()).await,
+            None => Err("missing directory path".to_string()),
+        },
         Some(command) => Err(format!("unknown command: {command}")),
     };
 
@@ -56,187 +67,231 @@ Usage:
   dataroomcli <command> [options]
 
 Commands:
-  ingest [root_folder] [priority_folders]     Start a new data room workspace
-  status          Show current data room status
-  help            Show this help message
-  version         Show the current version
+  docx <path>                          Parse a DOCX file
+  summarize <directory>               Summarize supported files in a directory with OpenAI
+  upload <directory>                  Alias for summarize
+  dir <directory>                     Alias for summarize
+  help                                Show this help message
+  version                             Show the current version
 "
     );
 }
 
 async fn parse_docx(path: String) -> Result<(), String> {
-    println!("PARSE DOCX");
     let path: &Path = Path::new(&path);
-    parse_docx_file(&path).map_err(|err| err.to_string())?;
-
-    // for file in WalkDir::new(path)
-    //     .into_iter()
-    //     .filter_map(Result::ok)
-    // {
-    //     let file_path = file.path();
-    //     let file_name = file_path.display();
-    //     if !file_path.is_file() {
-    //         println!("NOT FILE");
-    //         continue;
-    //     } else {
-    //         parse_docx_file(&file_path).map_err(|err| err.to_string())?;
-    //         break;
-    //
-    //     }
-    // }
+   let chunks = parse_docx_file(path).map_err(|err| err.to_string())?;
+    for chunk in chunks {
+        println!("CHUNK")
+    }
     Ok(())
 }
 
-async fn walk(path: Option<&String>) -> Result<(), String> {
-    let openai_client = reqwest::Client::new();
-    let helix_db: HelixDB = HelixDB::new(Some("http://localhost"), Some(6969), None);
-    for file in WalkDir::new(path.unwrap())
-        .into_iter()
-        .filter_map(Result::ok)
-    {
-        let mut failed_files: HashSet<String> = HashSet::new();
-        let file_path = file.path();
-        let file_name = file_path.display();
-        if !file_path.is_file() {
+
+async fn summarize_dir(path: String) -> Result<(), String> {
+    let root = PathBuf::from(&path);
+
+    if !root.exists() {
+        return Err(format!("path does not exist: {}", root.display()));
+    }
+
+    if !root.is_dir() {
+        return Err(format!("path is not a directory: {}", root.display()));
+    }
+
+    let (files, skipped_files) = collect_supported_files(&root)?;
+    if files.is_empty() {
+        return Err(format!("no supported files found in {}", root.display()));
+    }
+
+    let api_key = openai_api_key()?;
+    let client = OpenAiClient::new(&api_key);
+    let model = env::var("OPENAI_DOCUMENT_SUMMARY_MODEL")
+        .unwrap_or_else(|_| DEFAULT_DOCUMENT_SUMMARY_MODEL.to_string());
+    let prompt = build_summary_prompt(&root, &files, &skipped_files);
+    let file_inputs: Vec<ResponsesFileInput<'_>> = files
+        .iter()
+        .map(|file| ResponsesFileInput::FileData {
+            filename: file.filename.as_str(),
+            mime_type: file.mime_type,
+            data_base64: file.data_base64.as_str(),
+        })
+        .collect();
+
+    let summary = client
+        .gen_model_response_with_files(
+            Some(&prompt),
+            Some(DOCUMENT_SUMMARY_SYSTEM_PROMPT),
+            Some(&model),
+            Some(&file_inputs),
+        )
+        .await?;
+
+    println!("{summary}");
+    write_summary(&summary)?;
+
+    if !skipped_files.is_empty() {
+        eprintln!("skipped {} unsupported or empty files", skipped_files.len());
+    }
+
+    Ok(())
+}
+
+fn collect_supported_files(root: &Path) -> Result<(Vec<CollectedFile>, Vec<String>), String> {
+    let mut files = Vec::new();
+    let mut skipped_files = Vec::new();
+    let mut total_file_bytes = 0usize;
+    let mut total_limit_reached = false;
+
+    for entry in WalkDir::new(root).into_iter().filter_map(Result::ok) {
+        if !entry.file_type().is_file() {
             continue;
         }
 
-        let Ok(file_content) = fs::read_to_string(file_path) else {
-            println!("Could not read file named: {file_name}");
-            failed_files.insert(file_path.to_string_lossy().to_string());
+        let path = entry.into_path();
+        let relative_path = display_relative_path(root, &path);
+        let Some(mime_type) = infer_supported_mime_type(&path) else {
+            skipped_files.push(relative_path);
             continue;
         };
+        println!("{}", path.display());
 
-        if file_content.len() > MAX_BYTE_CHUNK {
-            println!("BIGGER: {}", file_content.len());
-            let result = chunk(&file_content).await;
-            for chunk in result {
-                let embedding_result =
-                    gen_document_embeddings(&chunk.content, &helix_db, &openai_client).await;
-                match embedding_result {
-                    Ok(_embedding_result) => {
-                        // add embeddings to Vec<DocumentEmbeddings>
-                        continue;
-                    }
-                    Err(error) => {
-                        return Err(error.to_string());
-                    }
-                }
-            }
+        if total_limit_reached {
+            skipped_files.push(format!(
+                "{relative_path} (skipped: total request file size limit already reached)"
+            ));
+            continue;
         }
-    }
-    Ok(())
-}
 
-fn build_text_chunk(content: &str, chunk_index: i32) -> TextChunk {
-    TextChunk {
-        _chunk_index: chunk_index,
-        content: content.to_string(),
-    }
-}
-
-async fn chunk(file_content: &str) -> Vec<TextChunk> {
-    let mut chunk_vec: Vec<TextChunk> = Vec::new();
-    let chunk_limit = file_content.len().div_ceil(MAX_BYTE_CHUNK) as i32;
-    println!("limit: {}", chunk_limit.to_string(),);
-    let mut current = String::new();
-    let mut chunk_index: i32 = 1;
-    let mut offset: usize = 0;
-    while chunk_index < chunk_limit {
-        let (chunk, remaining_chunks) = &file_content.split_at(offset + MAX_BYTE_CHUNK);
-        println!("chunk: {}", chunk,);
-        println!("CHUNK INDEX: {}", chunk_index.to_string(),);
-        chunk_index += 1;
-
-        if chunk_index == chunk_limit {
-            println!("remaiining chunk: {}", remaining_chunks,);
-            chunk_vec.push(build_text_chunk(chunk, chunk_index));
+        let file_size_bytes = fs::metadata(&path)
+            .map_err(|err| format!("failed to read metadata for {}: {err}", path.display()))?
+            .len() as usize;
+        if file_size_bytes == 0 {
+            skipped_files.push(format!("{relative_path} (empty)"));
+            continue;
         }
-        offset += MAX_BYTE_CHUNK;
-        current.push_str(chunk);
-        chunk_vec.push(build_text_chunk(chunk, chunk_index));
-        println!("current: {}", current,);
+
+        if file_size_bytes > MAX_FILE_BYTES {
+            skipped_files.push(format!(
+                "{relative_path} (skipped: file exceeds 50 MB limit)"
+            ));
+            continue;
+        }
+
+        if total_file_bytes + file_size_bytes > MAX_TOTAL_REQUEST_FILE_BYTES {
+            skipped_files.push(format!(
+                "{relative_path} (skipped: total request file size would exceed 50 MB limit)"
+            ));
+            total_limit_reached = true;
+            continue;
+        }
+
+        let file_bytes =
+            fs::read(&path).map_err(|err| format!("failed to read {}: {err}", path.display()))?;
+        if file_bytes.is_empty() {
+            skipped_files.push(format!("{relative_path} (empty)"));
+            continue;
+        }
+
+        let filename = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| format!("failed to derive filename from {}", path.display()))?
+            .to_string();
+
+        files.push(CollectedFile {
+            filename,
+            relative_path,
+            mime_type,
+            size_bytes: file_size_bytes,
+            data_base64: general_purpose::STANDARD.encode(file_bytes),
+        });
+        total_file_bytes += file_size_bytes;
     }
-    chunk_vec
+
+    files.sort_by(|left, right| left.relative_path.cmp(&right.relative_path));
+    skipped_files.sort();
+
+    Ok((files, skipped_files))
 }
 
-async fn save_embedding(helix_db: &HelixDB, result: &Vec<f64>) -> Result<(), String> {
-    let result: Result<(), HelixError> = helix_db.query("CreateEmbedding", &result).await;
-    match result {
-        Ok(()) => Ok(()),
-        Err(err) => Err(err.to_string()),
-    }
-}
-
-async fn embed_document(
-    content: &str,
-    openai_client: &reqwest::Client,
-) -> Result<Vec<f64>, String> {
-    if content.trim().is_empty() {
-        return Err("cannot embed empty document content".to_string());
-    }
-
-    let api_key = env::var("OPENAI_API_KEY")
-        .map_err(|_| "OPENAI_API_KEY environment variable is not set".to_string())?;
-
-    let response = openai_client
-        .post("https://api.openai.com/v1/embeddings")
-        .bearer_auth(api_key)
-        .json(&json!({
-            "model": "text-embedding-3-small",
-            "input": content,
-            "encoding_format": "float"
-        }))
-        .send()
-        .await
-        .map_err(|err| format!("failed to call OpenAI embeddings API: {err}"))?;
-
-    let status = response.status();
-    let response_body = response
-        .text()
-        .await
-        .map_err(|err| format!("failed to read OpenAI embeddings response: {err}"))?;
-
-    if !status.is_success() {
-        return Err(format!(
-            "OpenAI embeddings API returned {status}: {response_body}"
-        ));
-    }
-
-    let response_json: serde_json::Value = serde_json::from_str(&response_body)
-        .map_err(|err| format!("failed to parse OpenAI embeddings response: {err}"))?;
-
-    let embedding_values = response_json["data"]
-        .get(0)
-        .and_then(|item| item["embedding"].as_array())
-        .ok_or_else(|| "OpenAI embeddings response did not include an embedding".to_string())?;
-
-    let embedding: Vec<f64> = embedding_values
+fn build_summary_prompt(root: &Path, files: &[CollectedFile], skipped_files: &[String]) -> String {
+    let manifest = files
         .iter()
-        .map(|value| {
-            value
-                .as_f64()
-                .ok_or_else(|| "OpenAI embedding contained a non-number value".to_string())
+        .map(|file| {
+            format!(
+                "- {} ({}, {} bytes)",
+                file.relative_path, file.mime_type, file.size_bytes
+            )
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Vec<_>>()
+        .join("\n");
 
-    let embedded_at = Utc::now().to_rfc3339();
-    println!(
-        "embedded document at {embedded_at}; vector dimensions: {}",
-        embedding.len()
-    );
+    let skipped = if skipped_files.is_empty() {
+        "No files were skipped.".to_string()
+    } else {
+        format!(
+            "The following files were skipped because they are unsupported or empty:\n{}",
+            skipped_files
+                .iter()
+                .map(|path| format!("- {path}"))
+                .collect::<Vec<_>>()
+                .join("\n")
+        )
+    };
 
-    Ok(embedding)
+    format!(
+        "Summarize the attached document set from `{}`.\n\n\
+Document manifest:\n\
+{}\n\n\
+{}\n\n\
+Please:\n\
+- provide an overall summary of the full document set\n\
+- call out the most important details from each file when useful\n\
+- note contradictions, risks, missing context, or follow-up questions\n\
+- mention skipped files if they could change the conclusion",
+        root.display(),
+        manifest,
+        skipped
+    )
 }
 
-async fn gen_document_embeddings(
-    content: &str,
-    helix_db: &HelixDB,
-    openai_client: &reqwest::Client,
-) -> Result<(), String> {
-    let result = embed_document(&content, openai_client).await;
-    match result {
-        Ok(embedding_result) => save_embedding(helix_db, &embedding_result).await,
-        Err(err) => Err(err.to_string()),
+fn display_relative_path(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .unwrap_or(path)
+        .display()
+        .to_string()
+}
+
+fn infer_supported_mime_type(path: &Path) -> Option<&'static str> {
+    match path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .map(|extension| extension.to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("pdf") => Some("application/pdf"),
+        Some("txt") => Some("text/plain"),
+        Some("md") => Some("text/markdown"),
+        Some("json") => Some("application/json"),
+        Some("html") => Some("text/html"),
+        Some("csv") => Some("text/csv"),
+        Some("doc") => Some("application/msword"),
+        Some("docx") => {
+            Some("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        }
+        Some("pptx") => {
+            Some("application/vnd.openxmlformats-officedocument.presentationml.presentation")
+        }
+        Some("xls") => Some("application/vnd.ms-excel"),
+        Some("xlsx") => Some("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+        _ => None,
     }
+}
+
+fn write_summary(summary: &str) -> Result<(), String> {
+    let output_path = Path::new("../../output-text.md");
+    fs::write(output_path, summary)
+        .map_err(|err| format!("failed to write {}: {err}", output_path.display()))?;
+    println!("wrote summary to {}", output_path.display());
+    Ok(())
 }

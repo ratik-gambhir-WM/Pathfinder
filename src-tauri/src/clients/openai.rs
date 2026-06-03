@@ -57,7 +57,6 @@ impl<'a> OpenAiClient<'a> {
             .unwrap_or(DEFAULT_SYSTEM_INSTRUCTIONS)
             .trim();
         let model = model.unwrap_or(DEFAULT_RESPONSES_MODEL).trim();
-        let mut content = Vec::new();
 
         if prompt.is_empty() {
             return Err("prompt cannot be empty".to_string());
@@ -71,30 +70,13 @@ impl<'a> OpenAiClient<'a> {
             return Err("model cannot be empty".to_string());
         }
 
-        if let Some(file_inputs) = file_inputs {
-            for file_input in file_inputs {
-                content.push(build_input_item(file_input)?);
-            }
-        }
-
-        content.push(json!({
-            "type": "input_text",
-            "text": prompt,
-        }));
+        let request_body =
+            build_responses_request_body(model, system_instructions, prompt, file_inputs)?;
 
         let response = openai_client
             .post("https://api.openai.com/v1/responses")
             .bearer_auth(self.api_key)
-            .json(&json!({
-                "model": model,
-                "instructions": system_instructions,
-                "input": [
-                    {
-                        "role": "user",
-                        "content": content
-                    }
-                ],
-            }))
+            .json(&request_body)
             .send()
             .await
             .map_err(|err| format!("failed to call OpenAI responses API: {err}"))?;
@@ -179,6 +161,44 @@ impl<'a> OpenAiClient<'a> {
 
         extract_embedding(&response_json)
     }
+}
+
+fn build_responses_request_body(
+    model: &str,
+    system_instructions: &str,
+    prompt: &str,
+    file_inputs: Option<&[ResponsesFileInput<'_>]>,
+) -> Result<Value, String> {
+    Ok(json!({
+        "model": model,
+        "instructions": system_instructions,
+        "input": [
+            {
+                "role": "user",
+                "content": build_user_input_content(prompt, file_inputs)?,
+            }
+        ],
+    }))
+}
+
+fn build_user_input_content(
+    prompt: &str,
+    file_inputs: Option<&[ResponsesFileInput<'_>]>,
+) -> Result<Vec<Value>, String> {
+    let mut content = Vec::new();
+
+    if let Some(file_inputs) = file_inputs {
+        for file_input in file_inputs {
+            content.push(build_input_item(file_input)?);
+        }
+    }
+
+    content.push(json!({
+        "type": "input_text",
+        "text": prompt,
+    }));
+
+    Ok(content)
 }
 
 fn build_input_item(file_input: &ResponsesFileInput<'_>) -> Result<Value, String> {
@@ -397,6 +417,45 @@ mod tests {
                 "type": "input_file",
                 "filename": "draconomicon.pdf",
                 "file_data": "data:application/pdf;base64,YWJjMTIz",
+            })
+        );
+    }
+
+    #[test]
+    fn build_responses_request_body_places_files_and_prompt_in_user_content() {
+        let request_body = build_responses_request_body(
+            "gpt-5",
+            "You are a helpful assistant.",
+            "What is the first dragon in the book?",
+            Some(&[ResponsesFileInput::FileData {
+                filename: "draconomicon.pdf",
+                mime_type: "application/pdf",
+                data_base64: "YWJjMTIz",
+            }]),
+        )
+        .unwrap();
+
+        assert_eq!(
+            request_body,
+            json!({
+                "model": "gpt-5",
+                "instructions": "You are a helpful assistant.",
+                "input": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "input_file",
+                                "filename": "draconomicon.pdf",
+                                "file_data": "data:application/pdf;base64,YWJjMTIz",
+                            },
+                            {
+                                "type": "input_text",
+                                "text": "What is the first dragon in the book?",
+                            }
+                        ]
+                    }
+                ]
             })
         );
     }

@@ -7,9 +7,18 @@ pub mod services;
 pub mod state;
 pub mod utils;
 
+pub mod common;
+mod events;
+
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, SubmenuBuilder};
 
-use crate::commands::users::greet;
+use crate::{
+    commands::{
+        demo::{login_demo_command, save_markdown_summary, summarize},
+        users::greet,
+    },
+    events::register_login_demo_events,
+};
 
 const APP_NAME: &str = "Pathfinder";
 
@@ -73,10 +82,17 @@ pub fn run() {
         .setup(|app| {
             let menu = build_app_menu(&app.handle())?;
             app.set_menu(menu)?;
+            register_login_demo_events(&app.handle());
             Ok(())
         })
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            login_demo_command,
+            summarize,
+            save_markdown_summary
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

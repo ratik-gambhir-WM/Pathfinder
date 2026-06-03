@@ -2,9 +2,10 @@ export type WorkspaceLocationState = {
   email?: string;
 };
 
-export type WorkspaceSidebarIcon = "personSearch" | "terminal" | "timeline" | "folderOpen";
+export type WorkspaceSidebarIcon = "personSearch" | "terminal" | "timeline" | "folderOpen" | "sparkles";
 
 export type WorkspaceSidebarTool = {
+  href?: string;
   icon: WorkspaceSidebarIcon;
   name: string;
 };
@@ -244,7 +245,8 @@ export const workspaceInitiatives: WorkspaceSidebarTool[] = [
 
 export const workspaceTools: WorkspaceSidebarTool[] = [
   { icon: "timeline", name: "Meeting Timeline" },
-  { icon: "folderOpen", name: "Global Vault" },
+  { href: "/hub/vault", icon: "folderOpen", name: "Global Vault" },
+  { href: "/hub/summarize", icon: "sparkles", name: "Summarize" },
 ];
 
 export function getDealById(dealId: string) {

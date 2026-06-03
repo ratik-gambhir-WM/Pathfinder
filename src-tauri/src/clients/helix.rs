@@ -1,4 +1,5 @@
 use helix_rs::{HelixDB, HelixDBClient};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value;
 
 use crate::models::user::{GetUserByEmailInput, InsertUserInput};
@@ -31,6 +32,23 @@ impl HelixClient {
         println!("{pretty}");
 
         Ok(())
+    }
+
+    pub async fn query_helix<T, K>(
+        &self,
+        query_name: &str,
+        input: T,
+    ) -> Result<K, String>
+    where
+        T: Sync + Serialize,
+        K: DeserializeOwned
+     {
+        let result: Value = self
+            .helix_db
+            .query(query_name, &input)
+            .await
+            .map_err(|err| err.to_string())?;
+        serde_json::from_value::<K>(result).map_err(|err| err.to_string())
     }
 
     pub async fn get_user(&self, email: Option<&String>) -> Result<(), String> {

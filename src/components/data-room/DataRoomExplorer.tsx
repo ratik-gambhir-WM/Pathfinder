@@ -1,16 +1,26 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { DataRoomTreeNode } from "../../data/dataRoom";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 
 type DataRoomExplorerProps = {
   dealName: string;
+  dealRoomPath: string;
   nodes: DataRoomTreeNode[];
 };
 
-export function DataRoomExplorer({ dealName, nodes }: DataRoomExplorerProps) {
+export function DataRoomExplorer({ dealName, dealRoomPath, nodes }: DataRoomExplorerProps) {
   return (
     <aside className="flex w-72 shrink-0 flex-col gap-3 border-r border-white/80 bg-white/40 p-4 backdrop-blur-md">
+      <Link
+        aria-label={`Back to ${dealName} deal room`}
+        className="flex h-10 w-10 items-center justify-center rounded-full text-primary transition hover:bg-white/70"
+        to={dealRoomPath}
+      >
+        <Icon className="h-5 w-5" name="home" />
+      </Link>
+
       <div className="mb-3 flex items-center gap-4 px-3 py-3">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <Icon className="h-7 w-7" name="dataset" />

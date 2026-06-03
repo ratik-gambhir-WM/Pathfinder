@@ -4,7 +4,7 @@ import { DataRoomExplorer } from "../components/data-room/DataRoomExplorer";
 import { DataRoomTopBar } from "../components/data-room/DataRoomTopBar";
 import { ReportEditorPanel } from "../components/data-room/ReportEditorPanel";
 import { getDealDataRoomView } from "../data/dataRoom";
-import { getDealById, getTeamLabel } from "../data/workspace";
+import { getDealById, getDealRoomPath, getTeamLabel } from "../data/workspace";
 import { useWorkspaceSession } from "../hooks/useWorkspaceSession";
 
 export function DataRoomPage() {
@@ -31,7 +31,7 @@ export function DataRoomPage() {
         <DataRoomTopBar teamInitial={teamInitial} />
 
         <div className="flex h-[calc(100vh-72px)]">
-          <DataRoomExplorer dealName={deal.room.name} nodes={dataRoomView.tree} />
+          <DataRoomExplorer dealName={deal.room.name} dealRoomPath={getDealRoomPath(deal.room.id)} nodes={dataRoomView.tree} />
 
           <main className="flex min-w-0 flex-1 gap-6 overflow-hidden p-6">
             <ChipBankPanel chips={dataRoomView.chips} />

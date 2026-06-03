@@ -3,10 +3,7 @@ import { CriticalTasksCard } from "../components/hub/cards/CriticalTasksCard";
 import { RecentOpenedCard } from "../components/hub/cards/RecentOpenedCard";
 import { InsightsStrip } from "../components/hub/InsightsStrip";
 import { WorkspaceHeader } from "../components/hub/WorkspaceHeader";
-import { WorkspaceLayout } from "../components/hub/WorkspaceLayout";
-import { WorkspaceSidebar } from "../components/hub/WorkspaceSidebar";
-import { workspaceDeals, workspaceInitiatives, workspaceTools } from "../data/workspace";
-import { useWorkspaceSession } from "../hooks/useWorkspaceSession";
+import { WorkspaceHomeShell } from "../components/hub/WorkspaceHomeShell";
 
 const tasks = [
   {
@@ -96,20 +93,8 @@ const recentInsights = [
 const aiSuggestions = ['"Compare Q3 EBITDA across Alpha and Beta"', '"Summarize recent legal risks"'];
 
 export function HubPage() {
-  const { email, navigationState } = useWorkspaceSession();
-
   return (
-    <WorkspaceLayout
-      sidebar={
-        <WorkspaceSidebar
-          deals={workspaceDeals}
-          email={email}
-          initiatives={workspaceInitiatives}
-          navigationState={navigationState}
-          tools={workspaceTools}
-        />
-      }
-    >
+    <WorkspaceHomeShell>
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 pb-10">
         <WorkspaceHeader />
 
@@ -120,6 +105,6 @@ export function HubPage() {
           <InsightsStrip items={recentInsights} />
         </div>
       </div>
-    </WorkspaceLayout>
+    </WorkspaceHomeShell>
   );
 }

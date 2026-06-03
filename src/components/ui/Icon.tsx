@@ -12,6 +12,7 @@ type IconName =
   | "folderOpen"
   | "grid"
   | "help"
+  | "home"
   | "image"
   | "key"
   | "listAlt"
@@ -88,6 +89,13 @@ export function Icon({ className = "h-5 w-5", name }: IconProps) {
           <circle className={iconClassName} cx="12" cy="12" r="9" />
           <path className={iconClassName} d="M9.75 9.25a2.25 2.25 0 1 1 4.13 1.23c-.55.77-1.88 1.31-1.88 2.77" />
           <path className={iconClassName} d="M12 17h.01" />
+        </svg>
+      );
+    case "home":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <path className={iconClassName} d="M4 11.5 12 4l8 7.5" />
+          <path className={iconClassName} d="M6.5 10.25V20h5v-5h3v5h5v-9.75" />
         </svg>
       );
     case "dataset":
