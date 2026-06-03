@@ -50,7 +50,12 @@ export function WorkspaceSidebar({
     <aside className="hidden h-full w-72 shrink-0 border-r border-white/80 bg-white/40 backdrop-blur-md lg:flex">
       <div className="flex h-full min-h-0 w-full flex-col p-4">
         <div className="space-y-6">
-          <div className="flex items-center gap-4 px-2">
+          <NavLink
+            aria-label="Back to home page"
+            className="flex items-center gap-4 rounded-[22px] px-2 py-2 transition hover:bg-white/40"
+            state={navigationState}
+            to="/hub"
+          >
             <WestMonroeMark framed />
             <div>
               <h1 className="text-[1.1rem] font-bold leading-tight text-text-main [font-family:var(--font-heading)]">
@@ -58,7 +63,7 @@ export function WorkspaceSidebar({
               </h1>
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Diligence</p>
             </div>
-          </div>
+          </NavLink>
 
           {mode === "home" ? (
             <>

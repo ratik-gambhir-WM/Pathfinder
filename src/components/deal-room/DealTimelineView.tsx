@@ -9,72 +9,66 @@ type DealTimelineViewProps = {
   onEventsChange: (events: DealTimelineItem[]) => void;
 };
 
+type TimelineCategory = "Deliverable" | "Key Activity" | "Key Meeting / Call";
+
 type TimelineFormState = {
-  category: string;
+  category: TimelineCategory;
   date: string;
   detail: string;
   title: string;
 };
 
+type CalendarDay = {
+  date: Date;
+  dateKey: string;
+  dayLabel: string;
+};
+
+const categoryOptions: TimelineCategory[] = ["Key Meeting / Call", "Key Activity", "Deliverable"];
+const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
 const initialFormState: TimelineFormState = {
-  category: "Meeting",
+  category: "Key Meeting / Call",
   date: "",
   detail: "",
   title: "",
 };
 
-const categoryOptions = ["Meeting", "Site Visit", "Task", "Milestone", "Risk", "Note"];
-
-const toneByCategory: Record<string, DealTimelineTone> = {
-  Meeting: "accent",
-  Milestone: "primary",
-  Note: "accent",
-  Risk: "error",
-  "Site Visit": "primary",
-  Task: "muted",
+const toneByCategory: Record<TimelineCategory, DealTimelineTone> = {
+  Deliverable: "accent",
+  "Key Activity": "muted",
+  "Key Meeting / Call": "primary",
 };
 
-const timelineToneClasses: Record<DealTimelineTone, { detail: string; dot: string; label: string }> = {
-  accent: {
-    detail: "border-white/60 bg-white/54 text-text-main/82",
-    dot: "bg-tertiary",
-    label: "text-muted",
+const categoryStyles: Record<TimelineCategory, { bar: string; legend: string }> = {
+  Deliverable: {
+    bar: "bg-[#0055ff] text-white",
+    legend: "bg-[#0055ff]",
   },
-  error: {
-    detail: "border-error/20 bg-error-container/18 text-on-error-container italic",
-    dot: "bg-error",
-    label: "text-error/65",
+  "Key Activity": {
+    bar: "bg-secondary-container text-on-secondary-container",
+    legend: "bg-secondary-container",
   },
-  muted: {
-    detail: "border-white/55 bg-white/42 text-text-main/76",
-    dot: "bg-muted",
-    label: "text-muted",
-  },
-  primary: {
-    detail: "border-white/60 bg-white/54 text-text-main/82",
-    dot: "bg-primary",
-    label: "text-muted",
+  "Key Meeting / Call": {
+    bar: "bg-primary text-white",
+    legend: "bg-primary",
   },
 };
+
+const calendarWeeks = createCalendarWeeks("2026-09-28", 5);
 
 export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineViewProps) {
   const [formState, setFormState] = useState<TimelineFormState>(initialFormState);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  const sortedEvents = useMemo(
-    () =>
-      [...events].sort((first, second) => {
-        const dateComparison = first.date.localeCompare(second.date);
-
-        if (dateComparison !== 0) {
-          return dateComparison;
-        }
-
-        return first.title.localeCompare(second.title);
-      }),
-    [events],
-  );
+  const eventsByDate = useMemo(() => {
+    return events.reduce<Record<string, DealTimelineItem[]>>((groupedEvents, item) => {
+      const dateKey = getCalendarDateKey(item.date);
+      groupedEvents[dateKey] = [...(groupedEvents[dateKey] ?? []), item];
+      return groupedEvents;
+    }, {});
+  }, [events]);
 
   function openModal() {
     setFormState(initialFormState);
@@ -102,7 +96,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
       id: `timeline-${Date.now()}`,
       timestamp: formatTimelineDate(formState.date),
       title,
-      tone: toneByCategory[formState.category] ?? "primary",
+      tone: toneByCategory[formState.category],
     };
 
     onEventsChange([...events, timelineItem]);
@@ -113,44 +107,71 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
 
   return (
     <>
-      <div className="flex flex-col gap-6">
-        <header className="flex flex-col gap-2">
-          <h1 className="type-display text-text-main">Meeting Timeline</h1>
-          <p className="type-subtle text-muted">{deal.overviewSubtitle}</p>
+      <div className="flex flex-col gap-10">
+        <header className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="space-y-1">
+            <h1 className="type-display text-text-main">Meeting Timeline</h1>
+            <p className="text-[13px] text-text-main/78">{deal.overviewSubtitle}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-6">
+            <TimelineLegend />
+            <button
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-5 text-[12px] font-bold text-white shadow-[0_10px_26px_rgba(50,99,65,0.24)] transition hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
+              onClick={openModal}
+              type="button"
+            >
+              <Icon className="h-4 w-4" name="plus" />
+              Log Activity
+            </button>
+          </div>
         </header>
 
-        <div className="grid grid-cols-12 gap-6">
-          <WorkspaceCard className="col-span-12 min-h-[640px] rounded-[28px] p-8 lg:p-10 xl:col-span-8">
-            <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="type-h1 text-text-main">Activity Timeline</h2>
+        <div className="grid grid-cols-12 gap-8">
+          <WorkspaceCard className="col-span-12 rounded-[28px] p-6 xl:col-span-8">
+            <div className="mb-7 flex items-center justify-between">
+              <h2 className="type-h1 text-text-main">Engagement Timeline</h2>
+              <button
+                aria-label="Timeline actions"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:bg-white/58 hover:text-text-main"
+                type="button"
+              >
+                <Icon className="h-5 w-5" name="more" />
+              </button>
+            </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary/10 px-5 text-[13px] font-bold text-primary transition hover:bg-primary/16 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
-                  onClick={openModal}
-                  type="button"
-                >
-                  <Icon className="h-4 w-4" name="plus" />
-                  Log Activity
-                </button>
-                <button
-                  aria-label="Timeline actions"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition hover:bg-white/58 hover:text-text-main"
-                  type="button"
-                >
-                  <Icon className="h-5 w-5" name="more" />
-                </button>
+            <div className="overflow-x-auto">
+              <div
+                className="grid min-w-[740px] border-l border-t border-outline-variant bg-white/20"
+                style={{ gridTemplateColumns: "40px repeat(5, minmax(0, 1fr))" }}
+              >
+                <div className="border-b border-r border-outline-variant bg-white/35" />
+                {weekdays.map((weekday) => (
+                  <div
+                    className="border-b border-r border-outline-variant bg-[#00004d] px-3 py-3 text-center text-[12px] font-bold uppercase tracking-[0.05em] text-white"
+                    key={weekday}
+                  >
+                    {weekday}
+                  </div>
+                ))}
+
+                {calendarWeeks.map((week, weekIndex) => (
+                  <CalendarWeekRow eventsByDate={eventsByDate} key={weekIndex} week={week} weekIndex={weekIndex} />
+                ))}
               </div>
             </div>
 
-            <div className="workspace-scrollbar-hidden relative max-h-[640px] overflow-y-auto pl-8 pr-1">
-              <div className="absolute bottom-4 left-[7px] top-2 w-px bg-outline-variant/60" />
-
-              <div className="relative z-10 space-y-10 pb-6">
-                {sortedEvents.map((item) => (
-                  <TimelineEvent item={item} key={item.id} />
-                ))}
+            <div className="mt-8 flex flex-col gap-4 rounded-xl border border-primary/10 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3">
+                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" name="alert" />
+                <p className="text-[12px] leading-5 text-text-main/78">
+                  Viewing 5-week overview for <span className="font-bold text-text-main">Phase 1: Discovery</span>. Events are placed by
+                  date.
+                </p>
               </div>
+              <button className="text-left text-[12px] font-bold text-primary transition hover:text-primary-container" type="button">
+                Download PDF
+              </button>
             </div>
           </WorkspaceCard>
 
@@ -183,60 +204,75 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
   );
 }
 
-type TimelineEventProps = {
-  item: DealTimelineItem;
-};
-
-function TimelineEvent({ item }: TimelineEventProps) {
-  const tone = timelineToneClasses[item.tone];
-  const isSiteVisit = item.category.toLowerCase().includes("site");
-
+function TimelineLegend() {
   return (
-    <article className="relative">
-      <span className={`absolute -left-[31px] top-1.5 h-4 w-4 rounded-full border-4 border-surface ${tone.dot}`} />
-
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-        <div className="min-w-0">
-          <p className={`mb-2 text-[10px] font-bold uppercase tracking-[0.18em] ${tone.label}`}>{item.category}</p>
-          <h3 className="text-[1.22rem] font-bold leading-tight text-text-main [font-family:var(--font-heading)]">{item.title}</h3>
+    <div className="flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-[0.08em] text-text-main">
+      {categoryOptions.map((category) => (
+        <div className="flex items-center gap-1.5" key={category}>
+          <span className={`h-3 w-3 rounded-sm ${categoryStyles[category].legend}`} />
+          {category === "Key Meeting / Call" ? "Key Meeting" : category}
         </div>
-
-        <time className="text-[13px] font-semibold text-text-main/78" dateTime={item.date}>
-          {formatTimelineDate(item.date)}
-        </time>
-      </div>
-
-      <div className={`mt-4 rounded-[20px] border px-5 py-4 text-[15px] leading-7 ${tone.detail}`}>
-        <p>{item.detail}</p>
-
-        {isSiteVisit ? (
-          <div className="mt-4 flex flex-wrap gap-3">
-            <TimelineThumbnail tone="primary" />
-            <TimelineThumbnail tone="accent" />
-          </div>
-        ) : null}
-      </div>
-    </article>
+      ))}
+    </div>
   );
 }
 
-type TimelineThumbnailProps = {
-  tone: "accent" | "primary";
+type CalendarWeekRowProps = {
+  eventsByDate: Record<string, DealTimelineItem[]>;
+  week: CalendarDay[];
+  weekIndex: number;
 };
 
-function TimelineThumbnail({ tone }: TimelineThumbnailProps) {
-  const className =
-    tone === "primary"
-      ? "from-primary/85 via-secondary-fixed-dim to-surface-container-highest"
-      : "from-tertiary/85 via-tertiary-fixed-dim to-surface-container-highest";
+function CalendarWeekRow({ eventsByDate, week, weekIndex }: CalendarWeekRowProps) {
+  return (
+    <>
+      <div className="flex min-h-[100px] items-center justify-center border-b border-r border-outline-variant px-1 text-center text-[11px] italic leading-4 text-text-main/78">
+        Week
+        <br />
+        {weekIndex}
+      </div>
+      {week.map((day) => (
+        <CalendarCell day={day} events={eventsByDate[day.dateKey] ?? []} key={day.dateKey} />
+      ))}
+    </>
+  );
+}
+
+type CalendarCellProps = {
+  day: CalendarDay;
+  events: DealTimelineItem[];
+};
+
+function CalendarCell({ day, events }: CalendarCellProps) {
+  return (
+    <div className="min-h-[100px] border-b border-r border-outline-variant p-2 text-[10px] font-medium text-text-main/78">
+      <div>{day.dayLabel}</div>
+      <div className="mt-2 space-y-1">
+        {events
+          .slice()
+          .sort((first, second) => first.title.localeCompare(second.title))
+          .map((event) => (
+            <CalendarEventBar event={event} key={event.id} />
+          ))}
+      </div>
+    </div>
+  );
+}
+
+type CalendarEventBarProps = {
+  event: DealTimelineItem;
+};
+
+function CalendarEventBar({ event }: CalendarEventBarProps) {
+  const category = normalizeCategory(event.category);
+  const styles = categoryStyles[category];
 
   return (
-    <div className={`h-16 w-24 overflow-hidden rounded-xl bg-gradient-to-br ${className} shadow-[0_10px_20px_rgba(28,40,38,0.12)]`}>
-      <div className="grid h-full grid-cols-5 gap-1 p-2 opacity-70">
-        {Array.from({ length: 15 }, (_, index) => (
-          <span className="rounded-sm bg-white/42" key={index} />
-        ))}
-      </div>
+    <div
+      className={`h-6 max-w-full truncate px-3 py-1 text-[10px] font-bold leading-4 [clip-path:polygon(5%_0%,95%_0%,100%_50%,95%_100%,5%_100%,0%_50%)] ${styles.bar}`}
+      title={`${event.title} - ${formatTimelineDate(event.date)}`}
+    >
+      {event.title}
     </div>
   );
 }
@@ -263,7 +299,8 @@ type TimelineTasksPanelProps = {
 };
 
 function TimelineTasksPanel({ tasks }: TimelineTasksPanelProps) {
-  const [checkedState, setCheckedState] = useState(() => tasks.map((task) => Boolean(task.done)));
+  const featuredTasks = tasks.filter((task, index) => index === 0 || task.priority);
+  const [checkedState, setCheckedState] = useState(() => featuredTasks.map((task) => Boolean(task.done)));
 
   return (
     <WorkspaceCard className="rounded-[28px] p-7">
@@ -278,8 +315,8 @@ function TimelineTasksPanel({ tasks }: TimelineTasksPanelProps) {
         </button>
       </div>
 
-      <div className="space-y-7">
-        {tasks.map((task, index) => {
+      <div className="space-y-8">
+        {featuredTasks.map((task, index) => {
           const isChecked = checkedState[index] ?? false;
           const statusLabel = isChecked ? "Completed" : task.priority ? "High Priority" : "Open Task";
 
@@ -288,11 +325,13 @@ function TimelineTasksPanel({ tasks }: TimelineTasksPanelProps) {
               <button
                 aria-label={`${isChecked ? "Mark incomplete" : "Mark complete"}: ${task.label}`}
                 aria-pressed={isChecked}
-                className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-primary/20 bg-white/70 transition hover:scale-105"
+                className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 bg-white/70 transition hover:scale-105 ${
+                  task.priority ? "border-error/20" : "border-primary/20"
+                }`}
                 onClick={() => setCheckedState((current) => current.map((value, valueIndex) => (valueIndex === index ? !value : value)))}
                 type="button"
               >
-                <span className={`h-2.5 w-2.5 rounded-full ${task.priority ? "bg-error" : "bg-primary"} ${isChecked ? "opacity-100" : ""}`} />
+                <span className={`h-2.5 w-2.5 rounded-full ${task.priority ? "bg-error" : "bg-primary"}`} />
               </button>
 
               <div className="min-w-0 flex-1">
@@ -301,14 +340,14 @@ function TimelineTasksPanel({ tasks }: TimelineTasksPanelProps) {
                 </p>
                 <h3 className={`text-[15px] font-bold text-text-main ${isChecked ? "line-through opacity-55" : ""}`}>{task.label}</h3>
                 <div
-                  className={`mt-4 rounded-[18px] border px-4 py-3 text-[13px] leading-6 ${
+                  className={`mt-4 rounded-[14px] border px-4 py-3 text-[13px] leading-6 ${
                     task.priority ? "border-error/20 bg-error-container/18 text-on-error-container italic" : "border-white/55 bg-white/48 text-text-main/78"
                   }`}
                 >
                   {isChecked
                     ? "Task completed."
                     : task.priority
-                      ? "Needs immediate follow-up and should be addressed before the next review cycle."
+                      ? "Needs immediate follow-up."
                       : "Click the circle to mark this diligence task complete."}
                 </div>
               </div>
@@ -371,7 +410,7 @@ function NewActivityModal({ formState, onChange, onClose, onSubmit }: NewActivit
               <span className="mb-2 block text-[12px] font-bold uppercase tracking-[0.12em] text-text-main/75">Category</span>
               <select
                 className="h-11 w-full rounded-xl border border-outline-variant bg-white/55 px-4 text-[15px] text-text-main outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/16"
-                onChange={(event) => onChange({ ...formState, category: event.target.value })}
+                onChange={(event) => onChange({ ...formState, category: event.target.value as TimelineCategory })}
                 value={formState.category}
               >
                 {categoryOptions.map((category) => (
@@ -425,8 +464,72 @@ function StatusBadge({ className, label }: StatusBadgeProps) {
   return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${className}`}>{label}</span>;
 }
 
+function createCalendarWeeks(startDate: string, weekCount: number) {
+  return Array.from({ length: weekCount }, (_, weekIndex) =>
+    Array.from({ length: 5 }, (_, dayIndex) => {
+      const date = addDays(parseLocalDate(startDate), weekIndex * 7 + dayIndex);
+      return {
+        date,
+        dateKey: toDateKey(date),
+        dayLabel: formatCalendarDayLabel(date),
+      };
+    }),
+  );
+}
+
+function addDays(date: Date, days: number) {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+  return nextDate;
+}
+
+function parseLocalDate(date: string) {
+  return new Date(`${date}T12:00:00`);
+}
+
+function toDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function getCalendarDateKey(date: string) {
+  const parsedDate = parseLocalDate(date);
+  const day = parsedDate.getDay();
+
+  if (day === 6) {
+    return toDateKey(addDays(parsedDate, -1));
+  }
+
+  if (day === 0) {
+    return toDateKey(addDays(parsedDate, -2));
+  }
+
+  return toDateKey(parsedDate);
+}
+
+function normalizeCategory(category: string): TimelineCategory {
+  if (category === "Deliverable") {
+    return "Deliverable";
+  }
+
+  if (category === "Key Activity" || category === "Site Visit") {
+    return "Key Activity";
+  }
+
+  return "Key Meeting / Call";
+}
+
+function formatCalendarDayLabel(date: Date) {
+  const day = date.getDate();
+
+  if (day === 1) {
+    return `${date.toLocaleString("en-US", { month: "short" }).toUpperCase()} ${day}`;
+  }
+
+  return String(day);
+}
+
 function formatTimelineDate(date: string) {
-  const parsedDate = new Date(`${date}T12:00:00`);
+  const parsedDate = parseLocalDate(date);
 
   return new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" }).format(parsedDate);
 }
