@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 
 use crate::models::document::{ParsedFileData, ParsedFileData2};
 
-
 pub struct CollectedFile {
     pub filename: String,
     pub relative_path: String,
@@ -12,7 +11,11 @@ pub struct CollectedFile {
     pub data_base64: String,
 }
 
-pub fn build_summary_prompt(root: &Path, files: &Vec<CollectedFile>, skipped_files: &[String]) -> String {
+pub fn build_summary_prompt(
+    root: &Path,
+    files: &Vec<CollectedFile>,
+    skipped_files: &[String],
+) -> String {
     let manifest = files
         .iter()
         .map(|file| {

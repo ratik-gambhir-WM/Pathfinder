@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use crate::common::write_summary;
 use crate::services::document_service::summarize_dir;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,21 +42,15 @@ pub fn login_demo_command(payload: LoginDemoCommandPayload) -> LoginDemoCommandR
     }
 }
 
-
-
 #[tauri::command]
 pub async fn summarize(payload: DirPathPayload) -> Result<String, String> {
     println!("Summarizing...");
     println!("{:?}", payload.path);
     let summary = summarize_dir(payload.path).await;
     match summary {
-        Ok(sum) => {
-            Ok(sum)
-        },
-        Err(err) => Err(err.to_string())
-     
+        Ok(sum) => Ok(sum),
+        Err(err) => Err(err.to_string()),
     }
-  
 }
 
 #[tauri::command]

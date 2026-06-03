@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
-use docx_rust::{DocxError, DocxFile};
-use std::path::Path;
-use docx_rust::document::{BodyContent, Table};
 use crate::models::document::FileChunk;
 use crate::parsers::{chunk_text, TextChunk, MAX_TOKEN_CHUNK};
 use crate::utils::get_token_count;
+use docx_rust::document::{BodyContent, Table};
+use docx_rust::{DocxError, DocxFile};
+use std::path::Path;
 
 pub fn parse_docx_file(path: &Path) -> Result<Vec<TextChunk>, String> {
     println!("parse_docx_file");
@@ -35,16 +35,12 @@ fn gen_docx_chunk(content: &str, chunk_index: i32) -> FileChunk {
     }
 }
 
-fn extract_table_text(table: &Table) -> String {
-    String::new()
-}
-
 fn chunk_docx_file(file: &DocxFile) -> Result<Vec<TextChunk>, String> {
     println!("chunk_docx_file");
 
     let docx = file.parse().map_err(|err| err.to_string())?;
     let full_text = &docx.document.body.text();
-    
+
     if get_token_count(full_text) > MAX_TOKEN_CHUNK {
         Ok(chunk_text(full_text))
     } else {

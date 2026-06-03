@@ -13,6 +13,8 @@ export type WorkspaceSidebarTool = {
 export type DealTimelineTone = "accent" | "error" | "muted" | "primary";
 
 export type DealTimelineItem = {
+  category: string;
+  date: string;
   detail: string;
   id: string;
   timestamp: string;
@@ -86,6 +88,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
         "Synthesis suggests a strong acquisition target based on operational synergies. The automated packing line represents a significant competitive moat, provided the transition risks are mitigated through a phased integration. Alpha Corp's market positioning in the manufacturing sector offers a strategic foothold for expansion into vertical markets.",
       timeline: [
         {
+          category: "Note",
+          date: "2026-10-26",
           detail: '"EBITDA margins improved by 200bps driven by supply chain optimizations..."',
           id: "alpha-note",
           timestamp: "Today, 10:30 AM",
@@ -93,6 +97,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "accent",
         },
         {
+          category: "Risk",
+          date: "2026-10-25",
           detail: "Pending EPA litigation in Sector 7 facility.",
           id: "alpha-risk",
           timestamp: "Yesterday, 4:15 PM",
@@ -100,6 +106,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "error",
         },
         {
+          category: "Site Visit",
+          date: "2026-10-24",
           detail: "Uploaded and auto-transcribed. 4 highlights added.",
           id: "alpha-transcript",
           timestamp: "Oct 24, 2:00 PM",
@@ -107,6 +115,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "primary",
         },
         {
+          category: "Milestone",
+          date: "2026-10-22",
           detail: "Project kickoff.",
           id: "alpha-kickoff",
           timestamp: "Oct 22, 9:00 AM",
@@ -146,6 +156,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
         "Beta appears compelling if channel dependence can be reshaped through contract renegotiation and a staged digital integration plan. The upside is concentrated in operating discipline rather than pure topline acceleration, which makes execution readiness the central investment variable.",
       timeline: [
         {
+          category: "Legal Review",
+          date: "2026-10-26",
           detail: "Contract renewal draft shows tighter minimum-volume thresholds for the largest distributor.",
           id: "beta-legal",
           timestamp: "Today, 9:10 AM",
@@ -153,6 +165,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "accent",
         },
         {
+          category: "Risk",
+          date: "2026-10-25",
           detail: "ERP testing backlog grew by 14 unresolved items this week.",
           id: "beta-tech",
           timestamp: "Yesterday, 2:45 PM",
@@ -160,6 +174,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "error",
         },
         {
+          category: "Memo",
+          date: "2026-10-25",
           detail: "Commercial diligence memo uploaded with notes from the revenue operations lead.",
           id: "beta-memo",
           timestamp: "Oct 25, 1:15 PM",
@@ -167,6 +183,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "primary",
         },
         {
+          category: "Access",
+          date: "2026-10-23",
           detail: "External data room permissions approved for counsel.",
           id: "beta-room",
           timestamp: "Oct 23, 11:20 AM",
@@ -206,6 +224,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
         "The merger can unlock strong density economics if the organization avoids forcing integration ahead of depot-level readiness. The highest value is in rationalizing overlapping routes and maintenance spend, but only if labor relations and customer service continuity are tightly managed.",
       timeline: [
         {
+          category: "Model",
+          date: "2026-10-26",
           detail: "Network model now identifies 12 overlapping lanes with same-day consolidation potential.",
           id: "logistics-network",
           timestamp: "Today, 8:25 AM",
@@ -213,6 +233,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "accent",
         },
         {
+          category: "Risk",
+          date: "2026-10-25",
           detail: "Two depots require separate labor consultations before schedule redesign.",
           id: "logistics-labor",
           timestamp: "Yesterday, 5:05 PM",
@@ -220,6 +242,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "error",
         },
         {
+          category: "Operations",
+          date: "2026-10-24",
           detail: "Operations leads added comments on cross-dock throughput assumptions.",
           id: "logistics-ops",
           timestamp: "Oct 24, 3:40 PM",
@@ -227,6 +251,8 @@ export const workspaceDeals: WorkspaceDeal[] = [
           tone: "primary",
         },
         {
+          category: "Milestone",
+          date: "2026-10-21",
           detail: "Merger workspace created and baseline files imported.",
           id: "logistics-start",
           timestamp: "Oct 21, 10:00 AM",

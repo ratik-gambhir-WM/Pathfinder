@@ -1,14 +1,17 @@
-use std::{env, fs};
-use std::path::{Path, PathBuf};
-use base64::Engine;
-use base64::engine::general_purpose;
-use crate::models::document::{ParsedFileData, ParsedFileData2};
-use crate::parsers::TextChunk;
-use crate::parsers::gen_parsed_file;
-use walkdir::WalkDir;
 use crate::clients::openai::{OpenAiClient, ResponsesFileInput};
-use crate::common::{build_summary_prompt, display_relative_path, infer_supported_mime_type, write_summary, CollectedFile};
+use crate::common::{
+    build_summary_prompt, display_relative_path, infer_supported_mime_type, write_summary,
+    CollectedFile,
+};
+use crate::models::document::{ParsedFileData, ParsedFileData2};
+use crate::parsers::gen_parsed_file;
+use crate::parsers::TextChunk;
 use crate::utils::openai_api_key;
+use base64::engine::general_purpose;
+use base64::Engine;
+use std::path::{Path, PathBuf};
+use std::{env, fs};
+use walkdir::WalkDir;
 
 pub enum ParsedFile {
     Docx(ParsedFileData),
@@ -24,7 +27,6 @@ pub enum DirectoryFile {
     Image(ParsedFileData),
 }
 
-
 const DEFAULT_DOCUMENT_SUMMARY_MODEL: &str = "gpt-5.5";
 const MAX_FILE_BYTES: usize = 50 * 1024 * 1024;
 const MAX_TOTAL_REQUEST_FILE_BYTES: usize = 50 * 1024 * 1024;
@@ -35,7 +37,6 @@ of the full document set, call out important details from individual files when 
 any gaps, contradictions, or follow-up questions. If some files were skipped, mention the impact.
 
 Use Markdown with short sections and clear headings."#;
-
 
 pub fn parse_docx_file(path: &Path) -> Result<Vec<TextChunk>, String> {
     crate::parsers::docx::parse_docx_file(path)
@@ -82,7 +83,6 @@ pub async fn summarize_dir(path: String) -> Result<String, String> {
 
     Ok(summary)
 }
-
 
 fn collect_dir_content(root: &Path) -> Result<(Vec<CollectedFile>, Vec<String>), String> {
     let mut files = Vec::new();
@@ -162,13 +162,14 @@ fn collect_dir_content(root: &Path) -> Result<(Vec<CollectedFile>, Vec<String>),
     Ok((files, skipped_files))
 }
 
-
-fn collect_supported_files(root: &Path, to_chunk: Option<bool>) -> Result<(Vec<ParsedFileData2>, Vec<String>), String> {
+fn collect_supported_files(
+    root: &Path,
+    to_chunk: Option<bool>,
+) -> Result<(Vec<ParsedFileData2>, Vec<String>), String> {
     let mut files: Vec<ParsedFileData2> = Vec::new();
     let mut skipped_files: Vec<String> = Vec::new();
     let mut total_file_bytes = 0usize;
     let mut total_limit_reached = false;
-
 
     for entry in WalkDir::new(root).into_iter().filter_map(Result::ok) {
         if !entry.file_type().is_file() {
@@ -193,9 +194,7 @@ fn collect_supported_files(root: &Path, to_chunk: Option<bool>) -> Result<(Vec<P
         }
 
         if file_size_bytes > MAX_FILE_BYTES {
-            skipped_files.push(format!(
-                "{str} (skipped: file exceeds 50 MB limit)"
-            ));
+            skipped_files.push(format!("{str} (skipped: file exceeds 50 MB limit)"));
             continue;
         }
 
@@ -213,5 +212,3 @@ fn collect_supported_files(root: &Path, to_chunk: Option<bool>) -> Result<(Vec<P
     }
     Ok((files, skipped_files))
 }
-
-

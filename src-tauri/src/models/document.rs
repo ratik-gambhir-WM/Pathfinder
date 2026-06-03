@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::parsers::TextChunk;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParsedFileData {
@@ -27,8 +27,6 @@ pub struct ParsedFileData2 {
     pub total_chunks: i64,
     pub file_chunks: Vec<TextChunk>,
 }
-
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileChunk {

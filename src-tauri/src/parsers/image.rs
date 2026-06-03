@@ -2,17 +2,12 @@
 
 use std::{env, fs, path::Path};
 
-use crate::{
-    clients::openai::{OpenAiClient, ResponsesFileInput},
-    models::document::ImageEmbeddingResult,
-    utils::openai_api_key,
-};
+use crate::clients::openai::{OpenAiClient, ResponsesFileInput};
 use base64::{engine::general_purpose, Engine as _};
 
 const DEFAULT_IMAGE_DESCRIPTION_MODEL: &str = "gpt-5.4";
-const DEFAULT_EMBEDDING_MODEL: &str = "text-embedding-3-small";
 
-const IMAGE_EMBEDDING_SUMMARY_PROMPT: &str = r#"Create a dense, retrieval-optimized description of this image for vector search.
+const IMAGE_DESCRIPTION_PROMPT: &str = r#"Create a dense, retrieval-optimized description of this image for vector search.
 
 Focus on stable visual facts that would help someone find this image later:
 - primary subjects, objects, people, setting, scene type, visible text, charts, document layout, brand/product clues, colors, style, and notable relationships
@@ -21,55 +16,38 @@ Focus on stable visual facts that would help someone find this image later:
 
 Return one concise paragraph, roughly 80-160 words."#;
 
-pub async fn describe_and_embed_image_file(
+pub async fn describe_image_file(
     image_path: &Path,
-    openai_client: &reqwest::Client,
-) -> Result<ImageEmbeddingResult, String> {
+    openai_client: &OpenAiClient<'_>,
+) -> Result<String, String> {
     let image = fs::read(image_path)
         .map_err(|err| format!("failed to read image file {}: {err}", image_path.display()))?;
     let mime_type = infer_image_mime_type(image_path)?;
 
-    describe_and_embed_image(image, mime_type, openai_client).await
+    describe_image(&image, mime_type, openai_client).await
 }
 
-pub async fn describe_and_embed_image(
-    image: Vec<u8>,
+pub async fn describe_image(
+    image: &[u8],
     mime_type: &str,
-    openai_client: &reqwest::Client,
-) -> Result<ImageEmbeddingResult, String> {
+    openai_client: &OpenAiClient<'_>,
+) -> Result<String, String> {
     if image.is_empty() {
-        return Err("cannot describe and embed an empty image".to_string());
+        return Err("cannot describe an empty image".to_string());
     }
 
     let normalized_mime_type = normalize_image_mime_type(mime_type)?;
-    let description = describe_image(&image, normalized_mime_type, openai_client).await?;
-    let embedding = embed_description(&description, openai_client).await?;
-
-    Ok(ImageEmbeddingResult {
-        image,
-        description,
-        embedding,
-    })
-}
-
-async fn describe_image(
-    image: &[u8],
-    mime_type: &str,
-    _openai_client: &reqwest::Client,
-) -> Result<String, String> {
-    let api_key = openai_api_key()?;
-    let client = OpenAiClient::new(&api_key);
     let model = env::var("OPENAI_IMAGE_DESCRIPTION_MODEL")
         .unwrap_or_else(|_| DEFAULT_IMAGE_DESCRIPTION_MODEL.to_string());
     let image_base64 = general_purpose::STANDARD.encode(image);
     let file_inputs = [ResponsesFileInput::ImageData {
-        mime_type,
+        mime_type: normalized_mime_type,
         data_base64: image_base64.as_str(),
         detail: Some("auto"),
     }];
-    let description = client
+    let description = openai_client
         .gen_model_response_with_files(
-            Some(IMAGE_EMBEDDING_SUMMARY_PROMPT),
+            Some(IMAGE_DESCRIPTION_PROMPT),
             None,
             Some(&model),
             Some(&file_inputs),
@@ -82,22 +60,6 @@ async fn describe_image(
     }
 
     Ok(description)
-}
-
-async fn embed_description(
-    description: &str,
-    _openai_client: &reqwest::Client,
-) -> Result<Vec<f64>, String> {
-    if description.trim().is_empty() {
-        return Err("cannot embed an empty image description".to_string());
-    }
-
-    let api_key = openai_api_key()?;
-    let client = OpenAiClient::new(&api_key);
-    let model =
-        env::var("OPENAI_EMBEDDING_MODEL").unwrap_or_else(|_| DEFAULT_EMBEDDING_MODEL.to_string());
-
-    client.gen_embedding(description, Some(&model)).await
 }
 
 fn infer_image_mime_type(image_path: &Path) -> Result<&'static str, String> {

@@ -1,5 +1,5 @@
 use helix_rs::{HelixDB, HelixDBClient};
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::models::user::{GetUserByEmailInput, InsertUserInput};
@@ -34,15 +34,11 @@ impl HelixClient {
         Ok(())
     }
 
-    pub async fn query_helix<T, K>(
-        &self,
-        query_name: &str,
-        input: T,
-    ) -> Result<K, String>
+    pub async fn query_helix<T, K>(&self, query_name: &str, input: T) -> Result<K, String>
     where
         T: Sync + Serialize,
-        K: DeserializeOwned
-     {
+        K: DeserializeOwned,
+    {
         let result: Value = self
             .helix_db
             .query(query_name, &input)

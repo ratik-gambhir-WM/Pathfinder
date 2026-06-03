@@ -3,6 +3,7 @@ pub mod commands;
 pub mod errors;
 pub mod models;
 pub mod parsers;
+pub mod prompts;
 pub mod services;
 pub mod state;
 pub mod utils;
@@ -10,14 +11,19 @@ pub mod utils;
 pub mod common;
 mod events;
 
-use tauri::menu::{AboutMetadataBuilder, MenuBuilder, SubmenuBuilder};
+use tauri::{
+    menu::{AboutMetadataBuilder, MenuBuilder, SubmenuBuilder},
+    Manager,
+};
 
 use crate::{
     commands::{
-        demo::{login_demo_command, save_markdown_summary, summarize},
+        data_browse::{login_demo_command, save_markdown_summary, summarize},
+        database::database_status,
         users::greet,
     },
     events::register_login_demo_events,
+    state::AppState,
 };
 
 const APP_NAME: &str = "Pathfinder";
@@ -82,6 +88,7 @@ pub fn run() {
         .setup(|app| {
             let menu = build_app_menu(&app.handle())?;
             app.set_menu(menu)?;
+            app.manage(AppState::new(&app.handle())?);
             register_login_demo_events(&app.handle());
             Ok(())
         })
@@ -89,6 +96,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
+            database_status,
             login_demo_command,
             summarize,
             save_markdown_summary

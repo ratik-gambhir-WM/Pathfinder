@@ -8,23 +8,25 @@ import {
   WorkspaceLocationState,
   WorkspaceSidebarTool,
 } from "../../data/workspace";
+import { WestMonroeMark } from "../brand/WestMonroeMark";
 import { Icon } from "../ui/Icon";
 
 type WorkspaceSidebarProps = {
   activeDealId?: string;
   activeHomeSection?: "hub" | "summarize" | "vault";
-  activeSection?: "data-room" | "deal-room";
+  activeSection?: "data-room" | "deal-room" | "timeline";
   deals: WorkspaceDeal[];
   email?: string;
   initiatives?: WorkspaceSidebarTool[];
   mode?: "deal-room" | "home";
   navigationState?: WorkspaceLocationState;
+  onDealRoomSectionChange?: (section: "deal-room" | "timeline") => void;
   tools?: WorkspaceSidebarTool[];
 };
 
 const dealRoomSidebarLinks = [
   { icon: "dashboard" as const, key: "deal-room" as const, label: "Deal Room" },
-  { icon: "timeline" as const, label: "Meeting Timeline" },
+  { icon: "timeline" as const, key: "timeline" as const, label: "Meeting Timeline" },
   { icon: "folderOpen" as const, key: "data-room" as const, label: "Data Room Vault" },
   { icon: "grid" as const, label: "Synthesis Canvas" },
 ];
@@ -38,6 +40,7 @@ export function WorkspaceSidebar({
   initiatives = [],
   mode = "home",
   navigationState,
+  onDealRoomSectionChange,
   tools = [],
 }: WorkspaceSidebarProps) {
   const teamLabel = getTeamLabel(email);
@@ -48,14 +51,12 @@ export function WorkspaceSidebar({
       <div className="flex h-full min-h-0 w-full flex-col p-4">
         <div className="space-y-6">
           <div className="flex items-center gap-4 px-2">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/8 text-primary">
-              <Icon className="h-7 w-7" name="dashboard" />
-            </div>
+            <WestMonroeMark framed />
             <div>
               <h1 className="text-[1.1rem] font-bold leading-tight text-text-main [font-family:var(--font-heading)]">
-                Pathfinder
+                West Monroe
               </h1>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Workspace</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Diligence</p>
             </div>
           </div>
 
@@ -75,8 +76,8 @@ export function WorkspaceSidebar({
                   state={navigationState}
                   to="/hub"
                 >
-                  <Icon className="h-7 w-7" name="dashboard" />
-                  <span className="text-[12px] font-semibold">The Hub</span>
+                  <WestMonroeMark className="h-7 w-7" />
+                  <span className="text-[12px] font-semibold">Pathfinder</span>
                 </NavLink>
               </nav>
 
@@ -108,6 +109,11 @@ export function WorkspaceSidebar({
                 ))}
               </SidebarSection>
 
+              <SidebarSection title="Research">
+                <SidebarLink icon="search" label="Topics" />
+                <SidebarLink icon="timeline" label="Recent" />
+              </SidebarSection>
+
               <div className="border-t border-white/40 pt-6">
                 <nav className="space-y-1">
                   {tools.map((item) => (
@@ -126,7 +132,7 @@ export function WorkspaceSidebar({
           ) : (
             <nav className="space-y-2">
               {dealRoomSidebarLinks.map((link) => {
-                if (activeDeal && "key" in link) {
+                if (activeDeal && "key" in link && link.key !== "timeline") {
                   const destination = link.key === "deal-room" ? getDealRoomPath(activeDeal.room.id) : getDataRoomPath(activeDeal.room.id);
 
                   return (
@@ -140,12 +146,29 @@ export function WorkspaceSidebar({
                         ].join(" ")
                       }
                       key={link.label}
+                      onClick={() => {
+                        if (link.key === "deal-room") {
+                          onDealRoomSectionChange?.("deal-room");
+                        }
+                      }}
                       state={navigationState}
                       to={destination}
                     >
                       <Icon className="h-6 w-6" name={link.icon} />
                       <span className="text-[12px] font-semibold">{link.label}</span>
                     </NavLink>
+                  );
+                }
+
+                if ("key" in link && link.key === "timeline") {
+                  return (
+                    <SidebarStaticItem
+                      active={activeSection === "timeline"}
+                      icon={link.icon}
+                      key={link.label}
+                      label={link.label}
+                      onClick={() => onDealRoomSectionChange?.("timeline")}
+                    />
                   );
                 }
 
@@ -190,7 +213,7 @@ function SidebarSection({ children, title }: SidebarSectionProps) {
 type SidebarLinkProps = {
   homeSection?: "hub" | "summarize" | "vault";
   href?: string;
-  icon: "personSearch" | "terminal" | "timeline" | "folderOpen" | "sparkles";
+  icon: "personSearch" | "terminal" | "timeline" | "folderOpen" | "sparkles" | "search";
   label: string;
   navigationState?: WorkspaceLocationState;
 };
@@ -231,18 +254,26 @@ function SidebarLink({ homeSection, href, icon, label, navigationState }: Sideba
 }
 
 type SidebarStaticItemProps = {
+  active?: boolean;
   icon: "dashboard" | "folderOpen" | "grid" | "timeline";
   label: string;
+  onClick?: () => void;
 };
 
-function SidebarStaticItem({ icon, label }: SidebarStaticItemProps) {
+function SidebarStaticItem({ active = false, icon, label, onClick }: SidebarStaticItemProps) {
   return (
     <button
-      className="flex w-full items-center gap-3 rounded-[22px] px-5 py-4 text-left text-text-main transition hover:bg-white/40"
+      className={[
+        "flex w-full items-center gap-3 rounded-[22px] px-5 py-4 text-left transition",
+        active
+          ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(74,124,88,0.06)]"
+          : "text-text-main hover:bg-white/40",
+      ].join(" ")}
+      onClick={onClick}
       type="button"
     >
-      <Icon className="h-6 w-6 text-muted" name={icon} />
-      <span className="text-[12px] font-medium">{label}</span>
+      <Icon className={`h-6 w-6 ${active ? "text-current" : "text-muted"}`} name={icon} />
+      <span className={`text-[12px] ${active ? "font-semibold" : "font-medium"}`}>{label}</span>
     </button>
   );
 }

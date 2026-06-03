@@ -5,13 +5,13 @@ use pathfinder_lib::{
     utils::openai_api_key,
 };
 
+use pathfinder_lib::common::CollectedFile;
 use std::{
     env, fs,
     path::{Path, PathBuf},
     process,
 };
 use walkdir::WalkDir;
-use pathfinder_lib::common::CollectedFile;
 
 const APP_NAME: &str = "DataRoomCLI";
 const DEFAULT_DOCUMENT_SUMMARY_MODEL: &str = "gpt-5.5";
@@ -24,8 +24,6 @@ of the full document set, call out important details from individual files when 
 any gaps, contradictions, or follow-up questions. If some files were skipped, mention the impact.
 
 Use Markdown with short sections and clear headings."#;
-
-
 
 #[tokio::main]
 async fn main() {
@@ -79,13 +77,12 @@ Commands:
 
 async fn parse_docx(path: String) -> Result<(), String> {
     let path: &Path = Path::new(&path);
-   let chunks = parse_docx_file(path).map_err(|err| err.to_string())?;
+    let chunks = parse_docx_file(path).map_err(|err| err.to_string())?;
     for chunk in chunks {
         println!("CHUNK")
     }
     Ok(())
 }
-
 
 async fn summarize_dir(path: String) -> Result<(), String> {
     let root = PathBuf::from(&path);

@@ -1,23 +1,31 @@
 pub mod docx;
 pub mod image;
+pub mod powerpoint;
 pub mod spreadsheet;
 
 use crate::clients::helix::HelixClient;
 use crate::models::document::{FileChunk, ParsedFileData, ParsedFileData2};
-use crate::parsers::docx::{parse_docx_file};
+use crate::parsers::docx::parse_docx_file;
+use crate::parsers::powerpoint::parse_powerpoint_file;
 use crate::utils::get_token_count;
 use base64::Engine;
 
-
 use std::path::Path;
 use std::{env, fs, process};
-use walkdir::{WalkDir, DirEntry};
+use walkdir::{DirEntry, WalkDir};
 
 pub(crate) const MAX_TOKEN_CHUNK: usize = 800;
 
 pub struct TextChunk {
     chunk_index: i32,
     content: String,
+}
+
+enum DataFile {
+    Docx(String),
+    Powerpoint(String),
+    Image(String),
+    Spreadsheet(String),
 }
 
 fn build_text_chunk(content: &str, chunk_index: i32) -> TextChunk {
@@ -27,19 +35,32 @@ fn build_text_chunk(content: &str, chunk_index: i32) -> TextChunk {
     }
 }
 
-
 fn get_file_type(path: Box<Path>) -> String {
     let extension = path
         .extension()
         .and_then(|extension| extension.to_str())
         .map(|extension| extension.to_ascii_lowercase());
 
-    extension.unwrap_or_else(|| {
-        String::new()
-    })
-
+    extension.unwrap_or_else(|| String::new())
 }
 
+fn gen_file_type(path: Box<&Path>) -> Result<DataFile, String> {
+    match path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .map(|extension| extension.to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("docx") => Ok(DataFile::Docx(String::new())),
+        Some("pptx") | Some("ppt") => Ok(DataFile::Powerpoint(String::new())),
+        Some("jpg") | Some("jpeg") | Some("png") => Ok(DataFile::Image(String::new())),
+        Some("xslx") => Ok(DataFile::Spreadsheet(String::new())),
+        Some(extension) => Err(format!(
+            "unsupported image extension .{extension}; expected png, jpg, jpeg, webp, or gif"
+        )),
+        None => Err("COULD NOT READ FILE TYPE".to_owned()),
+    }
+}
 
 fn gen_file_metadata(path: &Path, chunks: Vec<TextChunk>) -> ParsedFileData2 {
     let file_type = get_file_type(Box::from(path));
@@ -49,7 +70,8 @@ fn gen_file_metadata(path: &Path, chunks: Vec<TextChunk>) -> ParsedFileData2 {
     let filename = path
         .file_name()
         .and_then(|name| name.to_str())
-        .ok_or_else(|| format!("failed to derive filename from {}", path.display())).unwrap();
+        .ok_or_else(|| format!("failed to derive filename from {}", path.display()))
+        .unwrap();
     ParsedFileData2 {
         file_id: "".to_string(),
         file_name: filename.to_string(),
@@ -65,15 +87,29 @@ fn gen_file_metadata(path: &Path, chunks: Vec<TextChunk>) -> ParsedFileData2 {
 }
 
 #[allow(dead_code)]
-pub fn gen_parsed_file(
-    file: DirEntry,
-    to_chunk: Option<bool>
-) -> ParsedFileData2 {
+pub fn gen_parsed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedFileData2 {
     let path = file.path();
     let mut chunks: Vec<TextChunk> = Vec::new();
     if matches!(to_chunk, Some(true)) {
         let parsed = parse_docx_file(&path);
-     chunks = parsed.unwrap_or_else(|_| Vec::new())
+        chunks = parsed.unwrap_or_else(|_| Vec::new())
+    }
+    println!("{}", path.display());
+    gen_file_metadata(path, chunks)
+}
+
+pub fn parse_typed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedFileData2 {
+    let path = file.path();
+    let typed_file = gen_file_type(Box::new(path));
+    let mut chunks: Vec<TextChunk> = Vec::new();
+    if matches!(to_chunk, Some(true)) {
+        chunks = match typed_file {
+            Ok(DataFile::Docx(_)) => parse_docx_file(path).unwrap_or_else(|_| Vec::new()),
+            Ok(DataFile::Powerpoint(_)) => {
+                parse_powerpoint_file(path).unwrap_or_else(|_| Vec::new())
+            }
+            _ => Vec::new(),
+        };
     }
     println!("{}", path.display());
     gen_file_metadata(path, chunks)
@@ -100,7 +136,6 @@ fn split_by_chunk_limit(content: &str, chunk_limit: usize) -> Vec<String> {
         .map(|chunk| chunk.iter().collect::<String>())
         .collect::<Vec<String>>()
 }
-
 
 fn read_and_encode_file(path: Box<Path>) -> Result<String, String> {
     let file_extension = path.extension().unwrap().to_str();
