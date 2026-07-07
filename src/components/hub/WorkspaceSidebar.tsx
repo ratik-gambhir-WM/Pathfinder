@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   getDataRoomPath,
@@ -8,6 +8,7 @@ import {
   WorkspaceLocationState,
   WorkspaceSidebarTool,
 } from "../../data/workspace";
+import { useThemeMode } from "../../hooks/useThemeMode";
 import { WestMonroeMark } from "../brand/WestMonroeMark";
 import { Icon } from "../ui/Icon";
 
@@ -43,6 +44,7 @@ export function WorkspaceSidebar({
   onDealRoomSectionChange,
   tools = [],
 }: WorkspaceSidebarProps) {
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const teamLabel = getTeamLabel(email);
   const activeDeal = deals.find((deal) => deal.room.id === activeDealId) ?? deals[0];
 
@@ -73,7 +75,7 @@ export function WorkspaceSidebar({
                     [
                       "flex items-center gap-3 rounded-[22px] px-5 py-4 transition",
                       isActive && activeHomeSection === "hub"
-                        ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(74,124,88,0.06)]"
+                        ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(80,101,142,0.12)]"
                         : "text-text-main hover:bg-white/40",
                     ].join(" ")
                   }
@@ -92,7 +94,7 @@ export function WorkspaceSidebar({
                     className={({ isActive }) =>
                       [
                         "flex items-center justify-between rounded-2xl px-5 py-3 transition",
-                        isActive ? "bg-white/58 shadow-[0_12px_30px_rgba(28,40,38,0.06)]" : "hover:bg-white/40",
+                        isActive ? "bg-white/58 shadow-[0_12px_30px_rgba(7,1,84,0.06)]" : "hover:bg-white/40",
                       ].join(" ")
                     }
                     key={deal.room.id}
@@ -146,7 +148,7 @@ export function WorkspaceSidebar({
                         [
                           "flex items-center gap-3 rounded-[22px] px-5 py-4 transition",
                           activeSection === link.key
-                            ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(74,124,88,0.06)]"
+                            ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(80,101,142,0.12)]"
                             : "text-text-main hover:bg-white/40",
                         ].join(" ")
                       }
@@ -184,20 +186,72 @@ export function WorkspaceSidebar({
         </div>
 
         <div className="mt-auto pt-6">
-          <div className="flex items-center gap-4 rounded-2xl px-4 py-3 transition hover:bg-white/40">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary-fixed-dim text-white">
-              <span className="text-lg font-semibold">{teamLabel.slice(0, 1)}</span>
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-[17px] font-medium text-text-main">{teamLabel}</p>
-              <p className="truncate text-[12px] font-semibold text-secondary">
-                {mode === "deal-room" && activeDeal ? activeDeal.room.name : "Focus: Project Alpha"}
-              </p>
-            </div>
+          <div className="relative">
+            {profileMenuOpen ? <ProfilePreferences /> : null}
+            <button
+              aria-expanded={profileMenuOpen}
+              aria-haspopup="menu"
+              className="flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left transition hover:bg-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
+              onClick={() => setProfileMenuOpen((isOpen) => !isOpen)}
+              type="button"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary-fixed-dim text-white">
+                <span className="text-lg font-semibold">{teamLabel.slice(0, 1)}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-[17px] font-medium text-text-main">{teamLabel}</p>
+                <p className="truncate text-[12px] font-semibold text-secondary">
+                  {mode === "deal-room" && activeDeal ? activeDeal.room.name : "Focus: Project Alpha"}
+                </p>
+              </div>
+            </button>
           </div>
         </div>
       </div>
     </aside>
+  );
+}
+
+function ProfilePreferences() {
+  const { setThemeMode, themeMode } = useThemeMode();
+
+  return (
+    <div
+      className="absolute bottom-full left-0 z-20 mb-3 w-full rounded-2xl border border-outline-variant bg-white p-3 shadow-[0_18px_44px_rgba(7,1,84,0.12)]"
+      role="menu"
+    >
+      <div className="space-y-3">
+        <p className="px-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">Theme</p>
+        <div className="grid grid-cols-2 gap-1 rounded-full border border-outline-variant bg-surface-container-high p-1">
+          <ThemeModeButton active={themeMode === "slate-frost"} label="Slate" onClick={() => setThemeMode("slate-frost")} />
+          <ThemeModeButton active={themeMode === "dark"} label="Dark" onClick={() => setThemeMode("dark")} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type ThemeModeButtonProps = {
+  active: boolean;
+  disabled?: boolean;
+  label: string;
+  onClick: () => void;
+};
+
+function ThemeModeButton({ active, disabled = false, label, onClick }: ThemeModeButtonProps) {
+  return (
+    <button
+      aria-pressed={active}
+      className={[
+        "h-9 rounded-full text-[12px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed disabled:cursor-not-allowed disabled:opacity-45",
+        active ? "bg-primary-container text-on-primary-container shadow-[0_6px_16px_rgba(7,1,84,0.16)]" : "text-primary hover:bg-white",
+      ].join(" ")}
+      disabled={disabled}
+      onClick={onClick}
+      type="button"
+    >
+      {label}
+    </button>
   );
 }
 
@@ -233,7 +287,7 @@ function SidebarLink({ homeSection, href, icon, label, navigationState }: Sideba
           [
             "flex w-full items-center gap-4 rounded-2xl px-5 py-3 text-left transition",
             isActive && (!isVaultLink || homeSection === "vault")
-              ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(74,124,88,0.06)]"
+              ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(80,101,142,0.12)]"
               : "text-text-main hover:bg-white/40",
           ].join(" ")
         }
@@ -271,7 +325,7 @@ function SidebarStaticItem({ active = false, icon, label, onClick }: SidebarStat
       className={[
         "flex w-full items-center gap-3 rounded-[22px] px-5 py-4 text-left transition",
         active
-          ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(74,124,88,0.06)]"
+          ? "border border-primary/20 bg-primary/8 text-primary shadow-[inset_0_0_0_1px_rgba(80,101,142,0.12)]"
           : "text-text-main hover:bg-white/40",
       ].join(" ")}
       onClick={onClick}

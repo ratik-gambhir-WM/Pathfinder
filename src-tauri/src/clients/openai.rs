@@ -100,6 +100,97 @@ impl<'a> OpenAiClient<'a> {
             .ok_or_else(|| "OpenAI responses API did not include output text".to_string())
     }
 
+    pub async fn gen_model_response_with_files_streaming<F>(
+        &self,
+        prompt: Option<&str>,
+        system_instructions: Option<&str>,
+        model: Option<&str>,
+        file_inputs: Option<&[ResponsesFileInput<'_>]>,
+        mut on_text_delta: F,
+    ) -> Result<String, String>
+    where
+        F: FnMut(&str) + Send,
+    {
+        let openai_client = reqwest::Client::new();
+        let prompt = prompt.unwrap_or(DEFAULT_RESPONSES_PROMPT).trim();
+        let system_instructions = system_instructions
+            .unwrap_or(DEFAULT_SYSTEM_INSTRUCTIONS)
+            .trim();
+        let model = model.unwrap_or(DEFAULT_RESPONSES_MODEL).trim();
+
+        if prompt.is_empty() {
+            return Err("prompt cannot be empty".to_string());
+        }
+
+        if system_instructions.is_empty() {
+            return Err("system instructions cannot be empty".to_string());
+        }
+
+        if model.is_empty() {
+            return Err("model cannot be empty".to_string());
+        }
+
+        let mut request_body =
+            build_responses_request_body(model, system_instructions, prompt, file_inputs)?;
+        request_body["stream"] = json!(true);
+
+        let mut response = openai_client
+            .post("https://api.openai.com/v1/responses")
+            .bearer_auth(self.api_key)
+            .json(&request_body)
+            .send()
+            .await
+            .map_err(|err| format!("failed to call OpenAI responses API: {err}"))?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let response_body = response
+                .text()
+                .await
+                .map_err(|err| format!("failed to read OpenAI responses response: {err}"))?;
+            return Err(format!(
+                "OpenAI responses API returned {status}: {response_body}"
+            ));
+        }
+
+        let mut pending = String::new();
+        let mut streamed_text = String::new();
+        let mut completed_text = None;
+
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|err| format!("failed to read OpenAI responses stream chunk: {err}"))?
+        {
+            let chunk_text = std::str::from_utf8(&chunk)
+                .map_err(|err| format!("OpenAI responses stream contained invalid UTF-8: {err}"))?;
+            pending.push_str(chunk_text);
+            process_sse_events(
+                &mut pending,
+                &mut streamed_text,
+                &mut completed_text,
+                &mut on_text_delta,
+            )?;
+        }
+
+        if !pending.trim().is_empty() {
+            process_sse_event(
+                &pending,
+                &mut streamed_text,
+                &mut completed_text,
+                &mut on_text_delta,
+            )?;
+        }
+
+        if !streamed_text.trim().is_empty() {
+            return Ok(streamed_text);
+        }
+
+        completed_text
+            .filter(|text| !text.trim().is_empty())
+            .ok_or_else(|| "OpenAI responses stream did not include output text".to_string())
+    }
+
     pub async fn gen_file_embeddings(&self, content: &str) -> Result<(), String> {
         let embedding = self.gen_embedding(content, None).await?;
         let embedded_at = Utc::now().to_rfc3339();
@@ -301,6 +392,89 @@ fn build_input_item(file_input: &ResponsesFileInput<'_>) -> Result<Value, String
 
 fn build_base64_data_url(mime_type: &str, data_base64: &str) -> String {
     format!("data:{mime_type};base64,{data_base64}")
+}
+
+fn process_sse_events<F>(
+    pending: &mut String,
+    streamed_text: &mut String,
+    completed_text: &mut Option<String>,
+    on_text_delta: &mut F,
+) -> Result<(), String>
+where
+    F: FnMut(&str),
+{
+    while let Some((event_end, separator_len)) = find_sse_event_boundary(pending) {
+        let raw_event = pending[..event_end].to_string();
+        pending.drain(..event_end + separator_len);
+        process_sse_event(&raw_event, streamed_text, completed_text, on_text_delta)?;
+    }
+
+    Ok(())
+}
+
+fn find_sse_event_boundary(pending: &str) -> Option<(usize, usize)> {
+    match (pending.find("\n\n"), pending.find("\r\n\r\n")) {
+        (Some(lf_index), Some(crlf_index)) if crlf_index < lf_index => Some((crlf_index, 4)),
+        (Some(lf_index), _) => Some((lf_index, 2)),
+        (None, Some(crlf_index)) => Some((crlf_index, 4)),
+        (None, None) => None,
+    }
+}
+
+fn process_sse_event<F>(
+    raw_event: &str,
+    streamed_text: &mut String,
+    completed_text: &mut Option<String>,
+    on_text_delta: &mut F,
+) -> Result<(), String>
+where
+    F: FnMut(&str),
+{
+    let data = raw_event
+        .lines()
+        .filter_map(|line| {
+            let line = line.trim_end_matches('\r');
+            line.strip_prefix("data:").map(str::trim_start)
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    if data.trim().is_empty() || data.trim() == "[DONE]" {
+        return Ok(());
+    }
+
+    let event_json: Value = serde_json::from_str(&data)
+        .map_err(|err| format!("failed to parse OpenAI responses stream event: {err}"))?;
+
+    if let Some(delta) = extract_response_stream_delta(&event_json) {
+        streamed_text.push_str(&delta);
+        on_text_delta(&delta);
+    }
+
+    if matches!(
+        event_json.get("type").and_then(Value::as_str),
+        Some("response.completed")
+    ) {
+        if let Some(text) = event_json
+            .get("response")
+            .and_then(extract_response_text)
+            .filter(|text| !text.trim().is_empty())
+        {
+            *completed_text = Some(text);
+        }
+    }
+
+    Ok(())
+}
+
+fn extract_response_stream_delta(event_json: &Value) -> Option<String> {
+    match event_json.get("type").and_then(Value::as_str) {
+        Some("response.output_text.delta") | Some("response.refusal.delta") => event_json
+            .get("delta")
+            .and_then(Value::as_str)
+            .map(ToString::to_string),
+        _ => None,
+    }
 }
 
 fn infer_file_mime_type(path: &Path) -> &'static str {
@@ -571,5 +745,50 @@ mod tests {
         });
 
         assert_eq!(extract_response_text(&response_json), None);
+    }
+
+    #[test]
+    fn process_sse_event_collects_output_text_delta() {
+        let raw_event = r#"event: response.output_text.delta
+data: {"type":"response.output_text.delta","delta":"Hello"}
+"#;
+        let mut streamed_text = String::new();
+        let mut completed_text = None;
+        let mut deltas = Vec::new();
+
+        process_sse_event(
+            raw_event,
+            &mut streamed_text,
+            &mut completed_text,
+            &mut |delta| deltas.push(delta.to_string()),
+        )
+        .unwrap();
+
+        assert_eq!(streamed_text, "Hello");
+        assert_eq!(deltas, vec!["Hello"]);
+        assert_eq!(completed_text, None);
+    }
+
+    #[test]
+    fn process_sse_events_handles_crlf_boundaries() {
+        let mut pending =
+            "event: response.output_text.delta\r\ndata: {\"type\":\"response.output_text.delta\",\"delta\":\"Hi\"}\r\n\r\n"
+                .to_string();
+        let mut streamed_text = String::new();
+        let mut completed_text = None;
+        let mut deltas = Vec::new();
+
+        process_sse_events(
+            &mut pending,
+            &mut streamed_text,
+            &mut completed_text,
+            &mut |delta| deltas.push(delta.to_string()),
+        )
+        .unwrap();
+
+        assert!(pending.is_empty());
+        assert_eq!(streamed_text, "Hi");
+        assert_eq!(deltas, vec!["Hi"]);
+        assert_eq!(completed_text, None);
     }
 }

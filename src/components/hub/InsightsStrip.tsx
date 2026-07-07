@@ -56,7 +56,7 @@ function InsightChip({ item }: { item: InsightItem }) {
         <Icon className="h-4 w-4 text-muted opacity-0 transition group-hover:opacity-100" name="openInNew" />
       </div>
 
-      {item.image ? <div className="ml-2 h-20 rounded-xl border border-white/60 bg-[linear-gradient(120deg,rgba(92,128,188,0.22),rgba(74,124,88,0.16),rgba(255,255,255,0.4))]" /> : null}
+      {item.image ? <div className="ml-2 h-20 rounded-xl border border-white/60 bg-[linear-gradient(120deg,rgba(80,101,142,0.22),rgba(206,215,230,0.5),rgba(232,238,248,0.8))]" /> : null}
 
       <p className="line-clamp-3 pl-2 font-heading text-[0.98rem] leading-relaxed text-text-main">{item.quote}</p>
 

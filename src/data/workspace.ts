@@ -271,7 +271,6 @@ export const workspaceInitiatives: WorkspaceSidebarTool[] = [
 
 export const workspaceTools: WorkspaceSidebarTool[] = [
   { icon: "timeline", name: "Meeting Timeline" },
-  { href: "/hub/vault", icon: "folderOpen", name: "Global Vault" },
   { href: "/hub/summarize", icon: "sparkles", name: "Summarize" },
 ];
 

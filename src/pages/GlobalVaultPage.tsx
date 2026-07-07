@@ -1,5 +1,6 @@
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { WorkspaceHomeShell } from "../components/hub/WorkspaceHomeShell";
 import { Icon } from "../components/ui/Icon";
 
@@ -18,7 +19,7 @@ export function GlobalVaultPage() {
     <WorkspaceHomeShell activeHomeSection="vault">
       <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 pb-10">
         <header className="space-y-3">
-          <div className="inline-flex w-fit items-center gap-3 rounded-full border border-white/80 bg-white/70 px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-primary shadow-[0_8px_20px_rgba(28,40,38,0.05)]">
+          <div className="inline-flex w-fit items-center gap-3 rounded-full border border-white/80 bg-white/70 px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-primary shadow-[0_8px_20px_rgba(7,1,84,0.05)]">
             <Icon className="h-4 w-4" name="folderOpen" />
             Global Vault
           </div>
@@ -74,7 +75,7 @@ export function GlobalVaultPage() {
           <div className="mt-6 min-h-[220px] rounded-[28px] border border-dashed border-primary/18 bg-white/65 p-6">
             {emptyMarkdown.trim() ? (
               <div className="vault-markdown text-[15px] leading-7 text-text-main">
-                <ReactMarkdown>{emptyMarkdown}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{emptyMarkdown}</ReactMarkdown>
               </div>
             ) : (
               <div className="flex h-full min-h-[172px] items-center justify-center rounded-[22px] bg-surface-container-low/60 px-6 text-center">
@@ -105,7 +106,7 @@ function UploadField({ accept, helperText, label, onChange }: UploadFieldProps) 
       <span className="text-[13px] font-semibold uppercase tracking-[0.14em] text-muted">{label}</span>
       <input
         accept={accept}
-        className="rounded-[22px] border border-primary/16 bg-white px-5 py-4 text-[14px] text-text-main shadow-[0_8px_20px_rgba(28,40,38,0.04)] file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-primary hover:file:bg-primary/14"
+        className="rounded-[22px] border border-primary/16 bg-white px-5 py-4 text-[14px] text-text-main shadow-[0_8px_20px_rgba(7,1,84,0.04)] file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-primary hover:file:bg-primary/14"
         multiple
         onChange={handleChange}
         type="file"
@@ -141,7 +142,7 @@ function DirectoryUploadField({ helperText, label, onChange }: DirectoryUploadFi
     <label className="flex flex-col gap-3">
       <span className="text-[13px] font-semibold uppercase tracking-[0.14em] text-muted">{label}</span>
       <input
-        className="rounded-[22px] border border-primary/16 bg-white px-5 py-4 text-[14px] text-text-main shadow-[0_8px_20px_rgba(28,40,38,0.04)] file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-primary hover:file:bg-primary/14"
+        className="rounded-[22px] border border-primary/16 bg-white px-5 py-4 text-[14px] text-text-main shadow-[0_8px_20px_rgba(7,1,84,0.04)] file:mr-4 file:rounded-full file:border-0 file:bg-primary/10 file:px-4 file:py-2 file:text-[13px] file:font-semibold file:text-primary hover:file:bg-primary/14"
         multiple
         onChange={handleChange}
         ref={inputRef}
@@ -163,7 +164,7 @@ function SelectionDetails({ emptyLabel, selectedItems, totalCount }: SelectionDe
   const remainingCount = Math.max(totalCount - previewItems.length, 0);
 
   return (
-    <div className="rounded-[24px] border border-white/80 bg-white/70 p-5 shadow-[0_8px_20px_rgba(28,40,38,0.04)]">
+    <div className="rounded-[24px] border border-white/80 bg-white/70 p-5 shadow-[0_8px_20px_rgba(7,1,84,0.04)]">
       {totalCount ? (
         <div className="space-y-3">
           <p className="text-[13px] font-semibold text-text-main">

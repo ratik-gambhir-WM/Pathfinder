@@ -2,6 +2,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { FormEvent, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { WestMonroeMark } from "../components/brand/WestMonroeMark";
 import { WorkspaceHomeShell } from "../components/hub/WorkspaceHomeShell";
 import { ChatPanel } from "../components/summarize/ChatPanel";
 import { PanelTab } from "../components/summarize/PanelTab";
@@ -77,7 +79,7 @@ export function SummarizePage() {
     <WorkspaceHomeShell activeHomeSection="summarize">
       <div className="mx-auto flex w-full max-w-[1120px] flex-col pb-10">
         <form
-          className="flex min-h-16 w-full items-center gap-3 rounded-full border border-white/85 bg-white/82 px-6 py-3 text-text-main shadow-[0_12px_34px_rgba(28,40,38,0.07)] backdrop-blur-md"
+          className="flex min-h-16 w-full items-center gap-3 rounded-full border border-white/85 bg-white/82 px-6 py-3 text-text-main shadow-[0_12px_34px_rgba(7,1,84,0.07)] backdrop-blur-md"
           onSubmit={handleSubmit}
         >
           <Icon className="h-6 w-6 shrink-0 text-primary" name="search" />
@@ -111,7 +113,7 @@ export function SummarizePage() {
         </form>
 
         <div className="mt-5 flex justify-center">
-          <div className="inline-flex rounded-full border border-white/85 bg-white/68 p-1 shadow-[0_10px_28px_rgba(28,40,38,0.05)]">
+          <div className="inline-flex rounded-full border border-white/85 bg-white/68 p-1 shadow-[0_10px_28px_rgba(7,1,84,0.05)]">
             <PanelTab active={activePanel === "summary"} icon="sparkles" label="Summary" onClick={() => setActivePanel("summary")} />
             <PanelTab active={activePanel === "chat"} icon="send" label="Chat" onClick={() => setActivePanel("chat")} />
           </div>
@@ -122,7 +124,7 @@ export function SummarizePage() {
             {error ? <p className="px-6 text-[13px] font-semibold text-error">{error}</p> : null}
             {isSummarizing ? <SummaryLoadingState /> : null}
             {summary ? (
-              <div className="vault-markdown relative rounded-[28px] border border-white/85 bg-white/76 p-8 pr-16 text-[15px] leading-7 text-text-main shadow-[0_12px_34px_rgba(28,40,38,0.05)]">
+              <div className="vault-markdown relative rounded-[28px] border border-white/85 bg-white/76 p-8 pr-16 text-[15px] leading-7 text-text-main shadow-[0_12px_34px_rgba(7,1,84,0.05)]">
                 <button
                   aria-label="Save markdown summary"
                   className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full text-primary transition hover:bg-primary/8"
@@ -132,7 +134,7 @@ export function SummarizePage() {
                 >
                   <Icon className="h-5 w-5" name="bookmark" />
                 </button>
-                <ReactMarkdown>{summary}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
               </div>
             ) : null}
           </div>
@@ -146,9 +148,12 @@ export function SummarizePage() {
 
 function SummaryLoadingState() {
   return (
-    <div className="flex min-h-[220px] items-center justify-center rounded-[28px] border border-white/85 bg-white/64 shadow-[0_12px_34px_rgba(28,40,38,0.05)] backdrop-blur-md">
-      <div className="flex items-center gap-4 text-primary">
-        <span className="h-7 w-7 animate-spin rounded-full border-2 border-primary/18 border-t-primary" />
+    <div className="flex min-h-[220px] items-center justify-center rounded-[28px] border border-white/85 bg-white/64 shadow-[0_12px_34px_rgba(7,1,84,0.05)] backdrop-blur-md">
+      <div className="flex flex-col items-center gap-4 text-primary">
+        <div className="wm-loading-mark relative flex h-20 w-20 items-center justify-center rounded-full bg-surface-container-high">
+          <span className="wm-loading-orbit absolute inset-0 rounded-full border border-primary/20" />
+          <WestMonroeMark className="h-12 w-12" />
+        </div>
         <span className="text-[14px] font-semibold">Summarizing documents...</span>
       </div>
     </div>

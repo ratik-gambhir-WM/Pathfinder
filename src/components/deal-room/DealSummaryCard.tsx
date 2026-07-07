@@ -8,8 +8,8 @@ type DealSummaryCardProps = {
 
 export function DealSummaryCard({ deal }: DealSummaryCardProps) {
   return (
-    <WorkspaceCard className="relative col-span-12 overflow-hidden rounded-[28px] bg-[rgba(248,250,245,0.9)] p-8 lg:p-10 xl:col-span-8">
-      <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-primary/6 blur-3xl" />
+    <WorkspaceCard className="relative col-span-12 overflow-hidden rounded-[28px] bg-surface-container-low p-8 lg:p-10 xl:col-span-8">
+      <div className="workspace-card-glow pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-primary/6 blur-3xl" />
 
       <div className="relative z-10 flex h-full flex-col gap-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:justify-between">
@@ -29,7 +29,7 @@ export function DealSummaryCard({ deal }: DealSummaryCardProps) {
             <p className="max-w-2xl text-[1.05rem] leading-8 text-text-main/90">{deal.summary}</p>
           </div>
 
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/90 bg-white/80 text-primary shadow-[0_10px_24px_rgba(28,40,38,0.06)]">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/90 bg-white/80 text-primary shadow-[0_10px_24px_rgba(7,1,84,0.06)]">
             <Icon className="h-8 w-8" name="dataset" />
           </div>
         </div>

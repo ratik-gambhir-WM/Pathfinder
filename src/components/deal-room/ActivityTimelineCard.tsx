@@ -45,7 +45,7 @@ export function ActivityTimelineCard({ className = "col-span-12 flex min-h-[540p
 
             return (
               <article className="flex gap-4" key={item.id}>
-                <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/90 bg-white/85 shadow-[0_8px_18px_rgba(28,40,38,0.06)]">
+                <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/90 bg-white/85 shadow-[0_8px_18px_rgba(7,1,84,0.06)]">
                   <span className={`h-3.5 w-3.5 rounded-full ${tone.dotClassName}`} />
                 </div>
 

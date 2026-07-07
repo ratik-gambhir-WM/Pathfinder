@@ -1,0 +1,47 @@
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+
+export type ThemeMode = "slate-frost" | "dark";
+
+type ThemeModeContextValue = {
+  setThemeMode: (themeMode: ThemeMode) => void;
+  themeMode: ThemeMode;
+};
+
+const THEME_STORAGE_KEY = "pathfinder-theme-mode";
+const ThemeModeContext = createContext<ThemeModeContextValue | null>(null);
+
+function getStoredThemeMode(): ThemeMode {
+  if (typeof window === "undefined") {
+    return "slate-frost";
+  }
+
+  const storedThemeMode = window.localStorage.getItem(THEME_STORAGE_KEY);
+  return storedThemeMode === "dark" ? "dark" : "slate-frost";
+}
+
+type ThemeModeProviderProps = {
+  children: ReactNode;
+};
+
+export function ThemeModeProvider({ children }: ThemeModeProviderProps) {
+  const [themeMode, setThemeMode] = useState<ThemeMode>(getStoredThemeMode);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeMode;
+    window.localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+  }, [themeMode]);
+
+  const value = useMemo<ThemeModeContextValue>(() => ({ setThemeMode, themeMode }), [themeMode]);
+
+  return <ThemeModeContext.Provider value={value}>{children}</ThemeModeContext.Provider>;
+}
+
+export function useThemeMode() {
+  const context = useContext(ThemeModeContext);
+
+  if (!context) {
+    throw new Error("useThemeMode must be used within ThemeModeProvider");
+  }
+
+  return context;
+}

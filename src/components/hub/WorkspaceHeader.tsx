@@ -10,7 +10,7 @@ export function WorkspaceHeader() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button className="inline-flex h-14 items-center gap-3 rounded-full border border-white/80 bg-white/70 px-7 text-[14px] font-semibold text-text-main shadow-[0_8px_20px_rgba(28,40,38,0.05)] transition hover:bg-white">
+        <button className="inline-flex h-14 items-center gap-3 rounded-full border border-white/80 bg-white/70 px-7 text-[14px] font-semibold text-text-main shadow-[0_8px_20px_rgba(7,1,84,0.05)] transition hover:bg-white">
           <Icon className="h-5 w-5 text-muted" name="grid" />
           Grid View
         </button>

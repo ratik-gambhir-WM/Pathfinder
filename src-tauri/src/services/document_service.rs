@@ -1,11 +1,14 @@
 use crate::clients::openai::{OpenAiClient, ResponsesFileInput};
 use crate::common::{
-    build_summary_prompt, display_relative_path, infer_supported_mime_type, write_summary,
-    CollectedFile,
+    build_summary_prompt, display_relative_path, infer_supported_mime_type, CollectedFile,
 };
 use crate::models::document::{ParsedFileData, ParsedFileData2};
 use crate::parsers::gen_parsed_file;
 use crate::parsers::TextChunk;
+use crate::prompts::{
+    DATA_ROOM_TECH_DILIGENCE_SUMMARY_PROMPT, DOCUMENT_SUMMARY_SYSTEM_PROMPT,
+    PRODUCT_AND_APPLICATION_DEEP_DIVE_PROMPT,
+};
 use crate::utils::openai_api_key;
 use base64::engine::general_purpose;
 use base64::Engine;
@@ -30,13 +33,6 @@ pub enum DirectoryFile {
 const DEFAULT_DOCUMENT_SUMMARY_MODEL: &str = "gpt-5.5";
 const MAX_FILE_BYTES: usize = 50 * 1024 * 1024;
 const MAX_TOTAL_REQUEST_FILE_BYTES: usize = 50 * 1024 * 1024;
-const DOCUMENT_SUMMARY_SYSTEM_PROMPT: &str = r#"You summarize collections of attached business documents.
-
-Rely on the attached files as the primary source of truth. Produce a concise but complete synthesis
-of the full document set, call out important details from individual files when relevant, and note
-any gaps, contradictions, or follow-up questions. If some files were skipped, mention the impact.
-
-Use Markdown with short sections and clear headings."#;
 
 pub fn parse_docx_file(path: &Path) -> Result<Vec<TextChunk>, String> {
     crate::parsers::docx::parse_docx_file(path)
@@ -55,7 +51,7 @@ pub async fn summarize_dir(path: String) -> Result<String, String> {
     let model = env::var("OPENAI_DOCUMENT_SUMMARY_MODEL")
         .unwrap_or_else(|_| DEFAULT_DOCUMENT_SUMMARY_MODEL.to_string());
     let (files, skipped_files) = collect_dir_content(&root)?;
-    let prompt = build_summary_prompt(&root, &files, &skipped_files);
+    let prompt = build_document_summary_prompt(&root, &files, &skipped_files);
     let file_inputs: Vec<ResponsesFileInput<'_>> = files
         .iter()
         .map(|file| ResponsesFileInput::FileData {
@@ -82,6 +78,19 @@ pub async fn summarize_dir(path: String) -> Result<String, String> {
     }
 
     Ok(summary)
+}
+
+fn build_document_summary_prompt(
+    root: &Path,
+    files: &Vec<CollectedFile>,
+    skipped_files: &[String],
+) -> String {
+    format!(
+        "{}\n\n{}\n\n{}",
+        build_summary_prompt(root, files, skipped_files),
+        DATA_ROOM_TECH_DILIGENCE_SUMMARY_PROMPT.trim(),
+        PRODUCT_AND_APPLICATION_DEEP_DIVE_PROMPT.trim()
+    )
 }
 
 fn collect_dir_content(root: &Path) -> Result<(Vec<CollectedFile>, Vec<String>), String> {

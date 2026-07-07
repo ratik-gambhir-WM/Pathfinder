@@ -19,7 +19,7 @@ export function AppShell({ centered = false, children, showFooter = true }: AppS
               : "min-h-screen"
         }`}
       >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="workspace-ambient pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute right-[-10%] top-[-12%] h-[38rem] w-[38rem] rounded-full bg-surface-container-high/90 blur-3xl" />
           <div className="absolute bottom-[-12%] left-[-8%] h-[28rem] w-[28rem] rounded-full bg-primary-fixed/30 blur-3xl" />
           <div className="absolute left-1/2 top-20 h-48 w-48 -translate-x-1/2 rounded-full bg-tertiary-fixed/30 blur-3xl" />

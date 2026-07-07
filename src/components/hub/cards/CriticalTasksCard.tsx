@@ -21,7 +21,7 @@ type CriticalTasksCardProps = {
 export function CriticalTasksCard({ assignees, tasks }: CriticalTasksCardProps) {
   return (
     <WorkspaceCard className="relative col-span-12 flex min-h-[430px] flex-col justify-between overflow-hidden p-8 lg:col-span-8">
-      <div className="absolute -right-16 -top-14 h-64 w-64 rounded-full bg-primary/6 blur-3xl" />
+      <div className="workspace-card-glow absolute -right-16 -top-14 h-64 w-64 rounded-full bg-primary/6 blur-3xl" />
 
       <div className="relative z-10 flex h-full flex-col">
         <div className="mb-8 flex items-center justify-between">

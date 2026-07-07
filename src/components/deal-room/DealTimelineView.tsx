@@ -117,7 +117,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
           <div className="flex flex-wrap items-center gap-6">
             <TimelineLegend />
             <button
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-5 text-[12px] font-bold text-white shadow-[0_10px_26px_rgba(50,99,65,0.24)] transition hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-primary px-5 text-[12px] font-bold text-white shadow-[0_10px_26px_rgba(80,101,142,0.24)] transition hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
               onClick={openModal}
               type="button"
             >
@@ -193,7 +193,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
 
       <div
         aria-live="polite"
-        className={`fixed bottom-8 right-8 z-50 flex items-center gap-3 rounded-[24px] border border-white/80 bg-white/76 px-5 py-4 text-sm font-semibold text-text-main shadow-[0_18px_50px_rgba(28,40,38,0.16)] backdrop-blur-md transition ${
+        className={`fixed bottom-8 right-8 z-50 flex items-center gap-3 rounded-[24px] border border-white/80 bg-white/76 px-5 py-4 text-sm font-semibold text-text-main shadow-[0_18px_50px_rgba(7,1,84,0.16)] backdrop-blur-md transition ${
           toastMessage ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
         }`}
       >
@@ -376,7 +376,7 @@ function NewActivityModal({ formState, onChange, onClose, onSubmit }: NewActivit
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/10 p-4 backdrop-blur-sm" role="presentation">
       <form
-        className="shrink-0 rounded-[28px] border border-white/80 bg-white/78 p-8 shadow-[0_28px_80px_rgba(28,40,38,0.18)] backdrop-blur-xl"
+        className="shrink-0 rounded-[28px] border border-white/80 bg-white/78 p-8 shadow-[0_28px_80px_rgba(7,1,84,0.18)] backdrop-blur-xl"
         onSubmit={onSubmit}
         style={{ width: "min(calc(100vw - 32px), 28rem)" }}
       >
@@ -443,7 +443,7 @@ function NewActivityModal({ formState, onChange, onClose, onSubmit }: NewActivit
           </label>
 
           <button
-            className="h-12 w-full rounded-2xl bg-primary px-5 text-[15px] font-bold text-white shadow-[0_12px_28px_rgba(50,99,65,0.26)] transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-55"
+            className="h-12 w-full rounded-2xl bg-primary px-5 text-[15px] font-bold text-white shadow-[0_12px_28px_rgba(80,101,142,0.26)] transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-55"
             disabled={!canSubmit}
             type="submit"
           >

@@ -21,7 +21,7 @@ export function DataRoomPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-on-surface">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="workspace-ambient pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-[15%] top-[22%] h-[22rem] w-[22rem] rounded-full bg-tertiary-fixed/16 blur-3xl" />
         <div className="absolute right-[10%] top-[12%] h-[26rem] w-[26rem] rounded-full bg-primary-fixed/18 blur-3xl" />
         <div className="absolute bottom-[8%] left-[30%] h-[30rem] w-[30rem] rounded-full bg-surface-container-high/70 blur-3xl" />

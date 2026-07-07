@@ -53,7 +53,7 @@ export function DealRoomPage() {
               <DealSummaryCard deal={deal.room} />
               <div className="relative col-span-12 xl:col-span-4">
                 <div className="absolute inset-x-0 bottom-full z-10 mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-                  <button className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-white/80 bg-white/72 px-6 text-[14px] font-semibold text-text-main shadow-[0_8px_20px_rgba(28,40,38,0.05)] transition hover:bg-white">
+                  <button className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-white/80 bg-white/72 px-6 text-[14px] font-semibold text-text-main shadow-[0_8px_20px_rgba(7,1,84,0.05)] transition hover:bg-white">
                     <Icon className="h-5 w-5 text-muted" name="refresh" />
                     Sync Data Room
                   </button>

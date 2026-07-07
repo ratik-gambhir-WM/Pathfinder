@@ -3,7 +3,6 @@ type WestMonroeMarkProps = {
   framed?: boolean;
 };
 
-const markColor = "#040047";
 const squareSize = 14;
 const radius = 1.5;
 
@@ -20,10 +19,10 @@ const pieces = [
 
 export function WestMonroeMark({ className = "h-14 w-14", framed = false }: WestMonroeMarkProps) {
   const mark = (
-    <svg aria-hidden="true" className={framed ? "h-11 w-11" : className} viewBox="0 0 96 96">
+    <svg aria-hidden="true" className={`wm-mark ${framed ? "h-11 w-11" : className}`} viewBox="0 0 96 96">
       {pieces.map((piece) => (
         <rect
-          fill={markColor}
+          fill="currentColor"
           height={squareSize}
           key={`${piece.x}-${piece.y}`}
           rx={radius}

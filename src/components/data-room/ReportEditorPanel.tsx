@@ -68,8 +68,8 @@ export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportE
         </div>
       </div>
 
-      <div className="sticky bottom-0 flex justify-center bg-gradient-to-t from-white/80 to-transparent px-6 pb-6 pt-2">
-        <div className="flex items-center gap-2 rounded-full border border-white bg-white/90 px-6 py-2 shadow-2xl backdrop-blur-xl">
+      <div className="report-editor-toolbar-scrim sticky bottom-0 flex justify-center bg-gradient-to-t from-white/80 to-transparent px-6 pb-6 pt-2">
+        <div className="report-editor-toolbar flex items-center gap-2 rounded-full border border-white bg-white/90 px-6 py-2 shadow-2xl backdrop-blur-xl">
           <ToolbarButton label="B" />
           <ToolbarButton className="italic" label="I" />
           <ToolbarButton label="•" />

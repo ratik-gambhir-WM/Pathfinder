@@ -37,7 +37,7 @@ export function PendingTasksTimelineCard({ tasks }: PendingTasksTimelineCardProp
                 <button
                   aria-label={`${isChecked ? "Mark incomplete" : "Mark complete"}: ${task.label}`}
                   aria-pressed={isChecked}
-                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/90 bg-white/85 shadow-[0_8px_18px_rgba(28,40,38,0.06)] transition hover:scale-[1.03]"
+                  className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/90 bg-white/85 shadow-[0_8px_18px_rgba(7,1,84,0.06)] transition hover:scale-[1.03]"
                   onClick={() =>
                     setCheckedState((current) => current.map((value, valueIndex) => (valueIndex === index ? !value : value)))
                   }
