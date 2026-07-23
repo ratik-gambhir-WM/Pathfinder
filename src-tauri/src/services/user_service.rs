@@ -1,4 +1,4 @@
-use rusqlite::{params, Connection, OptionalExtension, Row};
+use rusqlite::{params, Row};
 use serde::{Deserialize, Serialize};
 
 use crate::state::AppState;
@@ -28,24 +28,24 @@ pub struct User {
 
 pub fn add_user(state: &AppState, input: AddUserInput) -> Result<User, String> {
     validate_user_input(&input)?;
+    let email = input.email.trim().to_string();
 
-    state.with_db(|db| {
-        db.execute(
-            r#"
-            INSERT INTO users (first_name, last_name, email, api_key, role)
-            VALUES (?1, ?2, ?3, ?4, ?5)
-            "#,
-            params![
-                input.first_name.trim(),
-                input.last_name.trim(),
-                input.email.trim(),
-                input.api_key.trim(),
-                input.role.trim()
-            ],
-        )?;
+    state.gen_sqlite_db_client().execute(
+        r#"
+        INSERT INTO users (first_name, last_name, email, api_key, role)
+        VALUES (?1, ?2, ?3, ?4, ?5)
+        "#,
+        params![
+            input.first_name.trim(),
+            input.last_name.trim(),
+            email,
+            input.api_key.trim(),
+            input.role.trim()
+        ],
+    )?;
 
-        get_user_by_id(db, db.last_insert_rowid())
-    })
+    get_user_by_email(state, &email)?
+        .ok_or_else(|| format!("failed to fetch user after insert for email `{email}`"))
 }
 
 pub fn get_user_by_email(state: &AppState, email: &str) -> Result<Option<User>, String> {
@@ -54,30 +54,17 @@ pub fn get_user_by_email(state: &AppState, email: &str) -> Result<Option<User>, 
         return Err("email is required".to_string());
     }
 
-    state.with_db(|db| {
-        db.query_row(
-            r#"
-            SELECT id, first_name, last_name, email, api_key, role, created_at, updated_at
-            FROM users
-            WHERE email = ?1
-            "#,
-            [email],
-            user_from_row,
-        )
-        .optional()
-    })
-}
-
-fn get_user_by_id(db: &Connection, id: i64) -> rusqlite::Result<User> {
-    db.query_row(
+    let users = state.gen_sqlite_db_client().query_rows(
         r#"
         SELECT id, first_name, last_name, email, api_key, role, created_at, updated_at
         FROM users
-        WHERE id = ?1
+        WHERE email = ?1
         "#,
-        [id],
+        [email],
         user_from_row,
-    )
+    )?;
+
+    Ok(users.into_iter().next())
 }
 
 fn user_from_row(row: &Row<'_>) -> rusqlite::Result<User> {

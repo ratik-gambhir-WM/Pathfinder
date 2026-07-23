@@ -6,8 +6,8 @@ use tauri::AppHandle;
 use crate::clients::{helix::HelixClient, sqlite::SqliteClient};
 
 pub struct AppState {
-    pub helix_client: HelixClient,
-    pub sqlite_client: SqliteClient,
+    helix_client: HelixClient,
+    sqlite_client: SqliteClient,
 }
 
 impl AppState {
@@ -18,20 +18,22 @@ impl AppState {
         })
     }
 
-    pub fn db_path(&self) -> &Path {
+    pub fn gen_helix_db_client(&self) -> &HelixClient {
+        &self.helix_client
+    }
+
+    pub fn gen_sqlite_db_client(&self) -> &SqliteClient {
+        &self.sqlite_client
+    }
+
+    pub fn sqlite_db_path(&self) -> &Path {
         &self.sqlite_client.db_path
     }
 
-    pub fn with_db<T>(
+    pub fn with_sqlite_db<T>(
         &self,
         f: impl FnOnce(&Connection) -> rusqlite::Result<T>,
     ) -> Result<T, String> {
-        let db = self
-            .sqlite_client
-            .db
-            .lock()
-            .map_err(|_| "sqlite connection lock was poisoned".to_string())?;
-
-        f(&db).map_err(|err| format!("sqlite error: {err}"))
+        self.sqlite_client.with_connection(f)
     }
 }

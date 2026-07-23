@@ -3,8 +3,6 @@ use std::path::Path;
 use anyhow::Result;
 use calamine::{open_workbook_auto, Data, Reader};
 
-use crate::models::document::SpreadsheetTextChunk;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct SpreadsheetRow {
     sheet_name: String,
@@ -12,28 +10,17 @@ struct SpreadsheetRow {
     values: Vec<String>,
 }
 
-pub fn parse_spreadsheet(path: impl AsRef<Path>) -> Result<Vec<SpreadsheetTextChunk>> {
+pub fn parse_spreadsheet(path: impl AsRef<Path>) -> Result<String> {
     let rows = parse_spreadsheet_rows(path)?;
-    Ok(rows_to_chunks(rows))
+    Ok(rows_to_text(rows))
 }
 
-fn rows_to_chunks(rows: Vec<SpreadsheetRow>) -> Vec<SpreadsheetTextChunk> {
-    let mut chunks = Vec::new();
-
-    for row in rows {
-        let content = row_to_chunk_text(&row);
-
-        if content.trim().is_empty() {
-            continue;
-        }
-
-        chunks.push(SpreadsheetTextChunk {
-            chunk_index: chunks.len() + 1,
-            content,
-        });
-    }
-
-    chunks
+fn rows_to_text(rows: Vec<SpreadsheetRow>) -> String {
+    rows.iter()
+        .map(row_to_text)
+        .filter(|text| !text.trim().is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn parse_spreadsheet_rows(path: impl AsRef<Path>) -> Result<Vec<SpreadsheetRow>> {
@@ -55,7 +42,7 @@ fn parse_spreadsheet_rows(path: impl AsRef<Path>) -> Result<Vec<SpreadsheetRow>>
     Ok(rows)
 }
 
-fn row_to_chunk_text(row: &SpreadsheetRow) -> String {
+fn row_to_text(row: &SpreadsheetRow) -> String {
     let values = row
         .values
         .iter()
@@ -89,7 +76,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn formats_rows_as_indexed_text_chunks() {
+    fn formats_rows_as_ordered_text() {
         let rows = vec![
             SpreadsheetRow {
                 sheet_name: "Sheet1".to_string(),
@@ -108,21 +95,9 @@ mod tests {
             },
         ];
 
-        let chunks = rows_to_chunks(rows);
+        let text = rows_to_text(rows);
 
-        assert_eq!(
-            chunks,
-            vec![
-                SpreadsheetTextChunk {
-                    chunk_index: 1,
-                    content: "Sheet1 row 1: Name\tAmount".to_string(),
-                },
-                SpreadsheetTextChunk {
-                    chunk_index: 2,
-                    content: "Sheet1 row 3: Acme\t42".to_string(),
-                },
-            ]
-        );
+        assert_eq!(text, "Sheet1 row 1: Name\tAmount\nSheet1 row 3: Acme\t42");
     }
 
     #[test]

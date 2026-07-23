@@ -77,10 +77,8 @@ Commands:
 
 async fn parse_docx(path: String) -> Result<(), String> {
     let path: &Path = Path::new(&path);
-    let chunks = parse_docx_file(path).map_err(|err| err.to_string())?;
-    for chunk in chunks {
-        println!("CHUNK")
-    }
+    let text = parse_docx_file(path).map_err(|err| err.to_string())?;
+    println!("{text}");
     Ok(())
 }
 

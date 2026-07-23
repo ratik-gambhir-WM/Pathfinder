@@ -1,18 +1,22 @@
 pub mod docx;
 pub mod image;
+pub mod pdf;
 pub mod powerpoint;
 pub mod spreadsheet;
 
-use crate::clients::helix::HelixClient;
-use crate::models::document::{FileChunk, ParsedFileData, ParsedFileData2};
+use crate::clients::openai::OpenAiClient;
+use crate::models::document::ParsedFileData2;
 use crate::parsers::docx::parse_docx_file;
+use crate::parsers::image::parse_image_file;
+use crate::parsers::pdf::parse_pdf_file;
 use crate::parsers::powerpoint::parse_powerpoint_file;
-use crate::utils::get_token_count;
+use crate::parsers::spreadsheet::parse_spreadsheet;
+use crate::utils::{get_token_count, openai_api_key};
 use base64::Engine;
 
+use std::fs;
 use std::path::Path;
-use std::{env, fs, process};
-use walkdir::{DirEntry, WalkDir};
+use walkdir::DirEntry;
 
 pub(crate) const MAX_TOKEN_CHUNK: usize = 800;
 
@@ -21,18 +25,25 @@ pub struct TextChunk {
     content: String,
 }
 
+impl TextChunk {
+    pub fn new(chunk_index: i32, content: String) -> Self {
+        Self {
+            chunk_index,
+            content,
+        }
+    }
+}
+
 enum DataFile {
-    Docx(String),
-    Powerpoint(String),
-    Image(String),
-    Spreadsheet(String),
+    Docx,
+    Pdf,
+    Powerpoint,
+    Image,
+    Spreadsheet,
 }
 
 fn build_text_chunk(content: &str, chunk_index: i32) -> TextChunk {
-    TextChunk {
-        chunk_index,
-        content: content.to_string(),
-    }
+    TextChunk::new(chunk_index, content.to_string())
 }
 
 fn get_file_type(path: Box<Path>) -> String {
@@ -51,12 +62,15 @@ fn gen_file_type(path: Box<&Path>) -> Result<DataFile, String> {
         .map(|extension| extension.to_ascii_lowercase())
         .as_deref()
     {
-        Some("docx") => Ok(DataFile::Docx(String::new())),
-        Some("pptx") | Some("ppt") => Ok(DataFile::Powerpoint(String::new())),
-        Some("jpg") | Some("jpeg") | Some("png") => Ok(DataFile::Image(String::new())),
-        Some("xslx") => Ok(DataFile::Spreadsheet(String::new())),
+        Some("docx") => Ok(DataFile::Docx),
+        Some("pdf") => Ok(DataFile::Pdf),
+        Some("pptx") | Some("ppt") => Ok(DataFile::Powerpoint),
+        Some("gif") | Some("jpg") | Some("jpeg") | Some("png") | Some("webp") => {
+            Ok(DataFile::Image)
+        }
+        Some("xlsx") => Ok(DataFile::Spreadsheet),
         Some(extension) => Err(format!(
-            "unsupported image extension .{extension}; expected png, jpg, jpeg, webp, or gif"
+            "unsupported file extension .{extension}; expected docx, pdf, pptx, jpg, jpeg, png, webp, gif, or xlsx"
         )),
         None => Err("COULD NOT READ FILE TYPE".to_owned()),
     }
@@ -92,22 +106,42 @@ pub fn gen_parsed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedFileData
     let mut chunks: Vec<TextChunk> = Vec::new();
     if matches!(to_chunk, Some(true)) {
         let parsed = parse_docx_file(&path);
-        chunks = parsed.unwrap_or_else(|_| Vec::new())
+        chunks = parsed
+            .map(|text| chunk_text(&text))
+            .unwrap_or_else(|_| Vec::new())
     }
     println!("{}", path.display());
     gen_file_metadata(path, chunks)
 }
 
-pub fn parse_typed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedFileData2 {
+pub async fn parse_typed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedFileData2 {
     let path = file.path();
     let typed_file = gen_file_type(Box::new(path));
     let mut chunks: Vec<TextChunk> = Vec::new();
     if matches!(to_chunk, Some(true)) {
         chunks = match typed_file {
-            Ok(DataFile::Docx(_)) => parse_docx_file(path).unwrap_or_else(|_| Vec::new()),
-            Ok(DataFile::Powerpoint(_)) => {
-                parse_powerpoint_file(path).unwrap_or_else(|_| Vec::new())
-            }
+            Ok(DataFile::Docx) => parse_docx_file(path)
+                .map(|text| chunk_text(&text))
+                .unwrap_or_else(|_| Vec::new()),
+            Ok(DataFile::Pdf) => parse_pdf_file(path)
+                .map(|text| chunk_text(&text))
+                .unwrap_or_else(|_| Vec::new()),
+            Ok(DataFile::Powerpoint) => parse_powerpoint_file(path)
+                .map(|text| chunk_text(&text))
+                .unwrap_or_else(|_| Vec::new()),
+            Ok(DataFile::Spreadsheet) => parse_spreadsheet(path)
+                .map(|text| chunk_text(&text))
+                .unwrap_or_else(|_| Vec::new()),
+            Ok(DataFile::Image) => match openai_api_key() {
+                Ok(api_key) => {
+                    let openai_client = OpenAiClient::new(&api_key);
+                    parse_image_file(path, &openai_client)
+                        .await
+                        .map(|text| chunk_text(&text))
+                        .unwrap_or_else(|_| Vec::new())
+                }
+                Err(_) => Vec::new(),
+            },
             _ => Vec::new(),
         };
     }
@@ -141,7 +175,7 @@ fn read_and_encode_file(path: Box<Path>) -> Result<String, String> {
     let file_extension = path.extension().unwrap().to_str();
     match file_extension {
         Some("pdf") | Some("docx") | Some("xlsx") | Some("xls") => {
-            let bytes = std::fs::read(path).unwrap_or_else(|e| return vec![]);
+            let bytes = std::fs::read(path).unwrap_or_else(|_e| return vec![]);
             if bytes.is_empty() {
                 return Err(String::from("Could not read file"));
             }

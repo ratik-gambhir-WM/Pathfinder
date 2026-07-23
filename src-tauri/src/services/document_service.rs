@@ -4,7 +4,6 @@ use crate::common::{
 };
 use crate::models::document::{ParsedFileData, ParsedFileData2};
 use crate::parsers::gen_parsed_file;
-use crate::parsers::TextChunk;
 use crate::prompts::{
     DATA_ROOM_TECH_DILIGENCE_SUMMARY_PROMPT, DOCUMENT_SUMMARY_SYSTEM_PROMPT,
     PRODUCT_AND_APPLICATION_DEEP_DIVE_PROMPT,
@@ -34,7 +33,7 @@ const DEFAULT_DOCUMENT_SUMMARY_MODEL: &str = "gpt-5.5";
 const MAX_FILE_BYTES: usize = 50 * 1024 * 1024;
 const MAX_TOTAL_REQUEST_FILE_BYTES: usize = 50 * 1024 * 1024;
 
-pub fn parse_docx_file(path: &Path) -> Result<Vec<TextChunk>, String> {
+pub fn parse_docx_file(path: &Path) -> Result<String, String> {
     crate::parsers::docx::parse_docx_file(path)
 }
 

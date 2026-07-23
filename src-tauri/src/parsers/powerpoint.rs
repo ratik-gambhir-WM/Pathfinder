@@ -4,9 +4,7 @@ use std::path::Path;
 
 use pptx_to_md::{ImageHandlingMode, ParserConfig, PptxContainer, SlideElement};
 
-use crate::parsers::{chunk_text, TextChunk};
-
-pub fn parse_powerpoint_file(path: &Path) -> Result<Vec<TextChunk>, String> {
+pub fn parse_powerpoint_file(path: &Path) -> Result<String, String> {
     ensure_supported_powerpoint_file(path)?;
 
     let config = ParserConfig::builder()
@@ -31,10 +29,10 @@ pub fn parse_powerpoint_file(path: &Path) -> Result<Vec<TextChunk>, String> {
         .join("\n\n");
 
     if full_text.trim().is_empty() {
-        return Ok(Vec::new());
+        return Ok(String::new());
     }
 
-    Ok(chunk_text(&full_text))
+    Ok(full_text)
 }
 
 fn ensure_supported_powerpoint_file(path: &Path) -> Result<(), String> {

@@ -16,7 +16,7 @@ Focus on stable visual facts that would help someone find this image later:
 
 Return one concise paragraph, roughly 80-160 words."#;
 
-pub async fn describe_image_file(
+pub async fn parse_image_file(
     image_path: &Path,
     openai_client: &OpenAiClient<'_>,
 ) -> Result<String, String> {
