@@ -4,7 +4,9 @@ import { ActivityTimelineCard } from "../components/deal-room/ActivityTimelineCa
 import { DealRoomHeader } from "../components/deal-room/DealRoomHeader";
 import { DealSummaryCard } from "../components/deal-room/DealSummaryCard";
 import { DealTimelineView } from "../components/deal-room/DealTimelineView";
+import { DiligenceGraphView } from "../components/deal-room/DiligenceGraphView";
 import { PendingTasksTimelineCard } from "../components/deal-room/PendingTasksTimelineCard";
+import { SiteVisitsView } from "../components/deal-room/SiteVisitsView";
 import { InsightsStrip } from "../components/hub/InsightsStrip";
 import { WorkspaceLayout } from "../components/hub/WorkspaceLayout";
 import { WorkspaceSidebar } from "../components/hub/WorkspaceSidebar";
@@ -14,11 +16,13 @@ import { getDealById, workspaceDeals, workspaceInsights } from "../data/workspac
 import type { DealTimelineItem } from "../data/workspace";
 import { useWorkspaceSession } from "../hooks/useWorkspaceSession";
 
+type ActiveDealView = "deal-room" | "diligence-graph" | "site-visits" | "timeline";
+
 export function DealRoomPage() {
   const { dealId } = useParams();
   const deal = dealId ? getDealById(dealId) : undefined;
   const { email, navigationState } = useWorkspaceSession();
-  const [activeDealView, setActiveDealView] = useState<"deal-room" | "timeline">("deal-room");
+  const [activeDealView, setActiveDealView] = useState<ActiveDealView>("deal-room");
   const [timelineItems, setTimelineItems] = useState<DealTimelineItem[]>([]);
   const dealInsights = workspaceInsights.filter((insight) => insight.deal === deal?.room.name);
 
@@ -47,6 +51,10 @@ export function DealRoomPage() {
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 pb-10">
         {activeDealView === "timeline" ? (
           <DealTimelineView deal={deal.room} events={timelineItems} onEventsChange={setTimelineItems} />
+        ) : activeDealView === "diligence-graph" ? (
+          <DiligenceGraphView deal={deal.room} />
+        ) : activeDealView === "site-visits" ? (
+          <SiteVisitsView deal={deal.room} />
         ) : (
           <>
             <DealRoomHeader subtitle={deal.room.overviewSubtitle} />

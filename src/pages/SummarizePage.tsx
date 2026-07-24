@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { FormEvent, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -8,6 +7,8 @@ import { WorkspaceHomeShell } from "../components/hub/WorkspaceHomeShell";
 import { ChatPanel } from "../components/summarize/ChatPanel";
 import { PanelTab } from "../components/summarize/PanelTab";
 import { Icon } from "../components/ui/Icon";
+import { TAURI_COMMANDS } from "../lib/constants";
+import { execute } from "../lib/tauri/command";
 
 type ActivePanel = "chat" | "summary";
 type SelectedPathKind = "manual" | "file" | "folder";
@@ -59,7 +60,7 @@ export function SummarizePage() {
 
       if (directory) {
         try {
-          const files = await invoke<SummarizableFile[]>("list_summary_files", { payload: { path: selection } });
+          const files = await execute<SummarizableFile[]>(TAURI_COMMANDS.listSummaryFiles, { payload: { path: selection } });
           setExpandedFolderIds(new Set());
           setFolderFiles(files);
           setSelectedFilePaths(new Set(files.filter((file) => file.supported).map((file) => file.path)));
@@ -129,10 +130,10 @@ export function SummarizePage() {
     try {
       const result =
         folderFiles.length > 0
-          ? await invoke<string>("summarize_selected", { payload: { paths: selectedPaths } })
+          ? await execute<string>(TAURI_COMMANDS.summarizeSelected, { payload: { paths: selectedPaths } })
           : selectedPathKind === "file"
-            ? await invoke<string>("summarize_selected", { payload: { paths: [path] } })
-          : await invoke<string>("summarize", { payload: { path } });
+            ? await execute<string>(TAURI_COMMANDS.summarizeSelected, { payload: { paths: [path] } })
+          : await execute<string>(TAURI_COMMANDS.summarize, { payload: { path } });
       setSummary(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -157,7 +158,7 @@ export function SummarizePage() {
     }
 
     try {
-      await invoke("save_markdown_summary", { payload: { path, summary } });
+      await execute(TAURI_COMMANDS.saveMarkdownSummary, { payload: { path, summary } });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }

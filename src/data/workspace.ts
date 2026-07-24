@@ -1,5 +1,19 @@
 export type WorkspaceLocationState = {
+  accountLookupComplete?: boolean;
+  accountLookupError?: string;
+  accountUser?: WorkspaceAccountUser | null;
   email?: string;
+};
+
+export type WorkspaceAccountUser = {
+  apiKey: string;
+  createdAt: string;
+  email: string;
+  firstName: string;
+  id: number;
+  lastName: string;
+  role: string;
+  updatedAt: string;
 };
 
 export type WorkspaceSidebarIcon = "personSearch" | "terminal" | "timeline" | "folderOpen" | "sparkles";
@@ -339,7 +353,7 @@ export const workspaceInitiatives: WorkspaceSidebarTool[] = [
 ];
 
 export const workspaceTools: WorkspaceSidebarTool[] = [
-  { icon: "timeline", name: "Meeting Timeline" },
+  { icon: "timeline", name: "Deal Activity" },
 ];
 
 export function getDealById(dealId: string) {

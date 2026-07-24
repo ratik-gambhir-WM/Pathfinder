@@ -23,7 +23,7 @@ use crate::{
             summarize_selected,
         },
         database::database_status,
-        users::greet,
+        users::{create_user, create_wm_user, get_user_by_email, greet, user_exists_by_email},
     },
     events::register_login_demo_events,
     state::AppState,
@@ -99,6 +99,10 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             greet,
+            create_user,
+            create_wm_user,
+            get_user_by_email,
+            user_exists_by_email,
             database_status,
             login_demo_command,
             list_summary_files,

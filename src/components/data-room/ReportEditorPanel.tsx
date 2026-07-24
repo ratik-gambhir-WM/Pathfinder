@@ -1,5 +1,9 @@
+import { useEffect, useRef, useState } from "react";
 import { EditorBlock } from "../../data/dataRoom";
 import { Icon } from "../ui/Icon";
+
+const documentViews = ["Document", "Summary", "Notes", "Findings"] as const;
+type DocumentView = (typeof documentViews)[number];
 
 type ReportEditorPanelProps = {
   blocks: EditorBlock[];
@@ -9,7 +13,9 @@ type ReportEditorPanelProps = {
 
 export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportEditorPanelProps) {
   return (
-    <section className="glass-panel flex min-w-0 flex-1 flex-col overflow-hidden rounded-[28px]">
+    <section className="glass-panel relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[28px]">
+      <DocumentViewMenu />
+
       <div className="workspace-scrollbar-hidden flex-1 overflow-y-auto p-6">
         <div className="mx-auto max-w-4xl py-8">
           <div className="mb-10">
@@ -83,6 +89,80 @@ export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportE
         </div>
       </div>
     </section>
+  );
+}
+
+function DocumentViewMenu() {
+  const [activeView, setActiveView] = useState<DocumentView>("Document");
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  return (
+    <div className="absolute right-5 top-5 z-20" ref={menuRef}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Switch document view"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-outline-variant/70 bg-white/85 text-primary shadow-sm backdrop-blur-md transition hover:bg-white hover:text-text-main"
+        onClick={() => setOpen((isOpen) => !isOpen)}
+        title="Switch document view"
+        type="button"
+      >
+        <Icon className="h-5 w-5" name="listAlt" />
+      </button>
+
+      {open ? (
+        <div
+          className="absolute right-0 top-[3.25rem] w-44 overflow-hidden rounded-2xl border border-outline-variant/70 bg-white/95 p-1 shadow-[0_16px_40px_rgba(7,1,84,0.14)] backdrop-blur-md"
+          role="menu"
+        >
+          {documentViews.map((view) => {
+            const active = view === activeView;
+
+            return (
+              <button
+                aria-current={active ? "page" : undefined}
+                className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold transition ${
+                  active ? "bg-primary/10 text-text-main" : "text-muted hover:bg-primary/5 hover:text-text-main"
+                }`}
+                key={view}
+                onClick={() => {
+                  setActiveView(view);
+                  setOpen(false);
+                }}
+                role="menuitem"
+                type="button"
+              >
+                <span>{view}</span>
+                {active ? <Icon className="h-4 w-4 text-primary" name="check" /> : null}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 

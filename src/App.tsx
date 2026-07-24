@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AccountPage } from "./pages/AccountPage";
 import { DataRoomPage } from "./pages/DataRoomPage";
 import { HubPage } from "./pages/HubPage";
 import { DealRoomPage } from "./pages/DealRoomPage";
@@ -14,6 +15,7 @@ function App() {
         <Route element={<Navigate replace to="/login" />} path="/" />
         <Route element={<LoginPage />} path="/login" />
         <Route element={<HubPage />} path="/hub" />
+        <Route element={<AccountPage />} path="/hub/account" />
         <Route element={<GlobalVaultPage />} path="/hub/vault" />
         <Route element={<SummarizePage />} path="/hub/summarize" />
         <Route element={<DealRoomPage />} path="/hub/deals/:dealId" />
