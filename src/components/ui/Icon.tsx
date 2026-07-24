@@ -10,6 +10,7 @@ type IconName =
   | "doc"
   | "filter"
   | "folderOpen"
+  | "graph"
   | "grid"
   | "help"
   | "home"
@@ -21,6 +22,7 @@ type IconName =
   | "notification"
   | "openInNew"
   | "pdf"
+  | "person"
   | "personSearch"
   | "plus"
   | "refresh"
@@ -130,6 +132,13 @@ export function Icon({ className = "h-5 w-5", name }: IconProps) {
           <path className={iconClassName} d="m19.2 18.2 2.3 2.3" />
         </svg>
       );
+    case "person":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <circle className={iconClassName} cx="12" cy="8" r="3.25" />
+          <path className={iconClassName} d="M5.75 19c.95-3.2 3.35-5 6.25-5s5.3 1.8 6.25 5" />
+        </svg>
+      );
     case "terminal":
       return (
         <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
@@ -161,6 +170,15 @@ export function Icon({ className = "h-5 w-5", name }: IconProps) {
           <rect className={iconClassName} height="5" rx="1" width="5" x="15" y="4" />
           <rect className={iconClassName} height="5" rx="1" width="5" x="4" y="15" />
           <rect className={iconClassName} height="5" rx="1" width="5" x="15" y="15" />
+        </svg>
+      );
+    case "graph":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <circle className={iconClassName} cx="6" cy="7" r="2.25" />
+          <circle className={iconClassName} cx="18" cy="6" r="2.25" />
+          <circle className={iconClassName} cx="12" cy="18" r="2.25" />
+          <path className={iconClassName} d="m8 8.2 8 7.6M16.4 7.8l-3.3 8M7.2 9l3.6 7" />
         </svg>
       );
     case "plus":

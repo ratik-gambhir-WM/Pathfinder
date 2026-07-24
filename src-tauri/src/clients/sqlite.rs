@@ -116,6 +116,66 @@ fn run_migrations(connection: &Connection) -> Result<(), String> {
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             );
 
+            CREATE TABLE IF NOT EXISTS deals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                deal_name TEXT NOT NULL,
+                main_data_room_folder TEXT NOT NULL,
+                deal_type TEXT NOT NULL CHECK (
+                    deal_type IN (
+                        'Buy-side',
+                        'Sell-side',
+                        'Carve-out',
+                        'Add-on',
+                        'Recapitalization',
+                        'Growth equity'
+                    )
+                ),
+                pe_firm TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived')),
+                target_company TEXT,
+                buyer_or_platform_company TEXT,
+                parent_or_seller_company TEXT,
+                carve_out_business TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CHECK (length(trim(deal_name)) > 0),
+                CHECK (length(trim(main_data_room_folder)) > 0),
+                CHECK (length(trim(pe_firm)) > 0),
+                CHECK (
+                    (deal_type = 'Sell-side' AND target_company IS NOT NULL AND length(trim(target_company)) > 0)
+                    OR (
+                        deal_type = 'Buy-side'
+                        AND buyer_or_platform_company IS NOT NULL
+                        AND length(trim(buyer_or_platform_company)) > 0
+                        AND target_company IS NOT NULL
+                        AND length(trim(target_company)) > 0
+                    )
+                    OR (
+                        deal_type = 'Carve-out'
+                        AND parent_or_seller_company IS NOT NULL
+                        AND length(trim(parent_or_seller_company)) > 0
+                        AND carve_out_business IS NOT NULL
+                        AND length(trim(carve_out_business)) > 0
+                    )
+                    OR (
+                        deal_type = 'Add-on'
+                        AND buyer_or_platform_company IS NOT NULL
+                        AND length(trim(buyer_or_platform_company)) > 0
+                        AND target_company IS NOT NULL
+                        AND length(trim(target_company)) > 0
+                    )
+                    OR (
+                        deal_type IN ('Recapitalization', 'Growth equity')
+                        AND target_company IS NOT NULL
+                        AND length(trim(target_company)) > 0
+                    )
+                )
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_deals_deal_type ON deals(deal_type);
+            CREATE INDEX IF NOT EXISTS idx_deals_pe_firm ON deals(pe_firm);
+            CREATE INDEX IF NOT EXISTS idx_deals_updated_at ON deals(updated_at);
+
             "#,
         )
         .map_err(|err| format!("failed to initialize sqlite database: {err}"))?;
@@ -124,11 +184,41 @@ fn run_migrations(connection: &Connection) -> Result<(), String> {
         .query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))
         .map_err(|err| format!("failed to read sqlite schema version: {err}"))?;
 
-    if user_version < 1 {
+    if !column_exists(connection, "deals", "status")
+        .map_err(|err| format!("failed to inspect deals schema: {err}"))?
+    {
         connection
-            .pragma_update(None, "user_version", 1)
+            .execute_batch(
+                r#"
+                ALTER TABLE deals
+                    ADD COLUMN status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived'));
+                "#,
+            )
+            .map_err(|err| format!("failed to add deal status column: {err}"))?;
+    }
+
+    connection
+        .execute_batch("CREATE INDEX IF NOT EXISTS idx_deals_status ON deals(status);")
+        .map_err(|err| format!("failed to initialize deal status index: {err}"))?;
+
+    if user_version < 3 {
+        connection
+            .pragma_update(None, "user_version", 3)
             .map_err(|err| format!("failed to set sqlite schema version: {err}"))?;
     }
 
     Ok(())
+}
+
+fn column_exists(connection: &Connection, table_name: &str, column_name: &str) -> rusqlite::Result<bool> {
+    let mut statement = connection.prepare(&format!("PRAGMA table_info({table_name})"))?;
+    let columns = statement.query_map([], |row| row.get::<_, String>(1))?;
+
+    for column in columns {
+        if column? == column_name {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
 }

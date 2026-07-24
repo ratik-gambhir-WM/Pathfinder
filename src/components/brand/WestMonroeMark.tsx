@@ -17,9 +17,9 @@ const pieces = [
   { rotation: 45, x: 7, y: 41 },
 ];
 
-export function WestMonroeMark({ className = "h-14 w-14", framed = false }: WestMonroeMarkProps) {
-  const mark = (
-    <svg aria-hidden="true" className={`wm-mark ${framed ? "h-11 w-11" : className}`} viewBox="0 0 96 96">
+export function WestMonroeMark({ className = "h-14 w-14" }: WestMonroeMarkProps) {
+  return (
+    <svg aria-hidden="true" className={`wm-mark ${className}`} viewBox="0 0 96 96">
       {pieces.map((piece) => (
         <rect
           fill="currentColor"
@@ -33,15 +33,5 @@ export function WestMonroeMark({ className = "h-14 w-14", framed = false }: West
         />
       ))}
     </svg>
-  );
-
-  if (!framed) {
-    return mark;
-  }
-
-  return (
-    <span className={`inline-flex shrink-0 items-center justify-center rounded-2xl bg-primary/8 ${className}`}>
-      {mark}
-    </span>
   );
 }

@@ -30,7 +30,7 @@ export function ActivityTimelineCard({ className = "col-span-12 flex min-h-[540p
   return (
     <WorkspaceCard className={className}>
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="type-h2 text-text-main">Activity Timeline</h2>
+        <h2 className="type-h2 text-text-main">Deal Activity</h2>
         <button className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-white/50">
           <Icon className="h-5 w-5 text-muted" name="more" />
         </button>

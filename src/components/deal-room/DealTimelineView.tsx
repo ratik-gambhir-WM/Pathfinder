@@ -101,7 +101,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
 
     onEventsChange([...events, timelineItem]);
     setIsModalOpen(false);
-    setToastMessage("Timeline updated successfully");
+    setToastMessage("Deal activity updated successfully");
     window.setTimeout(() => setToastMessage(""), 3200);
   }
 
@@ -110,7 +110,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
       <div className="flex flex-col gap-10">
         <header className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div className="space-y-1">
-            <h1 className="type-display text-text-main">Meeting Timeline</h1>
+            <h1 className="type-display text-text-main">Deal Activity</h1>
             <p className="text-[13px] text-text-main/78">{deal.overviewSubtitle}</p>
           </div>
 
@@ -130,9 +130,9 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
         <div className="grid grid-cols-12 gap-8">
           <WorkspaceCard className="col-span-12 rounded-[28px] p-6 xl:col-span-8">
             <div className="mb-7 flex items-center justify-between">
-              <h2 className="type-h1 text-text-main">Engagement Timeline</h2>
+              <h2 className="type-h1 text-text-main">Activity Calendar</h2>
               <button
-                aria-label="Timeline actions"
+                aria-label="Deal activity actions"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition hover:bg-white/58 hover:text-text-main"
                 type="button"
               >
@@ -447,7 +447,7 @@ function NewActivityModal({ formState, onChange, onClose, onSubmit }: NewActivit
             disabled={!canSubmit}
             type="submit"
           >
-            Log to Timeline
+            Log Activity
           </button>
         </div>
       </form>

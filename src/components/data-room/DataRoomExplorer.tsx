@@ -79,15 +79,20 @@ function ExplorerNodeItem({ depth, node }: ExplorerNodeItemProps) {
           }
         }}
         style={{ paddingLeft: `${depth * 18 + 8}px` }}
+        title={node.name}
         type="button"
       >
-        <span className="mt-0.5 flex h-5 w-5 items-center justify-center text-muted">
+        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-muted">
           {hasChildren ? <Icon className="h-4 w-4" name={expanded ? "chevronDown" : "chevronRight"} /> : null}
         </span>
-        <span className="mt-0.5 text-primary">
+        <span className="mt-0.5 shrink-0 text-primary">
           <Icon className="h-[18px] w-[18px]" name={iconNameForNode(node.kind)} />
         </span>
-        <span className={`truncate ${hasChildren ? "text-sm font-medium text-text-main" : "text-[13px] text-text-main/80"}`}>
+        <span
+          className={`min-w-0 whitespace-normal break-words leading-snug [overflow-wrap:anywhere] ${
+            hasChildren ? "text-sm font-medium text-text-main" : "text-[13px] text-text-main/80"
+          }`}
+        >
           {node.name}
         </span>
       </button>

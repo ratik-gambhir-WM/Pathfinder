@@ -5,7 +5,7 @@ import { WorkspaceLayout } from "./WorkspaceLayout";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 
 type WorkspaceHomeShellProps = {
-  activeHomeSection?: "hub" | "summarize" | "vault";
+  activeHomeSection?: "account" | "hub" | "summarize" | "vault";
   children: ReactNode;
 };
 
