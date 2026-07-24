@@ -18,11 +18,11 @@ use tauri::{
 
 use crate::{
     commands::{
-        data_browse::{
+        research::{
             list_summary_files, login_demo_command, save_markdown_summary, summarize,
             summarize_selected,
         },
-        database::database_status,
+        deal::database_status,
         users::{create_user, create_wm_user, get_user_by_email, greet, user_exists_by_email},
     },
     events::register_login_demo_events,

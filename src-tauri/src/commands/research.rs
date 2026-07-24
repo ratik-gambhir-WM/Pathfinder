@@ -1,5 +1,5 @@
 use crate::common::write_summary;
-use crate::services::document_service::{
+use crate::services::research_service::{
     list_summarizable_files, summarize_dir, summarize_paths, SummarizableFile,
 };
 use serde::{Deserialize, Serialize};

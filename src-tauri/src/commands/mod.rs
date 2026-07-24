@@ -1,3 +1,3 @@
-pub mod data_browse;
-pub mod database;
+pub mod deal;
+pub mod research;
 pub mod users;
