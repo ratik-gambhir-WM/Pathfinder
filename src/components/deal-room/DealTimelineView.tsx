@@ -128,7 +128,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
         </header>
 
         <div className="grid grid-cols-12 gap-8">
-          <WorkspaceCard className="col-span-12 rounded-[28px] p-6 xl:col-span-8">
+          <WorkspaceCard className="col-span-12 rounded-[28px] p-6">
             <div className="mb-7 flex items-center justify-between">
               <h2 className="type-h1 text-text-main">Activity Calendar</h2>
               <button
@@ -175,10 +175,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
             </div>
           </WorkspaceCard>
 
-          <aside className="col-span-12 space-y-6 xl:col-span-4">
-            <ProjectSummaryPanel deal={deal} />
-            <TimelineTasksPanel tasks={deal.pendingTasks} />
-          </aside>
+          <TaskKanbanBoard tasks={deal.pendingTasks} />
         </div>
       </div>
 
@@ -277,89 +274,100 @@ function CalendarEventBar({ event }: CalendarEventBarProps) {
   );
 }
 
-type ProjectSummaryPanelProps = {
-  deal: DealRoomData;
-};
-
-function ProjectSummaryPanel({ deal }: ProjectSummaryPanelProps) {
-  return (
-    <WorkspaceCard className="rounded-[28px] p-7">
-      <h2 className="type-h2 text-text-main">{deal.name} Due Diligence</h2>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <StatusBadge className="bg-secondary-container/45 text-on-secondary-container" label={deal.stageLabel} />
-        <StatusBadge className="bg-primary/10 text-primary" label={deal.phaseLabel} />
-      </div>
-      <p className="mt-5 text-[15px] leading-7 text-text-main/82">{deal.summary}</p>
-    </WorkspaceCard>
-  );
-}
-
-type TimelineTasksPanelProps = {
+type TaskKanbanBoardProps = {
   tasks: DealTask[];
 };
 
-function TimelineTasksPanel({ tasks }: TimelineTasksPanelProps) {
-  const featuredTasks = tasks.filter((task, index) => index === 0 || task.priority);
-  const [checkedState, setCheckedState] = useState(() => featuredTasks.map((task) => Boolean(task.done)));
+type TaskKanbanColumn = {
+  description: string;
+  id: "done" | "in-progress" | "to-do";
+  tasks: DealTask[];
+  title: string;
+};
+
+function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
+  const columns: TaskKanbanColumn[] = [
+    {
+      description: "Open diligence reminders",
+      id: "to-do",
+      tasks: tasks.filter((task) => !task.done && !task.priority),
+      title: "To-do",
+    },
+    {
+      description: "Needs active follow-up",
+      id: "in-progress",
+      tasks: tasks.filter((task) => !task.done && task.priority),
+      title: "In progress",
+    },
+    {
+      description: "Closed out reminders",
+      id: "done",
+      tasks: tasks.filter((task) => task.done),
+      title: "Done",
+    },
+  ];
 
   return (
-    <WorkspaceCard className="rounded-[28px] p-7">
-      <div className="mb-7 flex items-center justify-between">
-        <h2 className="type-h2 text-text-main">Pending Tasks</h2>
-        <button
-          aria-label="Task actions"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-white/58 hover:text-text-main"
-          type="button"
-        >
-          <Icon className="h-5 w-5" name="more" />
-        </button>
+    <section className="col-span-12">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="type-h1 text-text-main">Pending Tasks</h2>
+          <p className="mt-1 text-[13px] text-text-main/70">Track diligence reminders by workflow status.</p>
+        </div>
       </div>
 
-      <div className="space-y-8">
-        {featuredTasks.map((task, index) => {
-          const isChecked = checkedState[index] ?? false;
-          const statusLabel = isChecked ? "Completed" : task.priority ? "High Priority" : "Open Task";
-
-          return (
-            <article className="flex gap-4" key={task.id}>
-              <button
-                aria-label={`${isChecked ? "Mark incomplete" : "Mark complete"}: ${task.label}`}
-                aria-pressed={isChecked}
-                className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 bg-white/70 transition hover:scale-105 ${
-                  task.priority ? "border-error/20" : "border-primary/20"
-                }`}
-                onClick={() => setCheckedState((current) => current.map((value, valueIndex) => (valueIndex === index ? !value : value)))}
-                type="button"
-              >
-                <span className={`h-2.5 w-2.5 rounded-full ${task.priority ? "bg-error" : "bg-primary"}`} />
-              </button>
-
-              <div className="min-w-0 flex-1">
-                <p className={`mb-2 text-[10px] font-bold uppercase tracking-[0.16em] ${task.priority ? "text-error/65" : "text-muted/72"}`}>
-                  {statusLabel}
-                </p>
-                <h3 className={`text-[15px] font-bold text-text-main ${isChecked ? "line-through opacity-55" : ""}`}>{task.label}</h3>
-                <div
-                  className={`mt-4 rounded-[14px] border px-4 py-3 text-[13px] leading-6 ${
-                    task.priority ? "border-error/20 bg-error-container/18 text-on-error-container italic" : "border-white/55 bg-white/48 text-text-main/78"
-                  }`}
-                >
-                  {isChecked
-                    ? "Task completed."
-                    : task.priority
-                      ? "Needs immediate follow-up."
-                      : "Click the circle to mark this diligence task complete."}
-                </div>
+      <div className="grid gap-5 lg:grid-cols-3">
+        {columns.map((column) => (
+          <WorkspaceCard className="flex min-h-[260px] flex-col rounded-[28px] p-5" key={column.id}>
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-[1.35rem] font-bold leading-tight text-text-main [font-family:var(--font-heading)]">{column.title}</h3>
+                <p className="mt-1 text-[12px] text-text-main/62">{column.description}</p>
               </div>
-            </article>
-          );
-        })}
-      </div>
+              <span className="rounded-full border border-outline-variant bg-white/70 px-3 py-1 text-[11px] font-bold text-muted">
+                {column.tasks.length}
+              </span>
+            </div>
 
-      <button className="mt-8 w-full rounded-2xl border border-outline-variant bg-white/55 px-4 py-3 text-[15px] font-semibold text-text-main transition hover:bg-white/78">
-        View Full List
-      </button>
-    </WorkspaceCard>
+            <div className="flex flex-1 flex-col gap-3">
+              {column.tasks.length > 0 ? (
+                column.tasks.map((task) => <ReminderCard key={task.id} status={column.title} task={task} />)
+              ) : (
+                <div className="flex min-h-28 items-center justify-center rounded-[22px] border border-dashed border-outline-variant bg-white/34 px-4 text-center text-[13px] font-medium text-muted">
+                  No reminders here yet.
+                </div>
+              )}
+            </div>
+          </WorkspaceCard>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+type ReminderCardProps = {
+  status: string;
+  task: DealTask;
+};
+
+function ReminderCard({ status, task }: ReminderCardProps) {
+  return (
+    <article
+      className={`rounded-[22px] border bg-white/70 p-4 shadow-[0_8px_20px_rgba(7,1,84,0.04)] ${
+        task.priority ? "border-error/20" : "border-white/80"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${task.priority ? "text-error/70" : "text-muted/80"}`}>
+          {task.priority ? "High Priority" : status}
+        </p>
+        <span className={`mt-0.5 h-2.5 w-2.5 rounded-full ${task.done ? "bg-primary" : task.priority ? "bg-error" : "bg-muted"}`} />
+      </div>
+      <h4 className={`mt-3 text-[15px] font-bold leading-6 text-text-main ${task.done ? "line-through opacity-60" : ""}`}>{task.label}</h4>
+      <p className={`mt-4 rounded-[16px] px-4 py-3 text-[13px] leading-6 ${task.priority ? "bg-error-container/20 text-error" : "bg-surface-container-high/70 text-text-main/72"}`}>
+        {task.done ? "Task completed." : task.priority ? "Needs immediate follow-up before the next review cycle." : "Open reminder for the diligence team."}
+      </p>
+    </article>
   );
 }
 
@@ -453,15 +461,6 @@ function NewActivityModal({ formState, onChange, onClose, onSubmit }: NewActivit
       </form>
     </div>
   );
-}
-
-type StatusBadgeProps = {
-  className: string;
-  label: string;
-};
-
-function StatusBadge({ className, label }: StatusBadgeProps) {
-  return <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${className}`}>{label}</span>;
 }
 
 function createCalendarWeeks(startDate: string, weekCount: number) {

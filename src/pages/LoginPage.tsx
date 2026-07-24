@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LoginCard } from "../components/login/LoginCard";
@@ -7,6 +6,8 @@ import { Button } from "../components/ui/Button";
 import { FormField } from "../components/ui/FormField";
 import { Icon } from "../components/ui/Icon";
 import { persistWorkspaceEmail } from "../hooks/useWorkspaceSession";
+import { TAURI_COMMANDS } from "../lib/constants";
+import { execute } from "../lib/tauri/command";
 
 type LoginStep = "email" | "new-user";
 
@@ -46,7 +47,7 @@ export function LoginPage() {
     setIsCheckingUser(true);
 
     try {
-      const exists = await invoke<boolean>("user_exists_by_email", { email: normalizedEmail });
+      const exists = await execute<boolean>(TAURI_COMMANDS.userExistsByEmail, { email: normalizedEmail });
 
       if (exists) {
         enterWorkspace(normalizedEmail);
@@ -69,7 +70,7 @@ export function LoginPage() {
     setIsCreatingUser(true);
 
     try {
-      await invoke("create_user", {
+      await execute(TAURI_COMMANDS.createUser, {
         input: {
           apiKey: newUserForm.apiKey.trim(),
           email: normalizedEmail,
