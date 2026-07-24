@@ -1,6 +1,9 @@
-use crate::common::write_summary;
-use crate::services::research_service::{
-    list_summarizable_files, summarize_dir, summarize_paths, SummarizableFile,
+use crate::{
+    commands::{CommandResult, CommandResultExt},
+    common::write_summary,
+    services::research_service::{
+        list_summarizable_files, summarize_dir, summarize_paths, SummarizableFile,
+    },
 };
 use serde::{Deserialize, Serialize};
 
@@ -50,32 +53,28 @@ pub fn login_demo_command(payload: LoginDemoCommandPayload) -> LoginDemoCommandR
 }
 
 #[tauri::command]
-pub fn list_summary_files(payload: DirPathPayload) -> Result<Vec<SummarizableFile>, String> {
-    list_summarizable_files(payload.path)
+pub fn list_summary_files(payload: DirPathPayload) -> CommandResult<Vec<SummarizableFile>> {
+    list_summarizable_files(payload.path).command_context("list_summary_files")
 }
 
 #[tauri::command]
-pub async fn summarize(payload: DirPathPayload) -> Result<String, String> {
+pub async fn summarize(payload: DirPathPayload) -> CommandResult<String> {
     println!("Summarizing...");
     println!("{:?}", payload.path);
-    let summary = summarize_dir(payload.path).await;
-    match summary {
-        Ok(sum) => Ok(sum),
-        Err(err) => Err(err.to_string()),
-    }
+    summarize_dir(payload.path)
+        .await
+        .command_context("summarize")
 }
 
 #[tauri::command]
-pub async fn summarize_selected(payload: SelectedPathsPayload) -> Result<String, String> {
+pub async fn summarize_selected(payload: SelectedPathsPayload) -> CommandResult<String> {
     println!("Summarizing selected files...");
-    let summary = summarize_paths(payload.paths).await;
-    match summary {
-        Ok(sum) => Ok(sum),
-        Err(err) => Err(err.to_string()),
-    }
+    summarize_paths(payload.paths)
+        .await
+        .command_context("summarize_selected")
 }
 
 #[tauri::command]
-pub fn save_markdown_summary(payload: SaveMarkdownSummaryPayload) -> Result<(), String> {
-    write_summary(&payload.summary, payload.path)
+pub fn save_markdown_summary(payload: SaveMarkdownSummaryPayload) -> CommandResult<()> {
+    write_summary(&payload.summary, payload.path).command_context("save_markdown_summary")
 }

@@ -4,6 +4,7 @@ pub mod errors;
 pub mod models;
 pub mod parsers;
 pub mod prompts;
+pub mod repository;
 pub mod services;
 pub mod state;
 pub mod utils;
@@ -18,11 +19,11 @@ use tauri::{
 
 use crate::{
     commands::{
+        deal::{database_status, extract_deal_questions_and_thesis, save_deal_and_extract},
         research::{
             list_summary_files, login_demo_command, save_markdown_summary, summarize,
             summarize_selected,
         },
-        deal::database_status,
         users::{create_user, create_wm_user, get_user_by_email, greet, user_exists_by_email},
     },
     events::register_login_demo_events,
@@ -104,6 +105,8 @@ pub fn run() {
             get_user_by_email,
             user_exists_by_email,
             database_status,
+            save_deal_and_extract,
+            extract_deal_questions_and_thesis,
             login_demo_command,
             list_summary_files,
             summarize,

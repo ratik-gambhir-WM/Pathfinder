@@ -1,21 +1,24 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { DataRoomTreeNode } from "../../data/dataRoom";
+import type { DealExtractionLocationState } from "../../data/dealExtraction";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
 
 type DataRoomExplorerProps = {
   dealName: string;
   dealRoomPath: string;
+  navigationState?: DealExtractionLocationState;
   nodes: DataRoomTreeNode[];
 };
 
-export function DataRoomExplorer({ dealName, dealRoomPath, nodes }: DataRoomExplorerProps) {
+export function DataRoomExplorer({ dealName, dealRoomPath, navigationState, nodes }: DataRoomExplorerProps) {
   return (
     <aside className="flex w-72 shrink-0 flex-col gap-3 border-r border-white/80 bg-white/40 p-4 backdrop-blur-md">
       <Link
         aria-label={`Back to ${dealName} deal room`}
         className="flex h-10 w-10 items-center justify-center rounded-full text-primary transition hover:bg-white/70"
+        state={navigationState}
         to={dealRoomPath}
       >
         <Icon className="h-5 w-5" name="home" />

@@ -1,30 +1,43 @@
 import { useEffect, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import { ActivityTimelineCard } from "../components/deal-room/ActivityTimelineCard";
 import { DealRoomHeader } from "../components/deal-room/DealRoomHeader";
 import { DealSummaryCard } from "../components/deal-room/DealSummaryCard";
 import { DealTimelineView } from "../components/deal-room/DealTimelineView";
-import { DiligenceGraphView } from "../components/deal-room/DiligenceGraphView";
-import { PendingTasksTimelineCard } from "../components/deal-room/PendingTasksTimelineCard";
-import { SiteVisitsView } from "../components/deal-room/SiteVisitsView";
+import { UnderConstructionView } from "../components/deal-room/UnderConstructionView";
 import { InsightsStrip } from "../components/hub/InsightsStrip";
 import { WorkspaceLayout } from "../components/hub/WorkspaceLayout";
 import { WorkspaceSidebar } from "../components/hub/WorkspaceSidebar";
-import { Button } from "../components/ui/Button";
-import { Icon } from "../components/ui/Icon";
+import type { DealExtractionLocationState } from "../data/dealExtraction";
+import { buildWorkspaceDealFromExtractionResult } from "../data/dealExtraction";
 import { getDealById, workspaceDeals, workspaceInsights } from "../data/workspace";
 import type { DealTimelineItem } from "../data/workspace";
 import { useWorkspaceSession } from "../hooks/useWorkspaceSession";
 
-type ActiveDealView = "deal-room" | "diligence-graph" | "site-visits" | "timeline";
+type ActiveDealView = "deal-room" | "diligence-graph" | "site-visits" | "synthesis-canvas" | "timeline";
 
 export function DealRoomPage() {
   const { dealId } = useParams();
-  const deal = dealId ? getDealById(dealId) : undefined;
+  const location = useLocation();
+  const extractionResult = (location.state as DealExtractionLocationState | null)?.result;
+  const extractedDeal =
+    extractionResult && String(extractionResult.deal.id) === dealId
+      ? buildWorkspaceDealFromExtractionResult(extractionResult)
+      : undefined;
+  const deal = extractedDeal ?? (dealId ? getDealById(dealId) : undefined);
   const { email, navigationState } = useWorkspaceSession();
   const [activeDealView, setActiveDealView] = useState<ActiveDealView>("deal-room");
   const [timelineItems, setTimelineItems] = useState<DealTimelineItem[]>([]);
   const dealInsights = workspaceInsights.filter((insight) => insight.deal === deal?.room.name);
+  const deals = extractedDeal
+    ? [extractedDeal, ...workspaceDeals.filter((workspaceDeal) => workspaceDeal.room.id !== extractedDeal.room.id)]
+    : workspaceDeals;
+  const dealNavigationState = extractionResult
+    ? ({
+        ...navigationState,
+        result: extractionResult,
+      } satisfies DealExtractionLocationState)
+    : navigationState;
 
   useEffect(() => {
     setTimelineItems(deal?.room.timeline ?? []);
@@ -40,10 +53,10 @@ export function DealRoomPage() {
         <WorkspaceSidebar
           activeDealId={deal.room.id}
           activeSection={activeDealView}
-          deals={workspaceDeals}
+          deals={deals}
           email={email}
           mode="deal-room"
-          navigationState={navigationState}
+          navigationState={dealNavigationState}
           onDealRoomSectionChange={setActiveDealView}
         />
       }
@@ -52,29 +65,29 @@ export function DealRoomPage() {
         {activeDealView === "timeline" ? (
           <DealTimelineView deal={deal.room} events={timelineItems} onEventsChange={setTimelineItems} />
         ) : activeDealView === "diligence-graph" ? (
-          <DiligenceGraphView deal={deal.room} />
+          <UnderConstructionView
+            description="Evidence relationships and dependency mapping for this deal."
+            icon="graph"
+            title="Diligence Graph"
+          />
         ) : activeDealView === "site-visits" ? (
-          <SiteVisitsView deal={deal.room} />
+          <UnderConstructionView
+            description="Planning templates and visit notes for diligence fieldwork."
+            icon="person"
+            title="Site Visits"
+          />
+        ) : activeDealView === "synthesis-canvas" ? (
+          <UnderConstructionView
+            description="A working canvas for combining findings, risks, and recommendations."
+            icon="grid"
+            title="Synthesis Canvas"
+          />
         ) : (
           <>
             <DealRoomHeader subtitle={deal.room.overviewSubtitle} />
 
             <div className="grid grid-cols-12 gap-6">
               <DealSummaryCard deal={deal.room} />
-              <div className="relative col-span-12 xl:col-span-4">
-                <div className="absolute inset-x-0 bottom-full z-10 mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-                  <button className="inline-flex h-12 items-center justify-center gap-3 rounded-full border border-white/80 bg-white/72 px-6 text-[14px] font-semibold text-text-main shadow-[0_8px_20px_rgba(7,1,84,0.05)] transition hover:bg-white">
-                    <Icon className="h-5 w-5 text-muted" name="refresh" />
-                    Sync Data Room
-                  </button>
-
-                  <Button className="h-12 px-6" icon={<Icon className="h-5 w-5" name="plus" />}>
-                    New Note
-                  </Button>
-                </div>
-
-                <PendingTasksTimelineCard key={deal.room.id} tasks={deal.room.pendingTasks} />
-              </div>
               <InsightsStrip
                 className="col-span-12 mt-2"
                 contextLabel={deal.room.name}

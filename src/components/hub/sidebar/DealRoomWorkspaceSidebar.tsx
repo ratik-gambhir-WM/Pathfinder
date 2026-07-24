@@ -11,7 +11,7 @@ const dealRoomSidebarLinks = [
   { icon: "person" as const, key: "site-visits" as const, label: "Site Visits" },
   { icon: "graph" as const, key: "diligence-graph" as const, label: "Diligence Graph" },
   { icon: "folderOpen" as const, key: "data-room" as const, label: "Data Room Vault" },
-  { icon: "grid" as const, label: "Synthesis Canvas" },
+  { icon: "grid" as const, key: "synthesis-canvas" as const, label: "Synthesis Canvas" },
 ];
 
 export function DealRoomWorkspaceSidebar({
@@ -56,7 +56,13 @@ export function DealRoomWorkspaceSidebar({
             );
           }
 
-          if ("key" in link && (link.key === "timeline" || link.key === "diligence-graph" || link.key === "site-visits")) {
+          if (
+            "key" in link &&
+            (link.key === "timeline" ||
+              link.key === "diligence-graph" ||
+              link.key === "site-visits" ||
+              link.key === "synthesis-canvas")
+          ) {
             return (
               <SidebarStaticItem
                 active={activeSection === link.key}

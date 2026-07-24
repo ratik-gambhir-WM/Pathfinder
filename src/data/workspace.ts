@@ -50,6 +50,7 @@ export type DealTask = {
 };
 
 export type DealRoomData = {
+  dealType?: string;
   id: string;
   keyQuestions: string[];
   metrics: DealMetric[];

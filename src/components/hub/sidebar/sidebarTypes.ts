@@ -2,7 +2,7 @@ import type { WorkspaceDeal, WorkspaceLocationState, WorkspaceSidebarTool } from
 
 export type ActiveHomeSection = "account" | "hub" | "summarize" | "vault";
 
-export type ActiveDealSection = "data-room" | "deal-room" | "diligence-graph" | "site-visits" | "timeline";
+export type ActiveDealSection = "data-room" | "deal-room" | "diligence-graph" | "site-visits" | "synthesis-canvas" | "timeline";
 
 export type DealRoomTabSection = Exclude<ActiveDealSection, "data-room">;
 

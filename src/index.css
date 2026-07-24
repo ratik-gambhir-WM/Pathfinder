@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oxanium:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -54,7 +54,7 @@
   --color-surface-variant: #e8eef8;
 
   --font-heading: "Oxanium", sans-serif;
-  --font-body: "Inter", sans-serif;
+  --font-body: "Oxanium", sans-serif;
 
   --radius-sm: 0.25rem;
   --radius-default: 0.5rem;

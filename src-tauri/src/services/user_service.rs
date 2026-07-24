@@ -1,7 +1,13 @@
-use rusqlite::{params, Row};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-use crate::state::AppState;
+use crate::{
+    repository::user_repository::{
+        create_user, get_user_by_email as fetch_user_by_email, CreateUserRecord,
+    },
+    state::AppState,
+};
+
+pub use crate::repository::user_repository::User;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -13,39 +19,18 @@ pub struct AddUserInput {
     pub role: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct User {
-    pub id: i64,
-    pub first_name: String,
-    pub last_name: String,
-    pub email: String,
-    pub api_key: String,
-    pub role: String,
-    pub created_at: String,
-    pub updated_at: String,
-}
-
 pub fn add_user(state: &AppState, input: AddUserInput) -> Result<User, String> {
     validate_user_input(&input)?;
-    let email = input.email.trim().to_string();
-
-    state.gen_sqlite_db_client().execute(
-        r#"
-        INSERT INTO users (first_name, last_name, email, api_key, role)
-        VALUES (?1, ?2, ?3, ?4, ?5)
-        "#,
-        params![
-            input.first_name.trim(),
-            input.last_name.trim(),
-            email,
-            input.api_key.trim(),
-            input.role.trim()
-        ],
-    )?;
-
-    get_user_by_email(state, &email)?
-        .ok_or_else(|| format!("failed to fetch user after insert for email `{email}`"))
+    create_user(
+        state,
+        CreateUserRecord {
+            first_name: input.first_name.trim(),
+            last_name: input.last_name.trim(),
+            email: input.email.trim(),
+            api_key: input.api_key.trim(),
+            role: input.role.trim(),
+        },
+    )
 }
 
 pub fn get_user_by_email(state: &AppState, email: &str) -> Result<Option<User>, String> {
@@ -54,30 +39,7 @@ pub fn get_user_by_email(state: &AppState, email: &str) -> Result<Option<User>, 
         return Err("email is required".to_string());
     }
 
-    let users = state.gen_sqlite_db_client().query_rows(
-        r#"
-        SELECT id, first_name, last_name, email, api_key, role, created_at, updated_at
-        FROM users
-        WHERE email = ?1
-        "#,
-        [email],
-        user_from_row,
-    )?;
-
-    Ok(users.into_iter().next())
-}
-
-fn user_from_row(row: &Row<'_>) -> rusqlite::Result<User> {
-    Ok(User {
-        id: row.get("id")?,
-        first_name: row.get("first_name")?,
-        last_name: row.get("last_name")?,
-        email: row.get("email")?,
-        api_key: row.get("api_key")?,
-        role: row.get("role")?,
-        created_at: row.get("created_at")?,
-        updated_at: row.get("updated_at")?,
-    })
+    fetch_user_by_email(state, email)
 }
 
 fn validate_user_input(input: &AddUserInput) -> Result<(), String> {

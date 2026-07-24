@@ -13,6 +13,7 @@ pub struct OpenAiClient<'a> {
     api_key: &'a str,
 }
 
+#[derive(Debug)]
 pub enum ResponsesFileInput<'a> {
     FileId(&'a str),
     FileUrl(&'a str),
@@ -29,6 +30,38 @@ pub enum ResponsesFileInput<'a> {
     FilePath(&'a Path),
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct ResponsesRequestOptions<'a> {
+    pub prompt: Option<&'a str>,
+    pub system_instructions: Option<&'a str>,
+    pub model: Option<&'a str>,
+    pub file_inputs: Option<&'a [ResponsesFileInput<'a>]>,
+    pub reasoning_effort: Option<&'a str>,
+    pub max_output_tokens: Option<u32>,
+}
+
+impl<'a> Default for ResponsesRequestOptions<'a> {
+    fn default() -> Self {
+        Self {
+            prompt: None,
+            system_instructions: None,
+            model: None,
+            file_inputs: None,
+            reasoning_effort: Some("high"),
+            max_output_tokens: None,
+        }
+    }
+}
+
+struct ResolvedResponsesRequest<'a> {
+    prompt: &'a str,
+    system_instructions: &'a str,
+    model: &'a str,
+    file_inputs: Option<&'a [ResponsesFileInput<'a>]>,
+    reasoning_effort: Option<&'a str>,
+    max_output_tokens: Option<u32>,
+}
+
 impl<'a> OpenAiClient<'a> {
     pub fn new(api_key: &'a str) -> Self {
         OpenAiClient { api_key }
@@ -40,8 +73,13 @@ impl<'a> OpenAiClient<'a> {
         system_instructions: Option<&str>,
         model: Option<&str>,
     ) -> Result<String, String> {
-        self.gen_model_response_with_files(prompt, system_instructions, model, None)
-            .await
+        self.gen_model_response_with_options(ResponsesRequestOptions {
+            prompt,
+            system_instructions,
+            model,
+            ..Default::default()
+        })
+        .await
     }
 
     pub async fn gen_model_response_with_files(
@@ -51,27 +89,42 @@ impl<'a> OpenAiClient<'a> {
         model: Option<&str>,
         file_inputs: Option<&[ResponsesFileInput<'_>]>,
     ) -> Result<String, String> {
+        self.gen_model_response_with_options(ResponsesRequestOptions {
+            prompt,
+            system_instructions,
+            model,
+            file_inputs,
+            ..Default::default()
+        })
+        .await
+    }
+
+    pub async fn gen_model_response_with_files_and_reasoning(
+        &self,
+        prompt: Option<&str>,
+        system_instructions: Option<&str>,
+        model: Option<&str>,
+        file_inputs: Option<&[ResponsesFileInput<'_>]>,
+        reasoning_effort: Option<&str>,
+    ) -> Result<String, String> {
+        self.gen_model_response_with_options(ResponsesRequestOptions {
+            prompt,
+            system_instructions,
+            model,
+            file_inputs,
+            reasoning_effort,
+            ..Default::default()
+        })
+        .await
+    }
+
+    pub async fn gen_model_response_with_options(
+        &self,
+        options: ResponsesRequestOptions<'_>,
+    ) -> Result<String, String> {
         let openai_client = reqwest::Client::new();
-        let prompt = prompt.unwrap_or(DEFAULT_RESPONSES_PROMPT).trim();
-        let system_instructions = system_instructions
-            .unwrap_or(DEFAULT_SYSTEM_INSTRUCTIONS)
-            .trim();
-        let model = model.unwrap_or(DEFAULT_RESPONSES_MODEL).trim();
-
-        if prompt.is_empty() {
-            return Err("prompt cannot be empty".to_string());
-        }
-
-        if system_instructions.is_empty() {
-            return Err("system instructions cannot be empty".to_string());
-        }
-
-        if model.is_empty() {
-            return Err("model cannot be empty".to_string());
-        }
-
-        let request_body =
-            build_responses_request_body(model, system_instructions, prompt, file_inputs)?;
+        let request = resolve_responses_request_options(options)?;
+        let request_body = build_responses_request_body(&request)?;
 
         let response = openai_client
             .post("https://api.openai.com/v1/responses")
@@ -106,32 +159,61 @@ impl<'a> OpenAiClient<'a> {
         system_instructions: Option<&str>,
         model: Option<&str>,
         file_inputs: Option<&[ResponsesFileInput<'_>]>,
+        on_text_delta: F,
+    ) -> Result<String, String>
+    where
+        F: FnMut(&str) + Send,
+    {
+        self.gen_model_response_streaming_with_options(
+            ResponsesRequestOptions {
+                prompt,
+                system_instructions,
+                model,
+                file_inputs,
+                ..Default::default()
+            },
+            on_text_delta,
+        )
+        .await
+    }
+
+    pub async fn gen_model_response_with_files_streaming_and_reasoning<F>(
+        &self,
+        prompt: Option<&str>,
+        system_instructions: Option<&str>,
+        model: Option<&str>,
+        file_inputs: Option<&[ResponsesFileInput<'_>]>,
+        reasoning_effort: Option<&str>,
+        on_text_delta: F,
+    ) -> Result<String, String>
+    where
+        F: FnMut(&str) + Send,
+    {
+        self.gen_model_response_streaming_with_options(
+            ResponsesRequestOptions {
+                prompt,
+                system_instructions,
+                model,
+                file_inputs,
+                reasoning_effort,
+                ..Default::default()
+            },
+            on_text_delta,
+        )
+        .await
+    }
+
+    pub async fn gen_model_response_streaming_with_options<F>(
+        &self,
+        options: ResponsesRequestOptions<'_>,
         mut on_text_delta: F,
     ) -> Result<String, String>
     where
         F: FnMut(&str) + Send,
     {
         let openai_client = reqwest::Client::new();
-        let prompt = prompt.unwrap_or(DEFAULT_RESPONSES_PROMPT).trim();
-        let system_instructions = system_instructions
-            .unwrap_or(DEFAULT_SYSTEM_INSTRUCTIONS)
-            .trim();
-        let model = model.unwrap_or(DEFAULT_RESPONSES_MODEL).trim();
-
-        if prompt.is_empty() {
-            return Err("prompt cannot be empty".to_string());
-        }
-
-        if system_instructions.is_empty() {
-            return Err("system instructions cannot be empty".to_string());
-        }
-
-        if model.is_empty() {
-            return Err("model cannot be empty".to_string());
-        }
-
-        let mut request_body =
-            build_responses_request_body(model, system_instructions, prompt, file_inputs)?;
+        let request = resolve_responses_request_options(options)?;
+        let mut request_body = build_responses_request_body(&request)?;
         request_body["stream"] = json!(true);
 
         let mut response = openai_client
@@ -254,22 +336,70 @@ impl<'a> OpenAiClient<'a> {
     }
 }
 
-fn build_responses_request_body(
-    model: &str,
-    system_instructions: &str,
-    prompt: &str,
-    file_inputs: Option<&[ResponsesFileInput<'_>]>,
-) -> Result<Value, String> {
-    Ok(json!({
-        "model": model,
-        "instructions": system_instructions,
+fn resolve_responses_request_options<'a>(
+    options: ResponsesRequestOptions<'a>,
+) -> Result<ResolvedResponsesRequest<'a>, String> {
+    let prompt = options.prompt.unwrap_or(DEFAULT_RESPONSES_PROMPT).trim();
+    let system_instructions = options
+        .system_instructions
+        .unwrap_or(DEFAULT_SYSTEM_INSTRUCTIONS)
+        .trim();
+    let model = options.model.unwrap_or(DEFAULT_RESPONSES_MODEL).trim();
+    let reasoning_effort = options.reasoning_effort.map(str::trim);
+
+    if prompt.is_empty() {
+        return Err("prompt cannot be empty".to_string());
+    }
+
+    if system_instructions.is_empty() {
+        return Err("system instructions cannot be empty".to_string());
+    }
+
+    if model.is_empty() {
+        return Err("model cannot be empty".to_string());
+    }
+
+    if matches!(reasoning_effort, Some("")) {
+        return Err("reasoning effort cannot be empty".to_string());
+    }
+
+    if matches!(options.max_output_tokens, Some(0)) {
+        return Err("max output tokens must be greater than 0".to_string());
+    }
+
+    Ok(ResolvedResponsesRequest {
+        prompt,
+        system_instructions,
+        model,
+        file_inputs: options.file_inputs,
+        reasoning_effort,
+        max_output_tokens: options.max_output_tokens,
+    })
+}
+
+fn build_responses_request_body(request: &ResolvedResponsesRequest<'_>) -> Result<Value, String> {
+    let mut request_body = json!({
+        "model": request.model,
+        "instructions": request.system_instructions,
         "input": [
             {
                 "role": "user",
-                "content": build_user_input_content(prompt, file_inputs)?,
+                "content": build_user_input_content(request.prompt, request.file_inputs)?,
             }
         ],
-    }))
+    });
+
+    if let Some(reasoning_effort) = request.reasoning_effort {
+        request_body["reasoning"] = json!({
+            "effort": reasoning_effort,
+        });
+    }
+
+    if let Some(max_output_tokens) = request.max_output_tokens {
+        request_body["max_output_tokens"] = json!(max_output_tokens);
+    }
+
+    Ok(request_body)
 }
 
 fn build_user_input_content(
@@ -597,23 +727,30 @@ mod tests {
 
     #[test]
     fn build_responses_request_body_places_files_and_prompt_in_user_content() {
-        let request_body = build_responses_request_body(
-            "gpt-5",
-            "You are a helpful assistant.",
-            "What is the first dragon in the book?",
-            Some(&[ResponsesFileInput::FileData {
-                filename: "draconomicon.pdf",
-                mime_type: "application/pdf",
-                data_base64: "YWJjMTIz",
-            }]),
-        )
+        let files = [ResponsesFileInput::FileData {
+            filename: "draconomicon.pdf",
+            mime_type: "application/pdf",
+            data_base64: "YWJjMTIz",
+        }];
+        let request = resolve_responses_request_options(ResponsesRequestOptions {
+            prompt: Some("What is the first dragon in the book?"),
+            system_instructions: Some("You are a helpful assistant."),
+            model: Some("gpt-5"),
+            file_inputs: Some(&files),
+            reasoning_effort: Some("high"),
+            ..Default::default()
+        })
         .unwrap();
+        let request_body = build_responses_request_body(&request).unwrap();
 
         assert_eq!(
             request_body,
             json!({
                 "model": "gpt-5",
                 "instructions": "You are a helpful assistant.",
+                "reasoning": {
+                    "effort": "high",
+                },
                 "input": [
                     {
                         "role": "user",
@@ -632,6 +769,43 @@ mod tests {
                 ]
             })
         );
+    }
+
+    #[test]
+    fn default_responses_options_use_high_reasoning() {
+        let request = resolve_responses_request_options(ResponsesRequestOptions {
+            prompt: Some("Summarize the attached files."),
+            ..Default::default()
+        })
+        .unwrap();
+        let request_body = build_responses_request_body(&request).unwrap();
+
+        assert_eq!(
+            request_body.get("reasoning"),
+            Some(&json!({
+                "effort": "high",
+            }))
+        );
+    }
+
+    #[test]
+    fn responses_options_allow_per_call_reasoning_and_output_limit() {
+        let request = resolve_responses_request_options(ResponsesRequestOptions {
+            prompt: Some("Extract the key questions."),
+            reasoning_effort: Some("none"),
+            max_output_tokens: Some(500),
+            ..Default::default()
+        })
+        .unwrap();
+        let request_body = build_responses_request_body(&request).unwrap();
+
+        assert_eq!(
+            request_body.get("reasoning"),
+            Some(&json!({
+                "effort": "none",
+            }))
+        );
+        assert_eq!(request_body.get("max_output_tokens"), Some(&json!(500)));
     }
 
     #[test]

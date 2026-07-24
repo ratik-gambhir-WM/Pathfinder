@@ -7,10 +7,10 @@ type DealSummaryCardProps = {
 };
 
 export function DealSummaryCard({ deal }: DealSummaryCardProps) {
-  return (
-    <WorkspaceCard className="relative col-span-12 overflow-hidden rounded-[28px] bg-surface-container-low p-8 lg:p-10 xl:col-span-8">
-      <div className="workspace-card-glow pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-primary/6 blur-3xl" />
+  const thesisLabel = deal.dealType === "Sell-side" ? "Equity Story" : "Investment Thesis";
 
+  return (
+    <WorkspaceCard className="relative col-span-12 overflow-hidden rounded-[28px] bg-surface-container-lowest p-8 lg:p-10">
       <div className="relative z-10 flex h-full flex-col gap-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:justify-between">
           <div className="max-w-3xl space-y-5">
@@ -72,7 +72,7 @@ export function DealSummaryCard({ deal }: DealSummaryCardProps) {
           <section className="space-y-4">
             <div className="flex items-center gap-3">
               <Icon className="h-6 w-6 text-accent" name="sparkles" />
-              <h3 className="type-h2 text-text-main">Investment Thesis</h3>
+              <h3 className="type-h2 text-text-main">{thesisLabel}</h3>
             </div>
 
             <div className="rounded-[24px] border border-white/70 bg-white/45 p-5">

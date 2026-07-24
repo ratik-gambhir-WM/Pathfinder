@@ -4,11 +4,14 @@ import { Icon } from "../ui/Icon";
 
 type DealBriefingCardProps = {
   compact?: boolean;
+  dealType?: string;
   keyQuestions: DealRoomData["keyQuestions"];
   thesis: string;
 };
 
-export function DealBriefingCard({ compact = false, keyQuestions, thesis }: DealBriefingCardProps) {
+export function DealBriefingCard({ compact = false, dealType, keyQuestions, thesis }: DealBriefingCardProps) {
+  const thesisLabel = dealType === "Sell-side" ? "Equity Story" : "Investment Thesis";
+
   return (
     <WorkspaceCard
       className={`rounded-[28px] p-8 ${
@@ -40,7 +43,7 @@ export function DealBriefingCard({ compact = false, keyQuestions, thesis }: Deal
         <section className="space-y-4">
           <div className="flex items-center gap-3">
             <Icon className="h-6 w-6 text-accent" name="sparkles" />
-            <h2 className="type-h2 text-text-main">Investment Thesis</h2>
+            <h2 className="type-h2 text-text-main">{thesisLabel}</h2>
           </div>
 
           <div className="rounded-[24px] border border-white/70 bg-white/45 p-5">

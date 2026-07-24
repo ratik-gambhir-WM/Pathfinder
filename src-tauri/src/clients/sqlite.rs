@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, sync::Mutex};
+use std::{fs, path::PathBuf, sync::Mutex, time::Duration};
 
 use rusqlite::{Connection, Params, Row};
 use tauri::{AppHandle, Manager};
@@ -20,6 +20,12 @@ impl SqliteClient {
 
         let connection = Connection::open(&db_path)
             .map_err(|err| format!("failed to open sqlite database: {err}"))?;
+        connection
+            .busy_timeout(Duration::from_secs(5))
+            .map_err(|err| format!("failed to configure sqlite busy timeout: {err}"))?;
+        connection
+            .pragma_update(None, "journal_mode", "WAL")
+            .map_err(|err| format!("failed to configure sqlite journal mode: {err}"))?;
 
         run_migrations(&connection)?;
 
@@ -176,6 +182,25 @@ fn run_migrations(connection: &Connection) -> Result<(), String> {
             CREATE INDEX IF NOT EXISTS idx_deals_pe_firm ON deals(pe_firm);
             CREATE INDEX IF NOT EXISTS idx_deals_updated_at ON deals(updated_at);
 
+            CREATE TABLE IF NOT EXISTS deal_metadata (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                deal_id INTEGER NOT NULL,
+                key_questions_json TEXT NOT NULL DEFAULT '[]',
+                investment_thesis TEXT NOT NULL DEFAULT '',
+                document_count INTEGER NOT NULL DEFAULT 0 CHECK (document_count >= 0),
+                data_room_size_bytes INTEGER NOT NULL DEFAULT 0 CHECK (data_room_size_bytes >= 0),
+                portco_summary TEXT,
+                buyer_summary TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (deal_id) REFERENCES deals(id) ON DELETE CASCADE
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_deal_metadata_deal_id
+                ON deal_metadata(deal_id);
+            CREATE INDEX IF NOT EXISTS idx_deal_metadata_updated_at
+                ON deal_metadata(updated_at);
+
             "#,
         )
         .map_err(|err| format!("failed to initialize sqlite database: {err}"))?;
@@ -210,7 +235,11 @@ fn run_migrations(connection: &Connection) -> Result<(), String> {
     Ok(())
 }
 
-fn column_exists(connection: &Connection, table_name: &str, column_name: &str) -> rusqlite::Result<bool> {
+fn column_exists(
+    connection: &Connection,
+    table_name: &str,
+    column_name: &str,
+) -> rusqlite::Result<bool> {
     let mut statement = connection.prepare(&format!("PRAGMA table_info({table_name})"))?;
     let columns = statement.query_map([], |row| row.get::<_, String>(1))?;
 

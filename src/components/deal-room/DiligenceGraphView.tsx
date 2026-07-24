@@ -7,12 +7,13 @@ type DiligenceGraphViewProps = {
 };
 
 export function DiligenceGraphView({ deal }: DiligenceGraphViewProps) {
+  const thesisLabel = deal.dealType === "Sell-side" ? "Equity Story" : "Investment Thesis";
   const graphNodes = [
     { label: deal.name, tone: "primary", x: "50%", y: "18%" },
     { label: "Financial Performance", tone: "accent", x: "20%", y: "48%" },
     { label: "Legal & Compliance", tone: "error", x: "50%", y: "54%" },
     { label: "Operations", tone: "muted", x: "80%", y: "48%" },
-    { label: "Investment Thesis", tone: "primary", x: "50%", y: "82%" },
+    { label: thesisLabel, tone: "primary", x: "50%", y: "82%" },
   ];
 
   return (

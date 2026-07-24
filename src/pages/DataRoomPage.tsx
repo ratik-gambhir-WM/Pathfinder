@@ -1,13 +1,21 @@
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import { ChipBankPanel } from "../components/data-room/ChipBankPanel";
 import { DataRoomExplorer } from "../components/data-room/DataRoomExplorer";
 import { ReportEditorPanel } from "../components/data-room/ReportEditorPanel";
 import { getDealDataRoomView } from "../data/dataRoom";
+import type { DealExtractionLocationState } from "../data/dealExtraction";
+import { buildWorkspaceDealFromExtractionResult } from "../data/dealExtraction";
 import { getDealById, getDealRoomPath } from "../data/workspace";
 
 export function DataRoomPage() {
   const { dealId } = useParams();
-  const deal = dealId ? getDealById(dealId) : undefined;
+  const location = useLocation();
+  const extractionResult = (location.state as DealExtractionLocationState | null)?.result;
+  const extractedDeal =
+    extractionResult && String(extractionResult.deal.id) === dealId
+      ? buildWorkspaceDealFromExtractionResult(extractionResult)
+      : undefined;
+  const deal = extractedDeal ?? (dealId ? getDealById(dealId) : undefined);
 
   if (!deal) {
     return <Navigate replace to="/hub" />;
@@ -25,7 +33,12 @@ export function DataRoomPage() {
 
       <div className="relative z-10">
         <div className="flex h-screen">
-          <DataRoomExplorer dealName={deal.room.name} dealRoomPath={getDealRoomPath(deal.room.id)} nodes={dataRoomView.tree} />
+          <DataRoomExplorer
+            dealName={deal.room.name}
+            dealRoomPath={getDealRoomPath(deal.room.id)}
+            navigationState={location.state as DealExtractionLocationState | undefined}
+            nodes={dataRoomView.tree}
+          />
 
           <main className="flex min-w-0 flex-1 gap-6 overflow-hidden p-6">
             <ChipBankPanel chips={dataRoomView.chips} />
