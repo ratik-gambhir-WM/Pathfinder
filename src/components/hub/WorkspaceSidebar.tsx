@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   getDataRoomPath,
@@ -45,11 +45,27 @@ export function WorkspaceSidebar({
   tools = [],
 }: WorkspaceSidebarProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [dealMenuOpen, setDealMenuOpen] = useState(false);
+  const dealMenuRef = useRef<HTMLDivElement>(null);
   const teamLabel = getTeamLabel(email);
   const activeDeal = deals.find((deal) => deal.room.id === activeDealId) ?? deals[0];
 
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!dealMenuRef.current?.contains(event.target as Node)) {
+        setDealMenuOpen(false);
+      }
+    }
+
+    if (dealMenuOpen) {
+      document.addEventListener("pointerdown", handlePointerDown);
+    }
+
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [dealMenuOpen]);
+
   return (
-    <aside className="hidden h-full w-72 shrink-0 border-r border-white/80 bg-white/40 backdrop-blur-md lg:flex">
+    <aside className="workspace-sidebar hidden h-full w-72 shrink-0 border-r border-white/80 bg-white/40 backdrop-blur-md lg:flex">
       <div className="flex h-full min-h-0 w-full flex-col p-4">
         <div className="space-y-6">
           <NavLink
@@ -88,7 +104,17 @@ export function WorkspaceSidebar({
                 </NavLink>
               </nav>
 
-              <SidebarSection title="Active Deals">
+              <SidebarSection
+                action={
+                  <DealSectionMenu
+                    containerRef={dealMenuRef}
+                    menuOpen={dealMenuOpen}
+                    onAddDeal={() => setDealMenuOpen(false)}
+                    onToggleMenu={() => setDealMenuOpen((isOpen) => !isOpen)}
+                  />
+                }
+                title="Active Deals"
+              >
                 {deals.map((deal) => (
                   <NavLink
                     className={({ isActive }) =>
@@ -118,7 +144,13 @@ export function WorkspaceSidebar({
 
               <SidebarSection title="Research">
                 <SidebarLink icon="search" label="Topics" />
-                <SidebarLink icon="timeline" label="Recent" />
+                <SidebarLink
+                  homeSection={activeHomeSection}
+                  href="/hub/summarize"
+                  icon="sparkles"
+                  label="Quick Chat"
+                  navigationState={navigationState}
+                />
               </SidebarSection>
 
               <div className="border-t border-white/40 pt-6">
@@ -256,16 +288,61 @@ function ThemeModeButton({ active, disabled = false, label, onClick }: ThemeMode
 }
 
 type SidebarSectionProps = {
+  action?: ReactNode;
   children: ReactNode;
   title: string;
 };
 
-function SidebarSection({ children, title }: SidebarSectionProps) {
+function SidebarSection({ action, children, title }: SidebarSectionProps) {
   return (
     <section className="space-y-3">
-      <h2 className="px-5 text-[11px] font-bold uppercase tracking-[0.2em] text-muted">{title}</h2>
+      <div className="flex items-center justify-between px-5">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">{title}</h2>
+        {action}
+      </div>
       <nav className="space-y-1">{children}</nav>
     </section>
+  );
+}
+
+type DealSectionMenuProps = {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  menuOpen: boolean;
+  onAddDeal: () => void;
+  onToggleMenu: () => void;
+};
+
+function DealSectionMenu({ containerRef, menuOpen, onAddDeal, onToggleMenu }: DealSectionMenuProps) {
+  return (
+    <div className="relative -mr-1" ref={containerRef}>
+      <button
+        aria-expanded={menuOpen}
+        aria-haspopup="menu"
+        aria-label="Active deals actions"
+        className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition hover:bg-white/60 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
+        onClick={onToggleMenu}
+        type="button"
+      >
+        <Icon className="h-4 w-4" name="plus" />
+      </button>
+
+      {menuOpen ? (
+        <div
+          className="absolute right-0 top-full z-20 mt-2 w-36 rounded-2xl border border-outline-variant bg-white p-1.5 shadow-[0_18px_44px_rgba(7,1,84,0.12)]"
+          role="menu"
+        >
+          <button
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-semibold text-text-main transition hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
+            onClick={onAddDeal}
+            role="menuitem"
+            type="button"
+          >
+            <Icon className="h-4 w-4 text-muted" name="plus" />
+            <span>Add deal</span>
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

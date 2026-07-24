@@ -56,6 +56,17 @@ export type WorkspaceDeal = {
   room: DealRoomData;
 };
 
+export type WorkspaceInsight = {
+  category: string;
+  deal: string;
+  fileIcon: "doc" | "pdf" | "image";
+  fileName: string;
+  image?: boolean;
+  quote: string;
+  toneClassName: string;
+  toneTextClassName: string;
+};
+
 export const workspaceDeals: WorkspaceDeal[] = [
   {
     colorClassName: "bg-primary",
@@ -264,6 +275,64 @@ export const workspaceDeals: WorkspaceDeal[] = [
   },
 ];
 
+export const workspaceInsights: WorkspaceInsight[] = [
+  {
+    category: "Financials",
+    deal: "Project Alpha",
+    fileIcon: "doc",
+    fileName: "Transcript: CEO Site Visit",
+    quote: "CapEx will decrease by 15% next year due to completion of the automated packing line.",
+    toneClassName: "bg-primary",
+    toneTextClassName: "text-primary",
+  },
+  {
+    category: "Market Data",
+    deal: "Project Alpha",
+    fileIcon: "image",
+    fileName: "Q3_Deck_Slide14.png",
+    image: true,
+    quote: "Distribution expansion is strongest across the Southeast region, with demand pockets clustering around new warehouse nodes.",
+    toneClassName: "bg-primary",
+    toneTextClassName: "text-primary",
+  },
+  {
+    category: "Legal Risk",
+    deal: "Project Beta",
+    fileIcon: "pdf",
+    fileName: "Contract_Dist_v2.pdf",
+    quote: "Clause 4.2 indicates severe penalties if delivery quotas to main distributor fall below 95%.",
+    toneClassName: "bg-accent",
+    toneTextClassName: "text-accent",
+  },
+  {
+    category: "Operations",
+    deal: "Project Beta",
+    fileIcon: "doc",
+    fileName: "ERP_Cutover_Notes.docx",
+    quote: "The testing backlog is concentrated in billing workflows, increasing cutover risk if revenue operations remains understaffed.",
+    toneClassName: "bg-[#6b87c8]",
+    toneTextClassName: "text-accent",
+  },
+  {
+    category: "Synergy",
+    deal: "Logistics Merger",
+    fileIcon: "pdf",
+    fileName: "Lane_Overlap_Model.pdf",
+    quote: "Twelve overlapping lanes can be consolidated without changing promised delivery windows.",
+    toneClassName: "bg-muted",
+    toneTextClassName: "text-muted",
+  },
+  {
+    category: "Labor Risk",
+    deal: "Logistics Merger",
+    fileIcon: "doc",
+    fileName: "Depot_Labor_Summary.docx",
+    quote: "Two unionized depots require separate consultation periods before schedule redesign can begin.",
+    toneClassName: "bg-error",
+    toneTextClassName: "text-error",
+  },
+];
+
 export const workspaceInitiatives: WorkspaceSidebarTool[] = [
   { icon: "personSearch", name: "Q4 Recruiting" },
   { icon: "terminal", name: "Software Migration" },
@@ -271,7 +340,6 @@ export const workspaceInitiatives: WorkspaceSidebarTool[] = [
 
 export const workspaceTools: WorkspaceSidebarTool[] = [
   { icon: "timeline", name: "Meeting Timeline" },
-  { href: "/hub/summarize", icon: "sparkles", name: "Summarize" },
 ];
 
 export function getDealById(dealId: string) {

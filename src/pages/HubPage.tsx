@@ -4,6 +4,7 @@ import { RecentOpenedCard } from "../components/hub/cards/RecentOpenedCard";
 import { InsightsStrip } from "../components/hub/InsightsStrip";
 import { WorkspaceHeader } from "../components/hub/WorkspaceHeader";
 import { WorkspaceHomeShell } from "../components/hub/WorkspaceHomeShell";
+import { workspaceInsights } from "../data/workspace";
 
 const tasks = [
   {
@@ -59,37 +60,6 @@ const recentFiles = [
   },
 ];
 
-const recentInsights = [
-  {
-    category: "Financials",
-    deal: "Project Alpha",
-    fileIcon: "doc",
-    fileName: "Transcript: CEO Site Visit",
-    quote: "CapEx will decrease by 15% next year due to completion of the automated packing line.",
-    toneClassName: "bg-primary",
-    toneTextClassName: "text-primary",
-  },
-  {
-    category: "Legal Risk",
-    deal: "Project Beta",
-    fileIcon: "pdf",
-    fileName: "Contract_Dist_v2.pdf",
-    quote: "Clause 4.2 indicates severe penalties if delivery quotas to main distributor fall below 95%.",
-    toneClassName: "bg-accent",
-    toneTextClassName: "text-accent",
-  },
-  {
-    category: "Market Data",
-    deal: "Project Alpha",
-    fileIcon: "image" as const,
-    fileName: "Q3_Deck_Slide14.png",
-    image: true,
-    quote: "Distribution expansion is strongest across the Southeast region, with demand pockets clustering around new warehouse nodes.",
-    toneClassName: "bg-primary",
-    toneTextClassName: "text-primary",
-  },
-] as const;
-
 const aiSuggestions = ['"Compare Q3 EBITDA across Alpha and Beta"', '"Summarize recent legal risks"'];
 
 export function HubPage() {
@@ -99,10 +69,10 @@ export function HubPage() {
         <WorkspaceHeader />
 
         <div className="grid grid-cols-12 gap-6">
-          <CriticalTasksCard assignees={["AT", "JD"]} tasks={tasks} />
-          <RecentOpenedCard items={recentFiles} />
           <AiSearchCard suggestions={aiSuggestions} />
-          <InsightsStrip items={recentInsights} />
+          <RecentOpenedCard items={recentFiles} />
+          <CriticalTasksCard assignees={["AT", "JD"]} tasks={tasks} />
+          <InsightsStrip items={workspaceInsights} />
         </div>
       </div>
     </WorkspaceHomeShell>

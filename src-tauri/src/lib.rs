@@ -18,7 +18,10 @@ use tauri::{
 
 use crate::{
     commands::{
-        data_browse::{login_demo_command, save_markdown_summary, summarize},
+        data_browse::{
+            list_summary_files, login_demo_command, save_markdown_summary, summarize,
+            summarize_selected,
+        },
         database::database_status,
         users::greet,
     },
@@ -98,7 +101,9 @@ pub fn run() {
             greet,
             database_status,
             login_demo_command,
+            list_summary_files,
             summarize,
+            summarize_selected,
             save_markdown_summary
         ])
         .run(tauri::generate_context!())

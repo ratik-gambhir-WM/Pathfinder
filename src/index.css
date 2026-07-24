@@ -136,14 +136,12 @@
     --color-tertiary-fixed-dim: #070154;
     --color-on-tertiary-fixed: #ffffff;
     --color-on-tertiary-fixed-variant: #b8c0cf;
-    --color-background: #121b31;
+    --color-background: #070a1b;
     --color-on-background: #f7f9ff;
     --color-surface-variant: #242e4a;
     --shadow-glass: 0 18px 44px rgba(0, 0, 0, 0.28);
     --shadow-glass-hover: 0 24px 56px rgba(0, 0, 0, 0.36);
-    --app-background:
-      radial-gradient(circle at 50% 105%, rgba(7, 1, 84, 0.72) 0%, rgba(7, 1, 84, 0.42) 30%, rgba(5, 7, 11, 0) 62%),
-      linear-gradient(180deg, #05070b 0%, #08101d 52%, #05002a 100%);
+    --app-background: #070a1b;
     background: var(--app-background);
   }
 
@@ -559,8 +557,16 @@
     color: var(--color-on-primary-container);
   }
 
+  html[data-theme="dark"] .workspace-ambient {
+    display: none;
+  }
+
+  html[data-theme="dark"] .workspace-sidebar {
+    background: #070a1b;
+  }
+
   html[data-theme="dark"] .report-editor-toolbar-scrim {
-    background: linear-gradient(to top, var(--color-background), rgba(18, 27, 49, 0));
+    background: linear-gradient(to top, var(--color-background), rgba(7, 10, 27, 0));
   }
 
   html[data-theme="dark"] .report-editor-toolbar {
