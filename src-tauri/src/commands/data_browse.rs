@@ -1,5 +1,7 @@
 use crate::common::write_summary;
-use crate::services::document_service::summarize_dir;
+use crate::services::document_service::{
+    list_summarizable_files, summarize_dir, summarize_paths, SummarizableFile,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
@@ -23,6 +25,11 @@ pub struct DirPathPayload {
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct SelectedPathsPayload {
+    pub paths: Vec<String>,
+}
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DirPathPayloadResponse {
     pub summary: String,
 }
@@ -43,10 +50,25 @@ pub fn login_demo_command(payload: LoginDemoCommandPayload) -> LoginDemoCommandR
 }
 
 #[tauri::command]
+pub fn list_summary_files(payload: DirPathPayload) -> Result<Vec<SummarizableFile>, String> {
+    list_summarizable_files(payload.path)
+}
+
+#[tauri::command]
 pub async fn summarize(payload: DirPathPayload) -> Result<String, String> {
     println!("Summarizing...");
     println!("{:?}", payload.path);
     let summary = summarize_dir(payload.path).await;
+    match summary {
+        Ok(sum) => Ok(sum),
+        Err(err) => Err(err.to_string()),
+    }
+}
+
+#[tauri::command]
+pub async fn summarize_selected(payload: SelectedPathsPayload) -> Result<String, String> {
+    println!("Summarizing selected files...");
+    let summary = summarize_paths(payload.paths).await;
     match summary {
         Ok(sum) => Ok(sum),
         Err(err) => Err(err.to_string()),

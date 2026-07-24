@@ -12,11 +12,11 @@ pub struct DatabaseStatus {
 
 #[tauri::command]
 pub fn database_status(state: State<'_, AppState>) -> Result<DatabaseStatus, String> {
-    let user_version =
-        state.with_db(|db| db.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0)))?;
+    let user_version = state
+        .with_sqlite_db(|db| db.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0)))?;
 
     Ok(DatabaseStatus {
-        database_path: state.db_path().display().to_string(),
+        database_path: state.sqlite_db_path().display().to_string(),
         user_version,
     })
 }

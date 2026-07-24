@@ -1,30 +1,22 @@
+import type { WorkspaceInsight } from "../../data/workspace";
 import { Icon } from "../ui/Icon";
 import { WorkspaceCard } from "./WorkspaceCard";
 
-type InsightItem = {
-  category: string;
-  deal: string;
-  fileIcon: "doc" | "pdf" | "image";
-  fileName: string;
-  image?: boolean;
-  quote: string;
-  toneClassName: string;
-  toneTextClassName: string;
-};
-
 type InsightsStripProps = {
-  items: readonly InsightItem[];
+  className?: string;
+  contextLabel?: string;
+  items: readonly WorkspaceInsight[];
 };
 
-export function InsightsStrip({ items }: InsightsStripProps) {
+export function InsightsStrip({ className = "col-span-12 mt-2", contextLabel = "Across Projects", items }: InsightsStripProps) {
   return (
-    <section className="col-span-12 mt-2">
+    <section className={className}>
       <div className="mb-4 flex items-center justify-between px-2">
         <h2 className="type-h3 flex items-center gap-3 text-text-main">
           <Icon className="h-6 w-6 text-accent" name="bookmark" />
           Recent Insights
         </h2>
-        <span className="type-label text-muted">Across Projects</span>
+        <span className="type-label text-muted">{contextLabel}</span>
       </div>
 
       <div className="workspace-scrollbar-hidden flex gap-4 overflow-x-auto px-2 pb-6 pt-2">
@@ -42,7 +34,7 @@ export function InsightsStrip({ items }: InsightsStripProps) {
   );
 }
 
-function InsightChip({ item }: { item: InsightItem }) {
+function InsightChip({ item }: { item: WorkspaceInsight }) {
   return (
     <article className="chip-card group relative flex w-72 shrink-0 flex-col gap-3 overflow-hidden p-4">
       <div className={`absolute left-0 top-0 h-full w-1 ${item.toneClassName}`} />

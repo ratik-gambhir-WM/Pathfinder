@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf, sync::Mutex};
 
-use rusqlite::Connection;
+use rusqlite::{Connection, Params, Row};
 use tauri::{AppHandle, Manager};
 
 const DATABASE_FILE_NAME: &str = "pathfinder.sqlite3";
@@ -27,6 +27,42 @@ impl SqliteClient {
             db: Mutex::new(connection),
             db_path,
         })
+    }
+
+    pub fn execute<P>(&self, sql: &str, params: P) -> Result<usize, String>
+    where
+        P: Params,
+    {
+        self.with_connection(|db| db.execute(sql, params))
+    }
+
+    pub fn query_rows<P, T>(
+        &self,
+        sql: &str,
+        params: P,
+        mut map_row: impl FnMut(&Row<'_>) -> rusqlite::Result<T>,
+    ) -> Result<Vec<T>, String>
+    where
+        P: Params,
+    {
+        self.with_connection(|db| {
+            let mut statement = db.prepare(sql)?;
+            let rows = statement.query_map(params, |row| map_row(row))?;
+
+            rows.collect::<rusqlite::Result<Vec<T>>>()
+        })
+    }
+
+    pub fn with_connection<T>(
+        &self,
+        f: impl FnOnce(&Connection) -> rusqlite::Result<T>,
+    ) -> Result<T, String> {
+        let db = self
+            .db
+            .lock()
+            .map_err(|_| "sqlite connection lock was poisoned".to_string())?;
+
+        f(&db).map_err(|err| format!("sqlite error: {err}"))
     }
 }
 

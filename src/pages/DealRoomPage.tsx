@@ -5,11 +5,12 @@ import { DealRoomHeader } from "../components/deal-room/DealRoomHeader";
 import { DealSummaryCard } from "../components/deal-room/DealSummaryCard";
 import { DealTimelineView } from "../components/deal-room/DealTimelineView";
 import { PendingTasksTimelineCard } from "../components/deal-room/PendingTasksTimelineCard";
+import { InsightsStrip } from "../components/hub/InsightsStrip";
 import { WorkspaceLayout } from "../components/hub/WorkspaceLayout";
 import { WorkspaceSidebar } from "../components/hub/WorkspaceSidebar";
 import { Button } from "../components/ui/Button";
 import { Icon } from "../components/ui/Icon";
-import { getDealById, workspaceDeals } from "../data/workspace";
+import { getDealById, workspaceDeals, workspaceInsights } from "../data/workspace";
 import type { DealTimelineItem } from "../data/workspace";
 import { useWorkspaceSession } from "../hooks/useWorkspaceSession";
 
@@ -19,6 +20,7 @@ export function DealRoomPage() {
   const { email, navigationState } = useWorkspaceSession();
   const [activeDealView, setActiveDealView] = useState<"deal-room" | "timeline">("deal-room");
   const [timelineItems, setTimelineItems] = useState<DealTimelineItem[]>([]);
+  const dealInsights = workspaceInsights.filter((insight) => insight.deal === deal?.room.name);
 
   useEffect(() => {
     setTimelineItems(deal?.room.timeline ?? []);
@@ -65,6 +67,11 @@ export function DealRoomPage() {
 
                 <PendingTasksTimelineCard key={deal.room.id} tasks={deal.room.pendingTasks} />
               </div>
+              <InsightsStrip
+                className="col-span-12 mt-2"
+                contextLabel={deal.room.name}
+                items={dealInsights}
+              />
               <ActivityTimelineCard className="col-span-12 flex min-h-[540px] flex-col rounded-[28px] p-6" items={timelineItems} />
             </div>
           </>

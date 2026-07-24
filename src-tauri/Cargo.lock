@@ -13,6 +13,7 @@ dependencies = [
  "docx-rust",
  "dotenvy",
  "helix-db",
+ "image",
  "pdf-extract",
  "pptx-to-md",
  "reqwest 0.12.28",
