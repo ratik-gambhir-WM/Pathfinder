@@ -286,26 +286,48 @@ type TaskKanbanColumn = {
 };
 
 function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
+  const [reminders, setReminders] = useState<DealTask[]>(tasks);
+  const [newReminderLabel, setNewReminderLabel] = useState("");
+  const [showNewReminderForm, setShowNewReminderForm] = useState(false);
   const columns: TaskKanbanColumn[] = [
     {
       description: "Open diligence reminders",
       id: "to-do",
-      tasks: tasks.filter((task) => !task.done && !task.priority),
+      tasks: reminders.filter((task) => !task.done && !task.priority),
       title: "To-do",
     },
     {
       description: "Needs active follow-up",
       id: "in-progress",
-      tasks: tasks.filter((task) => !task.done && task.priority),
+      tasks: reminders.filter((task) => !task.done && task.priority),
       title: "In progress",
     },
     {
       description: "Closed out reminders",
       id: "done",
-      tasks: tasks.filter((task) => task.done),
+      tasks: reminders.filter((task) => task.done),
       title: "Done",
     },
   ];
+
+  function handleAddReminder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const label = newReminderLabel.trim();
+
+    if (!label) {
+      return;
+    }
+
+    setReminders((current) => [
+      ...current,
+      {
+        id: `reminder-${Date.now()}`,
+        label,
+      },
+    ]);
+    setNewReminderLabel("");
+    setShowNewReminderForm(false);
+  }
 
   return (
     <section className="col-span-12">
@@ -314,6 +336,15 @@ function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
           <h2 className="type-h1 text-text-main">Pending Tasks</h2>
           <p className="mt-1 text-[13px] text-text-main/70">Track diligence reminders by workflow status.</p>
         </div>
+        <button
+          aria-expanded={showNewReminderForm}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 text-[13px] font-bold text-white shadow-[0_10px_26px_rgba(80,101,142,0.22)] transition hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
+          onClick={() => setShowNewReminderForm((isOpen) => !isOpen)}
+          type="button"
+        >
+          <Icon className="h-4 w-4" name="plus" />
+          Add Reminder
+        </button>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
@@ -330,6 +361,43 @@ function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
             </div>
 
             <div className="flex flex-1 flex-col gap-3">
+              {column.id === "to-do" && showNewReminderForm ? (
+                <form
+                  className="rounded-[22px] border border-primary/20 bg-white/74 p-4 shadow-[0_8px_20px_rgba(7,1,84,0.04)]"
+                  onSubmit={handleAddReminder}
+                >
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-muted">New reminder</span>
+                    <input
+                      autoFocus
+                      className="h-11 w-full rounded-[16px] border border-outline-variant bg-white/75 px-4 text-[14px] font-semibold text-text-main outline-none transition placeholder:text-muted/60 focus:border-primary focus:ring-2 focus:ring-primary/16"
+                      onChange={(event) => setNewReminderLabel(event.currentTarget.value)}
+                      placeholder="Add diligence reminder..."
+                      value={newReminderLabel}
+                    />
+                  </label>
+                  <div className="mt-3 flex justify-end gap-2">
+                    <button
+                      className="rounded-full px-4 py-2 text-[12px] font-bold text-muted transition hover:bg-surface-container-high hover:text-text-main"
+                      onClick={() => {
+                        setNewReminderLabel("");
+                        setShowNewReminderForm(false);
+                      }}
+                      type="button"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="rounded-full bg-primary px-4 py-2 text-[12px] font-bold text-white transition hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!newReminderLabel.trim()}
+                      type="submit"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+
               {column.tasks.length > 0 ? (
                 column.tasks.map((task) => <ReminderCard key={task.id} status={column.title} task={task} />)
               ) : (
