@@ -47,7 +47,7 @@ export function LoginCard({
           <div className="flex overflow-hidden rounded-full border border-outline-variant bg-surface-container-lowest shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] transition focus-within:border-primary-container focus-within:ring-4 focus-within:ring-primary-fixed/40">
             <input
               autoComplete="username"
-              className="min-w-0 flex-1 bg-transparent py-md pl-md pr-sm text-[15px] leading-[1.6] text-on-surface outline-none placeholder:text-outline-variant"
+              className="min-w-0 flex-1 bg-transparent py-md pl-md pr-sm text-[16px] leading-[1.6] text-on-surface outline-none placeholder:text-outline-variant"
               id="email-local-part"
               onChange={(event) => handleEmailLocalPartChange(event.currentTarget.value)}
               placeholder="rgambhir"
@@ -55,14 +55,14 @@ export function LoginCard({
               type="text"
               value={emailLocalPart}
             />
-            <div className="flex shrink-0 items-center border-l border-outline-variant bg-surface-container-low px-md text-[13px] font-semibold tracking-[0.02em] text-muted">
+            <div className="flex shrink-0 items-center border-l border-outline-variant bg-surface-container-low px-md text-[14px] font-semibold tracking-[0.02em] text-muted">
               {WEST_MONROE_EMAIL_DOMAIN}
             </div>
           </div>
         </div>
 
         {statusText || error ? (
-          <p className={`px-xs text-[13px] font-medium ${error ? "text-error" : "text-muted"}`}>
+          <p className={`px-xs text-[14px] font-medium ${error ? "text-error" : "text-muted"}`}>
             {error || statusText}
           </p>
         ) : null}

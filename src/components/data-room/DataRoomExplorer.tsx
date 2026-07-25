@@ -4,6 +4,7 @@ import { DataRoomTreeNode } from "../../data/dataRoom";
 import type { DealExtractionLocationState } from "../../data/dealExtraction";
 import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
+import { DataRoomSidebarTabs } from "./DataRoomSidebarTabs";
 
 type DataRoomExplorerProps = {
   dealName: string;
@@ -13,6 +14,22 @@ type DataRoomExplorerProps = {
 };
 
 export function DataRoomExplorer({ dealName, dealRoomPath, navigationState, nodes }: DataRoomExplorerProps) {
+  const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(() => new Set());
+
+  function toggleNode(nodeId: string) {
+    setExpandedNodeIds((current) => {
+      const next = new Set(current);
+
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+
+      return next;
+    });
+  }
+
   return (
     <aside className="flex w-72 shrink-0 flex-col gap-3 border-r border-white/80 bg-white/40 p-4 backdrop-blur-md">
       <Link
@@ -32,18 +49,28 @@ export function DataRoomExplorer({ dealName, dealRoomPath, navigationState, node
           <h2 className="text-[1.65rem] font-bold leading-none text-text-main [font-family:var(--font-heading)]">
             {dealName}
           </h2>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.22em] text-muted">Due Diligence</p>
+          <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Due Diligence</p>
         </div>
       </div>
 
-      <Button className="mb-5 h-14 px-6" icon={<Icon className="h-5 w-5" name="plus" />}>
+      <Button className="mb-4 h-14 px-6" icon={<Icon className="h-5 w-5" name="plus" />}>
         New Analysis
       </Button>
+
+      <div className="mb-4">
+        <DataRoomSidebarTabs activeTab="data-room" />
+      </div>
 
       <div className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto pr-1">
         <div className="space-y-1">
           {nodes.map((node) => (
-            <ExplorerNodeItem depth={0} key={node.id} node={node} />
+            <ExplorerNodeItem
+              depth={0}
+              expandedNodeIds={expandedNodeIds}
+              key={node.id}
+              node={node}
+              onToggle={toggleNode}
+            />
           ))}
         </div>
       </div>
@@ -55,7 +82,7 @@ export function DataRoomExplorer({ dealName, dealRoomPath, navigationState, node
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-medium text-text-main">Analyst Team</span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">{dealName}</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">{dealName}</span>
           </div>
         </div>
       </div>
@@ -65,12 +92,14 @@ export function DataRoomExplorer({ dealName, dealRoomPath, navigationState, node
 
 type ExplorerNodeItemProps = {
   depth: number;
+  expandedNodeIds: Set<string>;
   node: DataRoomTreeNode;
+  onToggle: (nodeId: string) => void;
 };
 
-function ExplorerNodeItem({ depth, node }: ExplorerNodeItemProps) {
-  const [expanded, setExpanded] = useState(Boolean(node.defaultExpanded));
+function ExplorerNodeItem({ depth, expandedNodeIds, node, onToggle }: ExplorerNodeItemProps) {
   const hasChildren = Boolean(node.children?.length);
+  const expanded = expandedNodeIds.has(node.id);
 
   return (
     <div>
@@ -78,7 +107,7 @@ function ExplorerNodeItem({ depth, node }: ExplorerNodeItemProps) {
         className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-white/40"
         onClick={() => {
           if (hasChildren) {
-            setExpanded((value) => !value);
+            onToggle(node.id);
           }
         }}
         style={{ paddingLeft: `${depth * 18 + 8}px` }}
@@ -93,7 +122,7 @@ function ExplorerNodeItem({ depth, node }: ExplorerNodeItemProps) {
         </span>
         <span
           className={`min-w-0 whitespace-normal break-words leading-snug [overflow-wrap:anywhere] ${
-            hasChildren ? "text-sm font-medium text-text-main" : "text-[13px] text-text-main/80"
+            hasChildren ? "text-[14px] font-medium text-text-main" : "text-[14px] text-text-main/80"
           }`}
         >
           {node.name}
@@ -103,7 +132,13 @@ function ExplorerNodeItem({ depth, node }: ExplorerNodeItemProps) {
       {hasChildren && expanded ? (
         <div className="space-y-0.5">
           {node.children?.map((child) => (
-            <ExplorerNodeItem depth={depth + 1} key={child.id} node={child} />
+            <ExplorerNodeItem
+              depth={depth + 1}
+              expandedNodeIds={expandedNodeIds}
+              key={child.id}
+              node={child}
+              onToggle={onToggle}
+            />
           ))}
         </div>
       ) : null}

@@ -173,27 +173,27 @@ export function SummarizePage() {
         >
           <Icon className="h-6 w-6 shrink-0 text-primary" name="search" />
           <input
-            className="min-w-0 flex-1 bg-transparent text-[15px] text-text-main outline-none placeholder:text-muted"
+            className="min-w-0 flex-1 bg-transparent text-[16px] text-text-main outline-none placeholder:text-muted"
             onChange={(event) => handlePathChange(event.target.value)}
             placeholder="Search or browse files in Finder..."
             value={selectedPath}
           />
           <button
-            className="shrink-0 rounded-full border border-primary/18 bg-primary/8 px-5 py-2 text-[12px] font-semibold text-primary transition hover:bg-primary/12"
+            className="shrink-0 rounded-full border border-primary/18 bg-primary/8 px-5 py-2 text-[13px] font-semibold text-primary transition hover:bg-primary/12"
             onClick={() => void handleBrowse(false)}
             type="button"
           >
             Browse File
           </button>
           <button
-            className="shrink-0 rounded-full border border-primary/18 bg-primary/8 px-5 py-2 text-[12px] font-semibold text-primary transition hover:bg-primary/12"
+            className="shrink-0 rounded-full border border-primary/18 bg-primary/8 px-5 py-2 text-[13px] font-semibold text-primary transition hover:bg-primary/12"
             onClick={() => void handleBrowse(true)}
             type="button"
           >
             Browse Folder
           </button>
           <button
-            className="shrink-0 rounded-full bg-primary px-5 py-2 text-[12px] font-semibold text-white transition hover:bg-primary-container disabled:cursor-not-allowed disabled:bg-primary/35"
+            className="shrink-0 rounded-full bg-primary px-5 py-2 text-[13px] font-semibold text-white transition hover:bg-primary-container disabled:cursor-not-allowed disabled:bg-primary/35"
             disabled={!selectedPath.trim() || isSummarizing || (folderFiles.length > 0 && selectedFilePaths.size === 0)}
             type="submit"
           >
@@ -212,14 +212,14 @@ export function SummarizePage() {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  className="rounded-full border border-primary/18 bg-primary/8 px-4 py-2 text-[12px] font-semibold text-primary transition hover:bg-primary/12"
+                  className="rounded-full border border-primary/18 bg-primary/8 px-4 py-2 text-[13px] font-semibold text-primary transition hover:bg-primary/12"
                   onClick={() => setSelectedFilePaths(new Set(folderFiles.filter((file) => file.supported).map((file) => file.path)))}
                   type="button"
                 >
                   Select All
                 </button>
                 <button
-                  className="rounded-full border border-primary/18 bg-white/75 px-4 py-2 text-[12px] font-semibold text-primary transition hover:bg-primary/8"
+                  className="rounded-full border border-primary/18 bg-white/75 px-4 py-2 text-[13px] font-semibold text-primary transition hover:bg-primary/8"
                   onClick={() => setSelectedFilePaths(new Set())}
                   type="button"
                 >
@@ -253,7 +253,7 @@ export function SummarizePage() {
             {error ? <p className="px-6 text-[13px] font-semibold text-error">{error}</p> : null}
             {isSummarizing ? <SummaryLoadingState /> : null}
             {summary ? (
-              <div className="vault-markdown relative rounded-[28px] border border-white/85 bg-white/76 p-8 pr-16 text-[15px] leading-7 text-text-main shadow-[0_12px_34px_rgba(7,1,84,0.05)]">
+              <div className="vault-markdown relative rounded-[28px] border border-white/85 bg-white/76 p-8 pr-16 text-[16px] leading-7 text-text-main shadow-[0_12px_34px_rgba(7,1,84,0.05)]">
                 <button
                   aria-label="Save markdown summary"
                   className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full text-primary transition hover:bg-primary/8"
@@ -324,8 +324,8 @@ function FolderTreeRows({
               <Icon className="h-4 w-4 shrink-0 text-muted" name={expanded ? "chevronDown" : "chevronRight"} />
               <Icon className="h-5 w-5 shrink-0 text-primary/75" name="folderOpen" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-semibold text-text-main">{folder.name}</span>
-                <span className="mt-0.5 block text-[11px] text-muted">
+                <span className="block truncate text-[14px] font-semibold text-text-main">{folder.name}</span>
+                <span className="mt-0.5 block text-[12px] text-muted">
                   {folder.supportedFileCount} of {folder.fileCount} supported
                 </span>
               </span>
@@ -372,8 +372,8 @@ function FolderTreeRows({
             </span>
             <FileTypeIcon mimeType={file.mimeType} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-semibold text-text-main">{file.filename}</span>
-              <span className="mt-0.5 block text-[11px] text-muted">
+              <span className="block truncate text-[14px] font-semibold text-text-main">{file.filename}</span>
+              <span className="mt-0.5 block text-[12px] text-muted">
                 {formatBytes(file.sizeBytes)}
                 {file.supported ? "" : " · Unsupported"}
               </span>

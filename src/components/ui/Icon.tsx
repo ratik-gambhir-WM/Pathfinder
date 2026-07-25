@@ -2,6 +2,7 @@ type IconName =
   | "arrowRight"
   | "bookmark"
   | "chevronDown"
+  | "chevronLeft"
   | "chevronRight"
   | "check"
   | "checkCircle"
@@ -70,6 +71,12 @@ export function Icon({ className = "h-5 w-5", name }: IconProps) {
       return (
         <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
           <path className={iconClassName} d="m9 6 6 6-6 6" />
+        </svg>
+      );
+    case "chevronLeft":
+      return (
+        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
+          <path className={iconClassName} d="m15 6-6 6 6 6" />
         </svg>
       );
     case "chevronDown":

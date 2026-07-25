@@ -40,8 +40,8 @@ function InsightChip({ item }: { item: WorkspaceInsight }) {
       <div className={`absolute left-0 top-0 h-full w-1 ${item.toneClassName}`} />
       <div className="flex items-start justify-between pl-2">
         <div className="space-y-1">
-          <p className={`text-[9px] font-bold uppercase tracking-[0.18em] ${item.toneTextClassName}`}>{item.deal}</p>
-          <span className="inline-flex rounded-md bg-surface-container-low px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-muted">
+          <p className={`text-[11px] font-bold uppercase tracking-[0.16em] ${item.toneTextClassName}`}>{item.deal}</p>
+          <span className="inline-flex rounded-md bg-surface-container-low px-2 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-muted">
             {item.category}
           </span>
         </div>

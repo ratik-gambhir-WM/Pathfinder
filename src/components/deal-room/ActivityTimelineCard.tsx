@@ -9,7 +9,7 @@ type ActivityTimelineCardProps = {
 
 const toneMap: Record<DealTimelineItem["tone"], { detailClassName: string; dotClassName: string }> = {
   accent: {
-    detailClassName: "border-white/70 bg-white/62 italic text-text-main/80",
+    detailClassName: "border-white/70 bg-white/62 text-text-main/80",
     dotClassName: "bg-accent",
   },
   error: {

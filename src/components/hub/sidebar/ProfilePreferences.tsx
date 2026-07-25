@@ -60,14 +60,14 @@ export function ProfilePreferences({ email, navigationState }: ProfilePreference
       role="menu"
     >
       <div className="space-y-3">
-        <p className="px-2 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">Theme</p>
+        <p className="px-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted">Theme</p>
         <div className="grid grid-cols-2 gap-1 rounded-full border border-outline-variant bg-surface-container-high p-1">
           <ThemeModeButton active={themeMode === "slate-frost"} label="Slate" onClick={() => setThemeMode("slate-frost")} />
           <ThemeModeButton active={themeMode === "dark"} label="Dark" onClick={() => setThemeMode("dark")} />
         </div>
         <div className="border-t border-outline-variant pt-3">
           <button
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold text-text-main transition hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed disabled:cursor-wait disabled:opacity-70"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold text-text-main transition hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed disabled:cursor-wait disabled:opacity-70"
             disabled={accountLoading}
             onClick={() => void handleAccountInfo()}
             role="menuitem"

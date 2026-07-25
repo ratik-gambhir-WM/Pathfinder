@@ -221,7 +221,7 @@ function NewUserSetupCard({
           value={form.role}
         />
 
-        {error ? <p className="px-xs text-[13px] font-medium text-error">{error}</p> : null}
+        {error ? <p className="px-xs text-[14px] font-medium text-error">{error}</p> : null}
 
         <div className="grid gap-sm sm:grid-cols-[auto_1fr]">
           <button

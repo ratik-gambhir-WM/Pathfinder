@@ -47,7 +47,7 @@ export function DealBriefingCard({ compact = false, dealType, keyQuestions, thes
           </div>
 
           <div className="rounded-[24px] border border-white/70 bg-white/45 p-5">
-            <p className={`${compact ? "text-[0.96rem] leading-7" : "text-[1rem] leading-8"} text-text-main/86 italic`}>
+            <p className={`${compact ? "text-[0.96rem] leading-7" : "text-[1rem] leading-8"} text-text-main/86`}>
               "{thesis}"
             </p>
           </div>

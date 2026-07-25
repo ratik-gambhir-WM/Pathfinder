@@ -53,7 +53,7 @@ function RecentFileRow({ item }: { item: RecentFile }) {
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[17px] font-semibold text-text-main">{item.title}</p>
-        <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+        <p className="truncate text-[12px] font-medium uppercase tracking-[0.1em] text-muted">
           {item.deal} • {item.time}
         </p>
       </div>

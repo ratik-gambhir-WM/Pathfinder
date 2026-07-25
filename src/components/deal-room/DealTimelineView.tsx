@@ -223,7 +223,7 @@ type CalendarWeekRowProps = {
 function CalendarWeekRow({ eventsByDate, week, weekIndex }: CalendarWeekRowProps) {
   return (
     <>
-      <div className="flex min-h-[100px] items-center justify-center border-b border-r border-outline-variant px-1 text-center text-[11px] italic leading-4 text-text-main/78">
+      <div className="flex min-h-[100px] items-center justify-center border-b border-r border-outline-variant px-1 text-center text-[11px] leading-4 text-text-main/78">
         Week
         <br />
         {weekIndex}

@@ -13,7 +13,7 @@ type ReportEditorPanelProps = {
 
 export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportEditorPanelProps) {
   return (
-    <section className="glass-panel relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[28px]">
+    <section className="glass-panel relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none">
       <DocumentViewMenu />
 
       <div className="workspace-scrollbar-hidden flex-1 overflow-y-auto p-6">
@@ -21,9 +21,9 @@ export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportE
           <div className="mb-10">
             <div className="mb-4 flex items-center gap-2 text-muted">
               <Icon className="h-5 w-5" name="doc" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{versionLabel}</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.16em]">{versionLabel}</span>
             </div>
-            <h1 className="mb-6 text-[4rem] font-bold leading-[1.05] tracking-[-0.05em] text-text-main [font-family:var(--font-heading)]">
+            <h1 className="mb-6 text-[2.25rem] font-bold leading-[1.08] tracking-[-0.04em] text-text-main [font-family:var(--font-heading)] xl:text-[3rem] xl:leading-[1.05]">
               {reportTitle}
             </h1>
             <div className="flex items-center gap-4 border-b border-white/50 pb-6">
@@ -46,7 +46,7 @@ export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportE
               if (block.type === "heading") {
                 return (
                   <h2
-                    className="pt-6 text-[3rem] font-bold leading-tight tracking-[-0.04em] text-text-main [font-family:var(--font-heading)]"
+                    className="pt-6 text-[1.75rem] font-bold leading-tight tracking-[-0.03em] text-text-main [font-family:var(--font-heading)] xl:text-[2.25rem]"
                     key={block.id}
                   >
                     {block.text}
@@ -57,7 +57,7 @@ export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportE
               if (block.type === "quote") {
                 return (
                   <blockquote className="rounded-[24px] border border-primary/10 bg-primary/5 p-8 shadow-sm" key={block.id}>
-                    <p className="text-[1.35rem] italic leading-9 text-text-main/80 [font-family:var(--font-heading)]">
+                    <p className="text-[1.35rem] leading-9 text-text-main/80 [font-family:var(--font-heading)]">
                       "{block.text}"
                     </p>
                   </blockquote>
@@ -77,7 +77,7 @@ export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportE
       <div className="report-editor-toolbar-scrim sticky bottom-0 flex justify-center bg-gradient-to-t from-white/80 to-transparent px-6 pb-6 pt-2">
         <div className="report-editor-toolbar flex items-center gap-2 rounded-full border border-white bg-white/90 px-6 py-2 shadow-2xl backdrop-blur-xl">
           <ToolbarButton label="B" />
-          <ToolbarButton className="italic" label="I" />
+          <ToolbarButton label="I" />
           <ToolbarButton label="•" />
           <div className="mx-2 h-5 w-px bg-muted/20" />
           <button className="flex items-center gap-2 rounded-full px-3 py-1.5 transition hover:bg-primary/5" type="button">
@@ -225,7 +225,7 @@ function DropZone() {
         </button>
       </div>
       <div className="relative h-0.5 w-full rounded-full bg-accent/40">
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent px-4 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-white shadow-sm">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent px-4 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white shadow-sm">
           Drop Insight Here
         </div>
       </div>

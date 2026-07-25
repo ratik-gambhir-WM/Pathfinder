@@ -58,7 +58,7 @@ export function HomeWorkspaceSidebar({
             to="/hub"
           >
             <Icon className="h-7 w-7" name="home" />
-            <span className="text-[12px] font-semibold">Deal Hub</span>
+            <span className="text-[13px] font-semibold">Deal Hub</span>
           </NavLink>
         </nav>
 
@@ -87,7 +87,7 @@ export function HomeWorkspaceSidebar({
             >
               <div className="flex items-center gap-4">
                 <span className={`h-3.5 w-3.5 rounded-full ${deal.colorClassName}`} />
-                <span className="text-[12px] font-medium text-text-main">{deal.room.name}</span>
+                <span className="text-[13px] font-medium text-text-main">{deal.room.name}</span>
               </div>
               {deal.complete ? <Icon className="h-5 w-5 text-primary/85" name="checkCircle" /> : null}
             </NavLink>

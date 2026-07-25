@@ -20,7 +20,7 @@ export function SidebarStaticItem({ active = false, icon, label, onClick }: Side
       type="button"
     >
       <Icon className={`h-6 w-6 ${active ? "text-current" : "text-muted"}`} name={icon} />
-      <span className={`text-[12px] ${active ? "font-semibold" : "font-medium"}`}>{label}</span>
+      <span className={`text-[13px] ${active ? "font-semibold" : "font-medium"}`}>{label}</span>
     </button>
   );
 }

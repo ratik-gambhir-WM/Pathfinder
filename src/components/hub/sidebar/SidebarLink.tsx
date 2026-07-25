@@ -29,7 +29,7 @@ export function SidebarLink({ homeSection, href, icon, label, navigationState }:
         to={href}
       >
         <Icon className="h-6 w-6 text-current" name={icon} />
-        <span className="text-[12px] font-medium">{label}</span>
+        <span className="text-[13px] font-medium">{label}</span>
       </NavLink>
     );
   }
@@ -40,7 +40,7 @@ export function SidebarLink({ homeSection, href, icon, label, navigationState }:
       type="button"
     >
       <Icon className="h-6 w-6 text-muted" name={icon} />
-      <span className="text-[12px] font-medium">{label}</span>
+      <span className="text-[13px] font-medium">{label}</span>
     </button>
   );
 }

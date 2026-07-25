@@ -102,7 +102,7 @@ function TaskTagView({ tag }: { tag: TaskTag }) {
         : "text-muted";
 
   return (
-    <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${className}`}>
+    <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${className}`}>
       {tag.value}
     </span>
   );

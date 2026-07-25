@@ -74,12 +74,12 @@ export function GlobalVaultPage() {
 
           <div className="mt-6 min-h-[220px] rounded-[28px] border border-dashed border-primary/18 bg-white/65 p-6">
             {emptyMarkdown.trim() ? (
-              <div className="vault-markdown text-[15px] leading-7 text-text-main">
+              <div className="vault-markdown text-[16px] leading-7 text-text-main">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{emptyMarkdown}</ReactMarkdown>
               </div>
             ) : (
               <div className="flex h-full min-h-[172px] items-center justify-center rounded-[22px] bg-surface-container-low/60 px-6 text-center">
-                <p className="text-[15px] text-muted">No data available yet</p>
+                <p className="text-[16px] text-muted">No data available yet</p>
               </div>
             )}
           </div>

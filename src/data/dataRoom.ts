@@ -172,7 +172,7 @@ export function getDealDataRoomView(deal: DealRoomData): DealDataRoomView {
           {
             id: "general-info",
             kind: "folder",
-            name: "1_General Info_d Ownership",
+            name: "1. General Info & Ownership",
           },
           {
             children: [
@@ -180,62 +180,62 @@ export function getDealDataRoomView(deal: DealRoomData): DealDataRoomView {
                 children: [
                   {
                     children: [
-                      { id: "model-1", kind: "sheet", name: "2.1.1_Telluride - Model (Dec 2025).xlsx" },
-                      { id: "model-2", kind: "sheet", name: "2.1.2_Telluride - June Variance Update.xlsx" },
+                      { id: "model-1", kind: "sheet", name: "2.1.1 Telluride - Model (Dec 2025).xlsx" },
+                      { id: "model-2", kind: "sheet", name: "2.1.2 Telluride - June Variance Update.xlsx" },
                     ],
                     defaultExpanded: true,
                     id: "fin-model",
                     kind: "folder",
-                    name: "2.1_Financial Model",
+                    name: "2.1 Financial Model",
                   },
                   {
                     id: "balance-sheet",
                     kind: "folder",
-                    name: "2.2_Balance Sheet Detail",
+                    name: "2.2 Balance Sheet Detail",
                   },
                   {
                     children: [
                       {
                         id: "capex",
                         kind: "folder",
-                        name: "2.3.1_Capex - SW Development Costs",
+                        name: "2.3.1 Capex - SW Development Costs",
                       },
                       {
                         id: "bank-rec",
                         kind: "folder",
-                        name: "2.3.2_Bank Reconciliations",
+                        name: "2.3.2 Bank Reconciliations",
                       },
                       {
                         id: "monthly-statements",
                         kind: "folder",
-                        name: "2.3.3_Monthly Statements",
+                        name: "2.3.3 Monthly Statements",
                       },
                       {
                         id: "transfer-pricing",
                         kind: "pdf",
-                        name: "2.3.4_Transfer Pricing Docs_FY 2023-24.pdf",
+                        name: "2.3.4 Transfer Pricing Docs - FY 2023-24.pdf",
                       },
                       {
                         id: "ebitda-adjustments",
                         kind: "sheet",
-                        name: "2.3.5_EBITDA Adjustments.xlsx",
+                        name: "2.3.5 EBITDA Adjustments.xlsx",
                       },
                       {
                         id: "shared-expenses",
                         kind: "sheet",
-                        name: "2.3.6_Shared Expenses.xlsx",
+                        name: "2.3.6 Shared Expenses.xlsx",
                       },
                     ],
                     defaultExpanded: true,
                     id: "other-docs",
                     kind: "folder",
-                    name: "2.3_Other O_cuments",
+                    name: "2.3 Other Documents",
                   },
                 ],
                 defaultExpanded: true,
                 id: "financial-detail-root",
                 kind: "folder",
-                name: "2_Financial Detail",
+                name: "2. Financial Detail",
               },
             ],
             defaultExpanded: true,

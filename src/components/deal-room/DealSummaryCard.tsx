@@ -44,7 +44,7 @@ export function DealSummaryCard({ deal }: DealSummaryCardProps) {
               >
                 {metric.value}
               </p>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-muted">{metric.label}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">{metric.label}</p>
             </div>
           ))}
         </div>
@@ -76,7 +76,7 @@ export function DealSummaryCard({ deal }: DealSummaryCardProps) {
             </div>
 
             <div className="rounded-[24px] border border-white/70 bg-white/45 p-5">
-              <p className="text-[0.96rem] leading-7 text-text-main/86 italic">"{deal.thesis}"</p>
+              <p className="text-[0.96rem] leading-7 text-text-main/86">"{deal.thesis}"</p>
             </div>
           </section>
         </div>

@@ -7,7 +7,7 @@ export function ChatPanel() {
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Icon className="h-5 w-5" name="sparkles" />
         </div>
-        <h2 className="type-display text-[34px] text-text-main">Ask Pathfinder</h2>
+        <h2 className="type-h1 text-text-main">Ask Pathfinder</h2>
       </div>
 
       <div className="w-full max-w-[640px] rounded-[28px] border border-white/85 bg-white/82 p-4 shadow-[0_18px_48px_rgba(7,1,84,0.08)] backdrop-blur-md">
@@ -24,7 +24,7 @@ export function ChatPanel() {
             <Icon className="h-5 w-5" name="plus" />
           </button>
           <div className="flex items-center gap-3">
-            <span className="rounded-full bg-primary/8 px-4 py-2 text-[12px] font-semibold text-primary">Pathfinder</span>
+            <span className="rounded-full bg-primary/8 px-4 py-2 text-[13px] font-semibold text-primary">Pathfinder</span>
             <button
               aria-label="Send message"
               className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white transition hover:bg-primary-container"

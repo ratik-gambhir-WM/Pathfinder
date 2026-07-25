@@ -51,7 +51,7 @@ export function DealRoomWorkspaceSidebar({
                 to={destination}
               >
                 <Icon className="h-6 w-6" name={link.icon} />
-                <span className="text-[12px] font-semibold">{link.label}</span>
+                <span className="text-[13px] font-semibold">{link.label}</span>
               </NavLink>
             );
           }

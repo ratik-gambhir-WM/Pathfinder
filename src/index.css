@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -53,8 +53,8 @@
   --color-on-background: #1c2433;
   --color-surface-variant: #e8eef8;
 
-  --font-heading: "Oxanium", sans-serif;
-  --font-body: "Oxanium", sans-serif;
+  --font-heading: "Playfair Display", serif;
+  --font-body: "Playfair Display", serif;
 
   --radius-sm: 0.25rem;
   --radius-default: 0.5rem;
@@ -185,17 +185,17 @@
 @layer components {
   .type-h1 {
     font-family: var(--font-heading);
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.15;
     letter-spacing: -0.02em;
   }
 
   .type-h2 {
     font-family: var(--font-heading);
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
-    line-height: 1.3;
+    line-height: 1.25;
   }
 
   .type-h3 {
@@ -207,14 +207,14 @@
 
   .type-body-lg {
     font-family: var(--font-body);
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 400;
     line-height: 1.6;
   }
 
   .type-body-sm {
     font-family: var(--font-body);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
     line-height: 1.5;
   }
@@ -275,6 +275,19 @@
     scrollbar-width: none;
   }
 
+  .view-columns-icon-line {
+    stroke-dasharray: 15;
+    stroke-dashoffset: 0;
+  }
+
+  .group:hover .view-columns-icon-line {
+    animation: view-columns-line-draw 0.3s linear both;
+  }
+
+  .group:hover .view-columns-icon-line-delayed {
+    animation-delay: 0.15s;
+  }
+
   .shimmer {
     background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.4) 50%, rgba(255, 255, 255, 0) 100%);
     background-size: 200% 100%;
@@ -283,7 +296,7 @@
 
   .type-display {
     font-family: var(--font-heading);
-    font-size: clamp(30px, 3.5vw, 40px);
+    font-size: clamp(32px, 3vw, 40px);
     font-weight: 700;
     line-height: 1.08;
     letter-spacing: -0.03em;
@@ -291,7 +304,7 @@
 
   .type-subtle {
     font-family: var(--font-body);
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 400;
     line-height: 1.5;
   }
@@ -607,6 +620,18 @@
   100% {
     border-color: rgba(80, 101, 142, 0.18);
     transform: scale(0.86);
+  }
+}
+
+@keyframes view-columns-line-draw {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 15;
+  }
+
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
   }
 }
 
