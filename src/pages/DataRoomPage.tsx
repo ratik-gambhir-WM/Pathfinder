@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
 import { ChipBankPanel } from "../components/data-room/ChipBankPanel";
 import { DataRoomExplorer } from "../components/data-room/DataRoomExplorer";
+import { EdgePanelOpenButton } from "../components/data-room/EdgePanelOpenButton";
 import { ReportEditorPanel } from "../components/data-room/ReportEditorPanel";
-import { Icon } from "../components/ui/Icon";
 import { getDealDataRoomView } from "../data/dataRoom";
 import type { DealExtractionLocationState } from "../data/dealExtraction";
 import { buildWorkspaceDealFromExtractionResult } from "../data/dealExtraction";
@@ -13,6 +13,7 @@ export function DataRoomPage() {
   const { dealId } = useParams();
   const location = useLocation();
   const [isChipBankOpen, setIsChipBankOpen] = useState(true);
+  const [isExplorerOpen, setIsExplorerOpen] = useState(true);
   const extractionResult = (location.state as DealExtractionLocationState | null)?.result;
   const extractedDeal =
     extractionResult && String(extractionResult.deal.id) === dealId
@@ -35,13 +36,22 @@ export function DataRoomPage() {
       </div>
 
       <div className="relative z-10">
-        <div className="flex h-screen">
+        <div className="relative flex h-screen">
           <DataRoomExplorer
+            collapsed={!isExplorerOpen}
             dealName={deal.room.name}
             dealRoomPath={getDealRoomPath(deal.room.id)}
             navigationState={location.state as DealExtractionLocationState | undefined}
             nodes={dataRoomView.tree}
+            onCollapse={() => setIsExplorerOpen(false)}
           />
+          {!isExplorerOpen ? (
+            <EdgePanelOpenButton
+              label="Open data room sidebar"
+              onClick={() => setIsExplorerOpen(true)}
+              side="left"
+            />
+          ) : null}
 
           <main className="relative flex min-w-0 flex-1 gap-0 overflow-hidden p-0">
             <ReportEditorPanel
@@ -51,15 +61,11 @@ export function DataRoomPage() {
             />
             {isChipBankOpen ? <ChipBankPanel chips={dataRoomView.chips} onCollapse={() => setIsChipBankOpen(false)} /> : null}
             {!isChipBankOpen ? (
-              <button
-                aria-label="Open document search"
-                className="absolute right-0 top-1/2 z-30 flex h-14 w-11 -translate-y-1/2 items-center justify-center border border-r-0 border-outline-variant bg-white/90 text-primary shadow-sm transition hover:bg-white hover:text-text-main"
+              <EdgePanelOpenButton
+                label="Open document search"
                 onClick={() => setIsChipBankOpen(true)}
-                title="Open document search"
-                type="button"
-              >
-                <Icon className="h-6 w-6" name="chevronLeft" />
-              </button>
+                side="right"
+              />
             ) : null}
           </main>
         </div>
