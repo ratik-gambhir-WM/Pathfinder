@@ -30,7 +30,7 @@ export function LoginCard({
   }
 
   return (
-    <section className="glass-panel mx-auto w-full max-w-[440px] rounded-xl p-xl">
+    <section className="glass-panel mx-auto w-full max-w-[440px] rounded-[8px] p-xl">
       <BrandLockup
         subtitle="Precision insights for executive decision-makers."
         title="Strategic Portfolio Hub"

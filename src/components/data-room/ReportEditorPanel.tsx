@@ -56,7 +56,7 @@ export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportE
 
               if (block.type === "quote") {
                 return (
-                  <blockquote className="rounded-[24px] border border-primary/10 bg-primary/5 p-8 shadow-sm" key={block.id}>
+                  <blockquote className="rounded-[16px] border border-primary/10 bg-primary/5 p-8 shadow-sm" key={block.id}>
                     <p className="text-[1.35rem] leading-9 text-text-main/80 [font-family:var(--font-heading)]">
                       "{block.text}"
                     </p>
@@ -190,7 +190,7 @@ function EditorCallouts({ columns }: EditorCalloutsProps) {
   return (
     <div className="my-10 grid gap-6 md:grid-cols-2">
       {columns.map((column) => (
-        <div className="rounded-[24px] border border-white/80 bg-white/40 p-6 shadow-sm backdrop-blur-sm" key={column.title}>
+        <div className="rounded-[16px] border border-white/80 bg-white/40 p-6 shadow-sm backdrop-blur-sm" key={column.title}>
           <h4
             className={`mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] ${
               column.tone === "error" ? "text-[#d9534f]" : "text-primary"

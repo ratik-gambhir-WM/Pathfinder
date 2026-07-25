@@ -11,7 +11,7 @@ export function PendingTasksTimelineCard({ tasks }: PendingTasksTimelineCardProp
   const [checkedState, setCheckedState] = useState(() => tasks.map((task) => Boolean(task.done)));
 
   return (
-    <WorkspaceCard className="col-span-12 flex min-h-[540px] flex-col rounded-[28px] p-6 xl:col-span-4">
+    <WorkspaceCard className="col-span-12 flex min-h-[540px] flex-col p-6 xl:col-span-4" radius="compact">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="type-h2 text-text-main">Pending Tasks</h2>
         <button className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-white/50">
@@ -57,7 +57,7 @@ export function PendingTasksTimelineCard({ tasks }: PendingTasksTimelineCardProp
                   <h3 className={`text-[1.02rem] font-semibold ${isChecked ? "text-text-main/55 line-through" : "text-text-main"}`}>
                     {task.label}
                   </h3>
-                  <div className={`rounded-2xl border px-4 py-3 text-[1rem] leading-7 ${detailClassName}`}>
+                  <div className={`rounded-[11px] border px-4 py-3 text-[1rem] leading-7 ${detailClassName}`}>
                     {isChecked
                       ? "Task completed."
                       : task.priority

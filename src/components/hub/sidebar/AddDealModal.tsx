@@ -208,7 +208,7 @@ export function AddDealModal({ onClose }: AddDealModalProps) {
       />
 
       <form
-        className="relative z-10 flex max-h-[calc(100vh-3rem)] w-full max-w-[640px] flex-col gap-5 overflow-y-auto rounded-[28px] border border-outline-variant bg-white p-6 shadow-[0_28px_70px_rgba(7,1,84,0.2)]"
+        className="relative z-10 flex max-h-[calc(100vh-3rem)] w-full max-w-[640px] flex-col gap-5 overflow-y-auto rounded-[19px] border border-outline-variant bg-white p-6 shadow-[0_28px_70px_rgba(7,1,84,0.2)]"
         onSubmit={handleSubmit}
       >
         <div className="flex items-start justify-between gap-4">
@@ -430,7 +430,7 @@ function SourceFilePicker({ emptyLabel, files, label, selectedPath, onChange }: 
         <div className="grid gap-2">
           {files.map((file) => (
             <label
-              className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition ${
+              className={`flex cursor-pointer items-start gap-3 rounded-[11px] border p-3 transition ${
                 selectedPath === file.path
                   ? "border-primary-container bg-primary-fixed/50"
                   : "border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low"

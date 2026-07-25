@@ -1,4 +1,5 @@
 import type { DealRoomData } from "../../data/workspace";
+import { WorkspaceCard } from "../hub/WorkspaceCard";
 import { Icon } from "../ui/Icon";
 import { DealRoomHeader } from "./DealRoomHeader";
 
@@ -35,7 +36,7 @@ export function SiteVisitsView({ deal }: SiteVisitsViewProps) {
     <>
       <DealRoomHeader subtitle={`${deal.name} field diligence`} />
 
-      <section className="workspace-card rounded-[28px] p-8">
+      <WorkspaceCard className="p-8" radius="compact">
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">Site Visits</p>
@@ -55,7 +56,7 @@ export function SiteVisitsView({ deal }: SiteVisitsViewProps) {
         <div className="mt-8 grid gap-4">
           {siteVisits.map((visit) => (
             <article
-              className="grid gap-5 rounded-[24px] border border-outline-variant bg-white/62 p-5 shadow-[0_8px_20px_rgba(7,1,84,0.04)] md:grid-cols-[7rem_1fr_auto]"
+              className="grid gap-5 rounded-[16px] border border-outline-variant bg-white/62 p-5 shadow-[0_8px_20px_rgba(7,1,84,0.04)] md:grid-cols-[7rem_1fr_auto]"
               key={visit.location}
             >
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -75,7 +76,7 @@ export function SiteVisitsView({ deal }: SiteVisitsViewProps) {
             </article>
           ))}
         </div>
-      </section>
+      </WorkspaceCard>
     </>
   );
 }

@@ -25,7 +25,7 @@ export function PendingTasksCard({ className = "", embedded = false, tasks }: Pe
 
           return (
             <label
-              className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition hover:bg-white/58 ${
+              className={`flex cursor-pointer items-start gap-3 rounded-[11px] border px-4 py-3 transition hover:bg-white/58 ${
                 embedded ? "border-white/60 bg-white/28" : "border-white/70 bg-white/38"
               }`}
               key={task.id}
@@ -57,5 +57,9 @@ export function PendingTasksCard({ className = "", embedded = false, tasks }: Pe
     return content;
   }
 
-  return <WorkspaceCard className="col-span-12 rounded-[28px] p-6">{content}</WorkspaceCard>;
+  return (
+    <WorkspaceCard className="col-span-12 p-6" radius="compact">
+      {content}
+    </WorkspaceCard>
+  );
 }

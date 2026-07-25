@@ -93,7 +93,7 @@ export function DealRoomPage() {
                 contextLabel={deal.room.name}
                 items={dealInsights}
               />
-              <ActivityTimelineCard className="col-span-12 flex min-h-[540px] flex-col rounded-[28px] p-6" items={timelineItems} />
+              <ActivityTimelineCard className="col-span-12 flex min-h-[540px] flex-col p-6" items={timelineItems} />
             </div>
           </>
         )}

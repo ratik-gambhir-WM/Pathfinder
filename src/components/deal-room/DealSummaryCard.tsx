@@ -10,7 +10,7 @@ export function DealSummaryCard({ deal }: DealSummaryCardProps) {
   const thesisLabel = deal.dealType === "Sell-side" ? "Equity Story" : "Investment Thesis";
 
   return (
-    <WorkspaceCard className="relative col-span-12 overflow-hidden rounded-[28px] !bg-background p-8 lg:p-10">
+    <WorkspaceCard className="relative col-span-12 overflow-hidden !bg-background p-8 lg:p-10" radius="compact">
       <div className="relative z-10 flex h-full flex-col gap-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:justify-between">
           <div className="max-w-3xl space-y-5">
@@ -59,7 +59,7 @@ export function DealSummaryCard({ deal }: DealSummaryCardProps) {
             <div className="space-y-3">
               {deal.keyQuestions.map((question) => (
                 <div
-                  className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/42 px-4 py-4"
+                  className="flex items-start gap-3 rounded-[11px] border border-white/70 bg-white/42 px-4 py-4"
                   key={question}
                 >
                   <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
@@ -75,7 +75,7 @@ export function DealSummaryCard({ deal }: DealSummaryCardProps) {
               <h3 className="type-h2 text-text-main">{thesisLabel}</h3>
             </div>
 
-            <div className="rounded-[24px] border border-white/70 bg-white/45 p-5">
+            <div className="rounded-[16px] border border-white/70 bg-white/45 p-5">
               <p className="text-[0.96rem] leading-7 text-text-main/86">"{deal.thesis}"</p>
             </div>
           </section>

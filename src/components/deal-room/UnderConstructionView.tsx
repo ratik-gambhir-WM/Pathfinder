@@ -15,7 +15,10 @@ export function UnderConstructionView({ description, icon, title }: UnderConstru
         <p className="type-subtle text-muted">{description}</p>
       </header>
 
-      <WorkspaceCard className="flex min-h-[520px] items-center justify-center rounded-[28px] bg-surface-container-lowest p-8 text-center">
+      <WorkspaceCard
+        className="flex min-h-[520px] items-center justify-center bg-surface-container-lowest p-8 text-center"
+        radius="compact"
+      >
         <div className="flex max-w-xl flex-col items-center gap-5">
           <div className="flex h-20 w-20 items-center justify-center rounded-full border border-outline-variant bg-surface-container-lowest text-primary shadow-[0_10px_24px_rgba(7,1,84,0.06)]">
             <Icon className="h-10 w-10" name={icon} />

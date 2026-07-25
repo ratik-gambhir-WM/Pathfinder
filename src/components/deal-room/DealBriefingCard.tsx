@@ -14,9 +14,10 @@ export function DealBriefingCard({ compact = false, dealType, keyQuestions, thes
 
   return (
     <WorkspaceCard
-      className={`rounded-[28px] p-8 ${
+      className={`p-8 ${
         compact ? "col-span-12 flex min-h-[540px] flex-col xl:col-span-4" : "col-span-12"
       }`}
+      radius="compact"
     >
       <div className={`gap-8 ${compact ? "flex flex-col" : "grid xl:grid-cols-2"}`}>
         <section className="space-y-4">
@@ -28,7 +29,7 @@ export function DealBriefingCard({ compact = false, dealType, keyQuestions, thes
           <div className="space-y-3">
             {keyQuestions.map((question) => (
               <div
-                className="flex items-start gap-3 rounded-2xl border border-white/70 bg-white/42 px-4 py-4"
+                className="flex items-start gap-3 rounded-[11px] border border-white/70 bg-white/42 px-4 py-4"
                 key={question}
               >
                 <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary" />
@@ -46,7 +47,7 @@ export function DealBriefingCard({ compact = false, dealType, keyQuestions, thes
             <h2 className="type-h2 text-text-main">{thesisLabel}</h2>
           </div>
 
-          <div className="rounded-[24px] border border-white/70 bg-white/45 p-5">
+          <div className="rounded-[16px] border border-white/70 bg-white/45 p-5">
             <p className={`${compact ? "text-[0.96rem] leading-7" : "text-[1rem] leading-8"} text-text-main/86`}>
               "{thesis}"
             </p>

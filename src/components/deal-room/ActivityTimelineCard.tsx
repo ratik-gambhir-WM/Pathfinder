@@ -26,9 +26,9 @@ const toneMap: Record<DealTimelineItem["tone"], { detailClassName: string; dotCl
   },
 };
 
-export function ActivityTimelineCard({ className = "col-span-12 flex min-h-[540px] flex-col rounded-[28px] p-6 xl:col-span-4", items }: ActivityTimelineCardProps) {
+export function ActivityTimelineCard({ className = "col-span-12 flex min-h-[540px] flex-col p-6 xl:col-span-4", items }: ActivityTimelineCardProps) {
   return (
-    <WorkspaceCard className={className}>
+    <WorkspaceCard className={className} radius="compact">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="type-h2 text-text-main">Deal Activity</h2>
         <button className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-white/50">
@@ -52,7 +52,7 @@ export function ActivityTimelineCard({ className = "col-span-12 flex min-h-[540p
                 <div className="space-y-2 pb-1">
                   <p className="text-[12px] font-medium text-muted">{item.timestamp}</p>
                   <h3 className="text-[1.02rem] font-semibold text-text-main">{item.title}</h3>
-                  <div className={`rounded-2xl border px-4 py-3 text-[1rem] leading-7 ${tone.detailClassName}`}>
+                  <div className={`rounded-[11px] border px-4 py-3 text-[1rem] leading-7 ${tone.detailClassName}`}>
                     {item.detail}
                   </div>
                 </div>

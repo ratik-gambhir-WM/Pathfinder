@@ -2,6 +2,7 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { WorkspaceHomeShell } from "../components/hub/WorkspaceHomeShell";
+import { WorkspaceCard } from "../components/hub/WorkspaceCard";
 import { Icon } from "../components/ui/Icon";
 
 const emptyMarkdown = "";
@@ -32,7 +33,7 @@ export function GlobalVaultPage() {
           </div>
         </header>
 
-        <section className="workspace-card rounded-[32px] p-8">
+        <WorkspaceCard className="p-8">
           <div className="grid gap-6 lg:grid-cols-2">
             <UploadField
               accept="*"
@@ -59,9 +60,9 @@ export function GlobalVaultPage() {
               totalCount={directorySelection.totalCount}
             />
           </div>
-        </section>
+        </WorkspaceCard>
 
-        <section className="workspace-card rounded-[32px] p-8">
+        <WorkspaceCard className="p-8">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-muted">Markdown Preview</p>
@@ -72,18 +73,18 @@ export function GlobalVaultPage() {
             </div>
           </div>
 
-          <div className="mt-6 min-h-[220px] rounded-[28px] border border-dashed border-primary/18 bg-white/65 p-6">
+          <div className="mt-6 min-h-[220px] rounded-[19px] border border-dashed border-primary/18 bg-white/65 p-6">
             {emptyMarkdown.trim() ? (
               <div className="vault-markdown text-[16px] leading-7 text-text-main">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{emptyMarkdown}</ReactMarkdown>
               </div>
             ) : (
-              <div className="flex h-full min-h-[172px] items-center justify-center rounded-[22px] bg-surface-container-low/60 px-6 text-center">
+              <div className="flex h-full min-h-[172px] items-center justify-center rounded-[15px] bg-surface-container-low/60 px-6 text-center">
                 <p className="text-[16px] text-muted">No data available yet</p>
               </div>
             )}
           </div>
-        </section>
+        </WorkspaceCard>
       </div>
     </WorkspaceHomeShell>
   );
@@ -164,7 +165,7 @@ function SelectionDetails({ emptyLabel, selectedItems, totalCount }: SelectionDe
   const remainingCount = Math.max(totalCount - previewItems.length, 0);
 
   return (
-    <div className="rounded-[24px] border border-white/80 bg-white/70 p-5 shadow-[0_8px_20px_rgba(7,1,84,0.04)]">
+    <div className="rounded-[16px] border border-white/80 bg-white/70 p-5 shadow-[0_8px_20px_rgba(7,1,84,0.04)]">
       {totalCount ? (
         <div className="space-y-3">
           <p className="text-[13px] font-semibold text-text-main">

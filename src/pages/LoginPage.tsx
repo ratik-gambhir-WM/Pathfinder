@@ -160,7 +160,7 @@ function NewUserSetupCard({
   onSubmit,
 }: NewUserSetupCardProps) {
   return (
-    <section className="glass-panel mx-auto w-full max-w-[440px] rounded-xl p-xl">
+    <section className="glass-panel mx-auto w-full max-w-[440px] rounded-[8px] p-xl">
       <div className="space-y-xs">
         <p className="type-label text-on-surface-variant">New Workspace Profile</p>
         <h1 className="type-h1 text-text-main">Finish setup</h1>

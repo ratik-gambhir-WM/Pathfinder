@@ -202,7 +202,7 @@ export function SummarizePage() {
         </form>
 
         {folderFiles.length > 0 ? (
-          <section className="mt-5 overflow-hidden rounded-[20px] border border-white/85 bg-white/74 shadow-[0_12px_34px_rgba(7,1,84,0.05)]">
+          <section className="mt-5 overflow-hidden rounded-[13px] border border-white/85 bg-white/74 shadow-[0_12px_34px_rgba(7,1,84,0.05)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/8 px-5 py-4">
               <div>
                 <h2 className="text-[14px] font-semibold text-text-main">Files in folder</h2>
@@ -253,7 +253,7 @@ export function SummarizePage() {
             {error ? <p className="px-6 text-[13px] font-semibold text-error">{error}</p> : null}
             {isSummarizing ? <SummaryLoadingState /> : null}
             {summary ? (
-              <div className="vault-markdown relative rounded-[28px] border border-white/85 bg-white/76 p-8 pr-16 text-[16px] leading-7 text-text-main shadow-[0_12px_34px_rgba(7,1,84,0.05)]">
+              <div className="vault-markdown relative rounded-[19px] border border-white/85 bg-white/76 p-8 pr-16 text-[16px] leading-7 text-text-main shadow-[0_12px_34px_rgba(7,1,84,0.05)]">
                 <button
                   aria-label="Save markdown summary"
                   className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full text-primary transition hover:bg-primary/8"
@@ -277,7 +277,7 @@ export function SummarizePage() {
 
 function SummaryLoadingState() {
   return (
-    <div className="flex min-h-[220px] items-center justify-center rounded-[28px] border border-white/85 bg-white/64 shadow-[0_12px_34px_rgba(7,1,84,0.05)] backdrop-blur-md">
+    <div className="flex min-h-[220px] items-center justify-center rounded-[19px] border border-white/85 bg-white/64 shadow-[0_12px_34px_rgba(7,1,84,0.05)] backdrop-blur-md">
       <div className="flex flex-col items-center gap-4 text-primary">
         <div className="wm-loading-mark relative flex h-20 w-20 items-center justify-center rounded-full bg-surface-container-high">
           <span className="wm-loading-orbit absolute inset-0 rounded-full border border-primary/20" />

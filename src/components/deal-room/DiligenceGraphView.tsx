@@ -1,4 +1,5 @@
 import type { DealRoomData } from "../../data/workspace";
+import { WorkspaceCard } from "../hub/WorkspaceCard";
 import { Icon } from "../ui/Icon";
 import { DealRoomHeader } from "./DealRoomHeader";
 
@@ -20,7 +21,7 @@ export function DiligenceGraphView({ deal }: DiligenceGraphViewProps) {
     <>
       <DealRoomHeader subtitle={`${deal.name} relationship map`} />
 
-      <section className="workspace-card relative min-h-[680px] overflow-hidden rounded-[28px] p-8">
+      <WorkspaceCard className="relative min-h-[680px] overflow-hidden p-8" radius="compact">
         <div className="flex items-start justify-between gap-6">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted">Diligence Graph</p>
@@ -36,7 +37,7 @@ export function DiligenceGraphView({ deal }: DiligenceGraphViewProps) {
           </div>
         </div>
 
-        <div className="relative mt-10 h-[460px] rounded-[28px] border border-outline-variant/70 bg-white/52">
+        <div className="relative mt-10 h-[460px] rounded-[19px] border border-outline-variant/70 bg-white/52">
           <svg aria-hidden="true" className="absolute inset-0 h-full w-full text-outline-variant" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path className="fill-none stroke-current stroke-[0.35]" d="M50 18 L20 48 L50 82 L80 48 L50 18" />
             <path className="fill-none stroke-current stroke-[0.3]" d="M20 48 L50 54 L80 48 M50 18 L50 54 L50 82" />
@@ -61,7 +62,7 @@ export function DiligenceGraphView({ deal }: DiligenceGraphViewProps) {
             </div>
           ))}
         </div>
-      </section>
+      </WorkspaceCard>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { WorkspaceHomeShell } from "../components/hub/WorkspaceHomeShell";
+import { WorkspaceCard } from "../components/hub/WorkspaceCard";
 import { Icon } from "../components/ui/Icon";
 import { WorkspaceLocationState } from "../data/workspace";
 import { useWorkspaceSession } from "../hooks/useWorkspaceSession";
@@ -30,7 +31,7 @@ export function AccountPage() {
           </div>
         </header>
 
-        <section className="workspace-card rounded-[32px] p-8">
+        <WorkspaceCard className="p-8">
           {error ? (
             <p className="text-[16px] font-medium text-error">{error}</p>
           ) : user ? (
@@ -49,7 +50,7 @@ export function AccountPage() {
                 : "Open Account info from the profile menu to load your local account profile."}
             </p>
           )}
-        </section>
+        </WorkspaceCard>
       </div>
     </WorkspaceHomeShell>
   );
@@ -62,7 +63,7 @@ type AccountInfoItemProps = {
 
 function AccountInfoItem({ label, value }: AccountInfoItemProps) {
   return (
-    <div className="rounded-[24px] border border-white/80 bg-white/70 p-5 shadow-[0_8px_20px_rgba(7,1,84,0.04)]">
+    <div className="rounded-[16px] border border-white/80 bg-white/70 p-5 shadow-[0_8px_20px_rgba(7,1,84,0.04)]">
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">{label}</p>
       <p className="mt-2 break-words text-[16px] font-semibold text-text-main">{value}</p>
     </div>

@@ -128,7 +128,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
         </header>
 
         <div className="grid grid-cols-12 gap-8">
-          <WorkspaceCard className="col-span-12 rounded-[28px] p-6">
+          <WorkspaceCard className="col-span-12 p-6" radius="compact">
             <div className="mb-7 flex items-center justify-between">
               <h2 className="type-h1 text-text-main">Activity Calendar</h2>
               <button
@@ -190,7 +190,7 @@ export function DealTimelineView({ deal, events, onEventsChange }: DealTimelineV
 
       <div
         aria-live="polite"
-        className={`fixed bottom-8 right-8 z-50 flex items-center gap-3 rounded-[24px] border border-white/80 bg-white/76 px-5 py-4 text-sm font-semibold text-text-main shadow-[0_18px_50px_rgba(7,1,84,0.16)] backdrop-blur-md transition ${
+        className={`fixed bottom-8 right-8 z-50 flex items-center gap-3 rounded-[16px] border border-white/80 bg-white/76 px-5 py-4 text-sm font-semibold text-text-main shadow-[0_18px_50px_rgba(7,1,84,0.16)] backdrop-blur-md transition ${
           toastMessage ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-8 opacity-0"
         }`}
       >
@@ -349,7 +349,7 @@ function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
 
       <div className="grid gap-5 lg:grid-cols-3">
         {columns.map((column) => (
-          <WorkspaceCard className="flex min-h-[260px] flex-col rounded-[28px] p-5" key={column.id}>
+          <WorkspaceCard className="flex min-h-[260px] flex-col p-5" key={column.id} radius="compact">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <h3 className="text-[1.35rem] font-bold leading-tight text-text-main [font-family:var(--font-heading)]">{column.title}</h3>
@@ -363,7 +363,7 @@ function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
             <div className="flex flex-1 flex-col gap-3">
               {column.id === "to-do" && showNewReminderForm ? (
                 <form
-                  className="rounded-[22px] border border-primary/20 bg-white/74 p-4 shadow-[0_8px_20px_rgba(7,1,84,0.04)]"
+                  className="rounded-[15px] border border-primary/20 bg-white/74 p-4 shadow-[0_8px_20px_rgba(7,1,84,0.04)]"
                   onSubmit={handleAddReminder}
                 >
                   <label className="block">
@@ -401,7 +401,7 @@ function TaskKanbanBoard({ tasks }: TaskKanbanBoardProps) {
               {column.tasks.length > 0 ? (
                 column.tasks.map((task) => <ReminderCard key={task.id} status={column.title} task={task} />)
               ) : (
-                <div className="flex min-h-28 items-center justify-center rounded-[22px] border border-dashed border-outline-variant bg-white/34 px-4 text-center text-[13px] font-medium text-muted">
+                <div className="flex min-h-28 items-center justify-center rounded-[15px] border border-dashed border-outline-variant bg-white/34 px-4 text-center text-[13px] font-medium text-muted">
                   No reminders here yet.
                 </div>
               )}
@@ -421,7 +421,7 @@ type ReminderCardProps = {
 function ReminderCard({ status, task }: ReminderCardProps) {
   return (
     <article
-      className={`rounded-[22px] border bg-white/70 p-4 shadow-[0_8px_20px_rgba(7,1,84,0.04)] ${
+      className={`rounded-[15px] border bg-white/70 p-4 shadow-[0_8px_20px_rgba(7,1,84,0.04)] ${
         task.priority ? "border-error/20" : "border-white/80"
       }`}
     >
@@ -432,7 +432,7 @@ function ReminderCard({ status, task }: ReminderCardProps) {
         <span className={`mt-0.5 h-2.5 w-2.5 rounded-full ${task.done ? "bg-primary" : task.priority ? "bg-error" : "bg-muted"}`} />
       </div>
       <h4 className={`mt-3 text-[15px] font-bold leading-6 text-text-main ${task.done ? "line-through opacity-60" : ""}`}>{task.label}</h4>
-      <p className={`mt-4 rounded-[16px] px-4 py-3 text-[13px] leading-6 ${task.priority ? "bg-error-container/20 text-error" : "bg-surface-container-high/70 text-text-main/72"}`}>
+      <p className={`mt-4 rounded-[13px] px-4 py-3 text-[13px] leading-6 ${task.priority ? "bg-error-container/20 text-error" : "bg-surface-container-high/70 text-text-main/72"}`}>
         {task.done ? "Task completed." : task.priority ? "Needs immediate follow-up before the next review cycle." : "Open reminder for the diligence team."}
       </p>
     </article>
@@ -452,7 +452,7 @@ function NewActivityModal({ formState, onChange, onClose, onSubmit }: NewActivit
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/10 p-4 backdrop-blur-sm" role="presentation">
       <form
-        className="shrink-0 rounded-[28px] border border-white/80 bg-white/78 p-8 shadow-[0_28px_80px_rgba(7,1,84,0.18)] backdrop-blur-xl"
+        className="shrink-0 rounded-[19px] border border-white/80 bg-white/78 p-8 shadow-[0_28px_80px_rgba(7,1,84,0.18)] backdrop-blur-xl"
         onSubmit={onSubmit}
         style={{ width: "min(calc(100vw - 32px), 28rem)" }}
       >
