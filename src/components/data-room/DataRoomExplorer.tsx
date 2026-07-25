@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { DataRoomTreeNode } from "../../data/dataRoom";
 import type { DealExtractionLocationState } from "../../data/dealExtraction";
-import { Button } from "../ui/Button";
 import { Icon } from "../ui/Icon";
+import { ArrowEndOnRectangleIcon } from "../ui/icons/ArrowEndOnRectangleIcon";
 import { DataRoomSidebarTabs } from "./DataRoomSidebarTabs";
+import { NewAnalysisMenu } from "./NewAnalysisMenu";
 
 type DataRoomExplorerProps = {
   collapsed: boolean;
@@ -42,7 +43,7 @@ export function DataRoomExplorer({
   return (
     <aside
       aria-hidden={collapsed}
-      className={`flex shrink-0 overflow-hidden bg-white/40 backdrop-blur-md transition-[width,border-color] duration-300 ${
+      className={`flex shrink-0 overflow-hidden bg-background transition-[width,border-color] duration-300 ${
         collapsed ? "w-0 border-r-0" : "w-72 border-r border-white/80"
       }`}
     >
@@ -67,27 +68,13 @@ export function DataRoomExplorer({
             title="Collapse data room sidebar"
             type="button"
           >
-            <Icon className="h-5 w-5" name="chevronLeft" />
+            <ArrowEndOnRectangleIcon className="h-6 w-6" direction="left" />
           </button>
         </div>
 
-        <div className="mb-3 flex items-center gap-4 px-3 py-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Icon className="h-7 w-7" name="dataset" />
-          </div>
-          <div>
-            <h2 className="text-[1.65rem] font-bold leading-none text-text-main [font-family:var(--font-heading)]">
-              {dealName}
-            </h2>
-            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-muted">Due Diligence</p>
-          </div>
-        </div>
+        <NewAnalysisMenu />
 
-        <Button className="mb-4 h-14 px-6" icon={<Icon className="h-5 w-5" name="plus" />}>
-          New Analysis
-        </Button>
-
-        <div className="mb-4">
+        <div className="mb-2">
           <DataRoomSidebarTabs activeTab="data-room" />
         </div>
 

@@ -13,7 +13,7 @@ type ReportEditorPanelProps = {
 
 export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportEditorPanelProps) {
   return (
-    <section className="glass-panel relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none">
+    <section className="glass-panel relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-none border-y-0">
       <DocumentViewMenu />
 
       <div className="workspace-scrollbar-hidden flex-1 overflow-y-auto p-6">

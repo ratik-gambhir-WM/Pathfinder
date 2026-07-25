@@ -1,4 +1,4 @@
-import { Icon } from "../../ui/Icon";
+import { ArrowEndOnRectangleIcon } from "../../ui/icons/ArrowEndOnRectangleIcon";
 import { ViewColumnsIcon } from "../../ui/icons/ViewColumnsIcon";
 
 type ChipBankHeaderProps = {
@@ -16,7 +16,7 @@ export function ChipBankHeader({ onCollapse }: ChipBankHeaderProps) {
           title="Collapse document search"
           type="button"
         >
-          <Icon className="h-7 w-7" name="chevronRight" />
+          <ArrowEndOnRectangleIcon className="h-7 w-7" direction="right" />
         </button>
         <div className="min-w-0">
           <h3 className="truncate text-[1.55rem] font-bold leading-tight text-text-main [font-family:var(--font-heading)]">

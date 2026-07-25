@@ -32,8 +32,8 @@ export function ChipBankPanel({ chips, onCollapse }: ChipBankPanelProps) {
   );
 
   return (
-    <section className="glass-panel -ml-px flex min-w-[360px] max-w-[440px] flex-[0_0_32%] flex-col rounded-none">
-      <div className="border-b border-outline-variant bg-surface-container-lowest px-5 py-5">
+    <section className="glass-panel -ml-px flex min-w-[360px] max-w-[440px] flex-[0_0_32%] flex-col rounded-none border-y-0">
+      <div className="border-b border-outline-variant bg-background px-5 py-5">
         <ChipBankHeader onCollapse={onCollapse} />
         <RepositorySearchControls
           categories={categories}
@@ -48,7 +48,7 @@ export function ChipBankPanel({ chips, onCollapse }: ChipBankPanelProps) {
         />
       </div>
 
-      <div className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto bg-surface-container-low/45 px-4 py-4">
+      <div className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto bg-background px-4 py-4">
         <div className="mb-3 flex items-center justify-between px-1">
           <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
             {filteredResults.length} {filteredResults.length === 1 ? "match" : "matches"}
