@@ -70,8 +70,8 @@ export function HubPage() {
 
         <div className="grid grid-cols-12 gap-6">
           <AiSearchCard suggestions={aiSuggestions} />
-          <RecentOpenedCard items={recentFiles} />
-          <CriticalTasksCard assignees={["AT", "JD"]} tasks={tasks} />
+          <CriticalTasksCard assignees={["AT", "JD"]} layout="rail" tasks={tasks} />
+          <RecentOpenedCard items={recentFiles} layout="wide" />
           <InsightsStrip items={workspaceInsights} />
         </div>
       </div>
