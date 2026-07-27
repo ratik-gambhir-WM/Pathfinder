@@ -18,7 +18,7 @@ export function RecentOpenedCard({ items, layout = "rail" }: RecentOpenedCardPro
   if (layout === "wide") {
     return (
       <WorkspaceCard className="relative col-span-12 flex min-h-[430px] flex-col overflow-hidden p-8 lg:col-span-8">
-        <div className="workspace-card-glow absolute -right-16 -top-14 h-64 w-64 rounded-full bg-primary/6 blur-3xl" />
+        <div className="absolute -right-16 -top-14 h-64 w-64 rounded-full bg-primary/6 blur-3xl [html[data-theme=dark]_&]:opacity-0" />
 
         <div className="relative z-10 flex h-full flex-col">
           <div className="mb-7 flex items-center justify-between">

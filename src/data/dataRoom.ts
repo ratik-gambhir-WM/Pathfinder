@@ -3,9 +3,11 @@ import { DealRoomData } from "./workspace";
 export type DataRoomTreeNode = {
   children?: DataRoomTreeNode[];
   defaultExpanded?: boolean;
+  error?: string;
   id: string;
   kind: "doc" | "folder" | "pdf" | "sheet";
   name: string;
+  relativePath?: string;
 };
 
 export type DataRoomChip =

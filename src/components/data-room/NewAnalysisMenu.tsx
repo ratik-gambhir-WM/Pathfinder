@@ -41,7 +41,7 @@ export function NewAnalysisMenu() {
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="New analysis"
-        className="flex h-14 w-full items-center justify-center rounded-full bg-[#ffffff] text-background shadow-sm transition hover:bg-[#f7f7fb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed"
+        className="flex h-14 w-full items-center justify-center rounded-full bg-[#0c006b] text-white shadow-sm transition enabled:hover:bg-[#211781] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-fixed disabled:cursor-not-allowed disabled:opacity-50 [html[data-theme=dark]_&]:bg-white [html[data-theme=dark]_&]:text-[#0c006b] [html[data-theme=dark]_&]:enabled:hover:bg-[#f1eff8]"
         onClick={() => setOpen((current) => !current)}
         title="New analysis"
         type="button"

@@ -18,7 +18,7 @@ export function SidebarFrame({ children, email, navigationState, profileDeal, pr
   const subtitle = profileDeal ? profileDeal.room.name : profileSubtitle ?? "Focus: Project Alpha";
 
   return (
-    <aside className="workspace-sidebar hidden h-full w-72 shrink-0 border-r border-white/80 bg-white/40 backdrop-blur-md lg:flex">
+    <aside className="hidden h-full w-72 shrink-0 border-r border-white/80 bg-white/40 backdrop-blur-md lg:flex [html[data-theme=dark]_&]:bg-[#070a1b]">
       <div className="flex h-full min-h-0 w-full flex-col p-4">
         <div className="space-y-6">
           <NavLink

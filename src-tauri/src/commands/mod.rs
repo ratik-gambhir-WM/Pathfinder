@@ -1,3 +1,4 @@
+pub mod data_room;
 pub mod deal;
 pub mod research;
 pub mod users;

@@ -19,7 +19,11 @@ const pieces = [
 
 export function WestMonroeMark({ className = "h-14 w-14" }: WestMonroeMarkProps) {
   return (
-    <svg aria-hidden="true" className={`wm-mark ${className}`} viewBox="0 0 96 96">
+    <svg
+      aria-hidden="true"
+      className={`text-[#040047] [html[data-theme=dark]_&]:text-white ${className}`}
+      viewBox="0 0 96 96"
+    >
       {pieces.map((piece) => (
         <rect
           fill="currentColor"

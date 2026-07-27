@@ -8,6 +8,9 @@ type InsightsStripProps = {
   items: readonly WorkspaceInsight[];
 };
 
+const shimmerClassName =
+  "animate-[shimmer_1.5s_linear_infinite] bg-[linear-gradient(90deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.4)_50%,rgba(255,255,255,0)_100%)] [background-size:200%_100%]";
+
 export function InsightsStrip({ className = "col-span-12 mt-2", contextLabel = "Across Projects", items }: InsightsStripProps) {
   return (
     <section className={className}>
@@ -65,14 +68,14 @@ function LoadingChip() {
     <WorkspaceCard className="relative flex w-72 shrink-0 flex-col gap-4 overflow-hidden p-4 opacity-55">
       <div className="absolute left-0 top-0 h-full w-1 bg-muted/25" />
       <div className="space-y-2 pl-2 pt-1">
-        <div className="shimmer h-2 w-24 rounded-full bg-muted/10" />
-        <div className="shimmer h-2 w-16 rounded-full bg-muted/10" />
+        <div className={`${shimmerClassName} h-2 w-24 rounded-full bg-muted/10`} />
+        <div className={`${shimmerClassName} h-2 w-16 rounded-full bg-muted/10`} />
       </div>
-      <div className="shimmer ml-2 mt-4 h-3 w-full rounded-full bg-muted/10" />
-      <div className="shimmer ml-2 h-3 w-5/6 rounded-full bg-muted/10" />
+      <div className={`${shimmerClassName} ml-2 mt-4 h-3 w-full rounded-full bg-muted/10`} />
+      <div className={`${shimmerClassName} ml-2 h-3 w-5/6 rounded-full bg-muted/10`} />
       <div className="mt-auto flex items-center gap-2 pl-2">
-        <div className="shimmer h-4 w-4 rounded-full bg-muted/10" />
-        <div className="shimmer h-2 w-32 rounded-full bg-muted/10" />
+        <div className={`${shimmerClassName} h-4 w-4 rounded-full bg-muted/10`} />
+        <div className={`${shimmerClassName} h-2 w-32 rounded-full bg-muted/10`} />
       </div>
     </WorkspaceCard>
   );

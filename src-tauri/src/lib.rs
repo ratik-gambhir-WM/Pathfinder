@@ -19,6 +19,7 @@ use tauri::{
 
 use crate::{
     commands::{
+        data_room::{list_deal_data_room, preview_deal_document},
         deal::{database_status, extract_deal_questions_and_thesis, save_deal_and_extract},
         research::{
             list_summary_files, login_demo_command, save_markdown_summary, summarize,
@@ -105,6 +106,8 @@ pub fn run() {
             get_user_by_email,
             user_exists_by_email,
             database_status,
+            list_deal_data_room,
+            preview_deal_document,
             save_deal_and_extract,
             extract_deal_questions_and_thesis,
             login_demo_command,

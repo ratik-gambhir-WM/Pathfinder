@@ -279,8 +279,8 @@ function SummaryLoadingState() {
   return (
     <div className="flex min-h-[220px] items-center justify-center rounded-[19px] border border-white/85 bg-white/64 shadow-[0_12px_34px_rgba(7,1,84,0.05)] backdrop-blur-md">
       <div className="flex flex-col items-center gap-4 text-primary">
-        <div className="wm-loading-mark relative flex h-20 w-20 items-center justify-center rounded-full bg-surface-container-high">
-          <span className="wm-loading-orbit absolute inset-0 rounded-full border border-primary/20" />
+        <div className="relative flex h-20 w-20 animate-[wm-loader-pulse_1.8s_ease-in-out_infinite] items-center justify-center rounded-full bg-surface-container-high shadow-[0_12px_28px_rgba(7,1,84,0.08)] [&_svg]:animate-[wm-loader-spin_1.35s_linear_infinite] [&_svg]:[transform-origin:center]">
+          <span className="absolute inset-0 animate-[wm-loader-orbit_1.35s_linear_infinite] rounded-full border border-primary/20" />
           <WestMonroeMark className="h-12 w-12" />
         </div>
         <span className="text-[14px] font-semibold">Summarizing documents...</span>

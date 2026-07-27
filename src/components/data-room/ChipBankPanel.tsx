@@ -32,7 +32,7 @@ export function ChipBankPanel({ chips, onCollapse }: ChipBankPanelProps) {
   );
 
   return (
-    <section className="glass-panel -ml-px flex min-w-[360px] max-w-[440px] flex-[0_0_32%] flex-col rounded-none border-y-0">
+    <section className="glass-panel -ml-px flex w-[clamp(360px,30vw,440px)] min-w-[360px] max-w-[440px] flex-none flex-col rounded-none border-y-0">
       <div className="border-b border-outline-variant bg-background px-5 py-5">
         <ChipBankHeader onCollapse={onCollapse} />
         <RepositorySearchControls

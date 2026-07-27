@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataRoomTreeNode } from "../../data/dataRoom";
 import type { DealExtractionLocationState } from "../../data/dealExtraction";
@@ -14,6 +14,11 @@ type DataRoomExplorerProps = {
   navigationState?: DealExtractionLocationState;
   nodes: DataRoomTreeNode[];
   onCollapse: () => void;
+  onSelectFile: (node: DataRoomTreeNode) => void;
+  rootPath?: string;
+  selectedFilePath?: string;
+  treeError?: string;
+  treeLoading?: boolean;
 };
 
 export function DataRoomExplorer({
@@ -23,8 +28,21 @@ export function DataRoomExplorer({
   navigationState,
   nodes,
   onCollapse,
+  onSelectFile,
+  rootPath,
+  selectedFilePath,
+  treeError,
+  treeLoading = false,
 }: DataRoomExplorerProps) {
   const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(() => new Set());
+
+  useEffect(() => {
+    setExpandedNodeIds((current) => {
+      const next = new Set(current);
+      collectDefaultExpandedNodeIds(nodes, next);
+      return next;
+    });
+  }, [nodes]);
 
   function toggleNode(nodeId: string) {
     setExpandedNodeIds((current) => {
@@ -79,6 +97,18 @@ export function DataRoomExplorer({
         </div>
 
         <div className="workspace-scrollbar-hidden min-h-0 flex-1 overflow-y-auto pr-1">
+          {rootPath ? (
+            <p
+              className="mb-3 truncate px-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted/80"
+              title={rootPath}
+            >
+              Local · {rootPath}
+            </p>
+          ) : null}
+          {treeLoading ? (
+            <ExplorerStatus detail="Reading the configured local folder…" title="Loading data room" />
+          ) : null}
+          {treeError ? <ExplorerStatus detail={treeError} title="Data room unavailable" /> : null}
           <div className="space-y-1">
             {nodes.map((node) => (
               <ExplorerNodeItem
@@ -86,7 +116,9 @@ export function DataRoomExplorer({
                 expandedNodeIds={expandedNodeIds}
                 key={node.id}
                 node={node}
+                onSelectFile={onSelectFile}
                 onToggle={toggleNode}
+                selectedFilePath={selectedFilePath}
               />
             ))}
           </div>
@@ -112,42 +144,58 @@ type ExplorerNodeItemProps = {
   depth: number;
   expandedNodeIds: Set<string>;
   node: DataRoomTreeNode;
+  onSelectFile: (node: DataRoomTreeNode) => void;
   onToggle: (nodeId: string) => void;
+  selectedFilePath?: string;
 };
 
-function ExplorerNodeItem({ depth, expandedNodeIds, node, onToggle }: ExplorerNodeItemProps) {
-  const hasChildren = Boolean(node.children?.length);
+function ExplorerNodeItem({
+  depth,
+  expandedNodeIds,
+  node,
+  onSelectFile,
+  onToggle,
+  selectedFilePath,
+}: ExplorerNodeItemProps) {
+  const isFolder = node.kind === "folder";
   const expanded = expandedNodeIds.has(node.id);
+  const selected = Boolean(node.relativePath && node.relativePath === selectedFilePath);
 
   return (
     <div>
       <button
-        className="flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-white/40"
+        aria-current={selected ? "true" : undefined}
+        className={`flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left transition ${
+          selected ? "bg-primary/10 text-text-main" : "hover:bg-white/40"
+        }`}
         onClick={() => {
-          if (hasChildren) {
+          if (isFolder) {
             onToggle(node.id);
+          } else {
+            onSelectFile(node);
           }
         }}
         style={{ paddingLeft: `${depth * 18 + 8}px` }}
-        title={node.name}
+        title={node.error ? `${node.name} — ${node.error}` : node.name}
         type="button"
       >
         <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-muted">
-          {hasChildren ? <Icon className="h-4 w-4" name={expanded ? "chevronDown" : "chevronRight"} /> : null}
+          {isFolder ? <Icon className="h-4 w-4" name={expanded ? "chevronDown" : "chevronRight"} /> : null}
         </span>
         <span className="mt-0.5 shrink-0 text-primary">
           <Icon className="h-[18px] w-[18px]" name={iconNameForNode(node.kind)} />
         </span>
         <span
           className={`min-w-0 whitespace-normal break-words leading-snug [overflow-wrap:anywhere] ${
-            hasChildren ? "text-[14px] font-medium text-text-main" : "text-[14px] text-text-main/80"
+            isFolder ? "text-[14px] font-medium text-text-main" : "text-[14px] text-text-main/80"
           }`}
         >
           {node.name}
         </span>
+        {node.error ? <span className="ml-auto shrink-0 text-error">!</span> : null}
       </button>
 
-      {hasChildren && expanded ? (
+      {isFolder && expanded ? (
         <div className="space-y-0.5">
           {node.children?.map((child) => (
             <ExplorerNodeItem
@@ -155,11 +203,33 @@ function ExplorerNodeItem({ depth, expandedNodeIds, node, onToggle }: ExplorerNo
               expandedNodeIds={expandedNodeIds}
               key={child.id}
               node={child}
+              onSelectFile={onSelectFile}
               onToggle={onToggle}
+              selectedFilePath={selectedFilePath}
             />
           ))}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function collectDefaultExpandedNodeIds(nodes: DataRoomTreeNode[], target: Set<string>) {
+  for (const node of nodes) {
+    if (node.defaultExpanded) {
+      target.add(node.id);
+    }
+    if (node.children) {
+      collectDefaultExpandedNodeIds(node.children, target);
+    }
+  }
+}
+
+function ExplorerStatus({ detail, title }: { detail: string; title: string }) {
+  return (
+    <div className="mx-1 mb-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-3">
+      <p className="text-[12px] font-semibold text-text-main">{title}</p>
+      <p className="mt-1 break-words text-[11px] leading-5 text-muted">{detail}</p>
     </div>
   );
 }

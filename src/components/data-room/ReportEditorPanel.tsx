@@ -74,8 +74,8 @@ export function ReportEditorPanel({ blocks, reportTitle, versionLabel }: ReportE
         </div>
       </div>
 
-      <div className="report-editor-toolbar-scrim sticky bottom-0 flex justify-center bg-gradient-to-t from-white/80 to-transparent px-6 pb-6 pt-2">
-        <div className="report-editor-toolbar flex items-center gap-2 rounded-full border border-white bg-white/90 px-6 py-2 shadow-2xl backdrop-blur-xl">
+      <div className="sticky bottom-0 flex justify-center bg-gradient-to-t from-white/80 to-transparent px-6 pb-6 pt-2 [html[data-theme=dark]_&]:bg-[linear-gradient(to_top,var(--theme-canvas),rgba(7,10,27,0))]">
+        <div className="flex items-center gap-2 rounded-full border border-white bg-white/90 px-6 py-2 shadow-2xl backdrop-blur-xl [html[data-theme=dark]_&]:border-[rgba(184,192,207,0.2)] [html[data-theme=dark]_&]:bg-surface-container-lowest [html[data-theme=dark]_&]:shadow-[0_18px_44px_rgba(0,0,0,0.42)]">
           <ToolbarButton label="B" />
           <ToolbarButton label="I" />
           <ToolbarButton label="•" />
