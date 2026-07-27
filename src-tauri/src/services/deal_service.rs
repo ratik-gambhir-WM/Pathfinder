@@ -5,8 +5,10 @@ use serde::{Deserialize, Serialize};
 use walkdir::WalkDir;
 
 use crate::{
-    clients::openai::{OpenAiClient, ResponsesFileInput},
-    common::{display_relative_path, infer_supported_mime_type},
+    core::{
+        clients::openai::{OpenAiClient, ResponsesFileInput},
+        display_relative_path, infer_supported_mime_type,
+    },
     repository::deal_repository::{
         create_deal, get_deal_by_id, upsert_deal_metadata, CreateDealRecord, Deal, DealMetadata,
         UpsertDealMetadataRecord,

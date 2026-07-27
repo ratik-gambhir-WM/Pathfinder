@@ -2,7 +2,7 @@
 
 use std::{env, fs, path::Path};
 
-use crate::clients::openai::{OpenAiClient, ResponsesFileInput};
+use crate::core::clients::openai::{OpenAiClient, ResponsesFileInput};
 use base64::{engine::general_purpose, Engine as _};
 
 const DEFAULT_IMAGE_DESCRIPTION_MODEL: &str = "gpt-5.4";

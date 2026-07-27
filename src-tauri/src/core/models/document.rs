@@ -1,4 +1,4 @@
-use crate::parsers::TextChunk;
+use crate::core::parsers::TextChunk;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

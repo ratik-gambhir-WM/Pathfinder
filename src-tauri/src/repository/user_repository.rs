@@ -1,4 +1,4 @@
-use rusqlite::{params, Row};
+use rusqlite::{params, Connection, OptionalExtension, Row};
 use serde::Serialize;
 
 use crate::state::AppState;
@@ -48,17 +48,23 @@ pub fn create_user(state: &AppState, record: CreateUserRecord<'_>) -> Result<Use
 }
 
 pub fn get_user_by_email(state: &AppState, email: &str) -> Result<Option<User>, String> {
-    let users = state.gen_sqlite_db_client().query_rows(
-        r#"
+    state.with_sqlite_db(|connection| query_user_by_email(connection, email))
+}
+
+fn query_user_by_email(connection: &Connection, email: &str) -> rusqlite::Result<Option<User>> {
+    connection
+        .query_row(
+            r#"
         SELECT id, first_name, last_name, email, api_key, role, created_at, updated_at
         FROM users
-        WHERE email = ?1
+        WHERE email = ?1 COLLATE NOCASE
+        ORDER BY id
+        LIMIT 1
         "#,
-        [email],
-        user_from_row,
-    )?;
-
-    Ok(users.into_iter().next())
+            [email],
+            user_from_row,
+        )
+        .optional()
 }
 
 fn user_from_row(row: &Row<'_>) -> rusqlite::Result<User> {
@@ -72,4 +78,39 @@ fn user_from_row(row: &Row<'_>) -> rusqlite::Result<User> {
         created_at: row.get("created_at")?,
         updated_at: row.get("updated_at")?,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn query_user_by_email_matches_email_case_insensitively() {
+        let connection = Connection::open_in_memory().unwrap();
+        connection
+            .execute_batch(
+                r#"
+                CREATE TABLE users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    first_name TEXT NOT NULL,
+                    last_name TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
+                    api_key TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );
+
+                INSERT INTO users (first_name, last_name, email, api_key, role)
+                VALUES ('Sam', 'Example', 'SAM@gmail.com', 'test-key', 'user');
+                "#,
+            )
+            .unwrap();
+
+        let user = query_user_by_email(&connection, "sam@gmail.com")
+            .unwrap()
+            .expect("case-insensitive email lookup should find the existing user");
+
+        assert_eq!(user.email, "SAM@gmail.com");
+    }
 }

@@ -4,13 +4,13 @@ pub mod pdf;
 pub mod powerpoint;
 pub mod spreadsheet;
 
-use crate::clients::openai::OpenAiClient;
-use crate::models::document::ParsedFileData2;
-use crate::parsers::docx::parse_docx_file;
-use crate::parsers::image::parse_image_file;
-use crate::parsers::pdf::parse_pdf_file;
-use crate::parsers::powerpoint::parse_powerpoint_file;
-use crate::parsers::spreadsheet::parse_spreadsheet;
+use crate::core::clients::openai::OpenAiClient;
+use crate::core::models::document::ParsedFileData2;
+use crate::core::parsers::docx::parse_docx_file;
+use crate::core::parsers::image::parse_image_file;
+use crate::core::parsers::pdf::parse_pdf_file;
+use crate::core::parsers::powerpoint::parse_powerpoint_file;
+use crate::core::parsers::spreadsheet::parse_spreadsheet;
 use crate::utils::{get_token_count, openai_api_key};
 use base64::Engine;
 

@@ -1,7 +1,11 @@
+pub mod clients;
+pub mod models;
+pub mod parsers;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::models::document::{ParsedFileData, ParsedFileData2};
+use crate::core::models::document::{ParsedFileData, ParsedFileData2};
 
 pub struct CollectedFile {
     pub filename: String,

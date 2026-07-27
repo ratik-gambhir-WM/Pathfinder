@@ -1,9 +1,11 @@
-use crate::clients::openai::{OpenAiClient, ResponsesFileInput};
-use crate::common::{
-    build_summary_prompt, display_relative_path, infer_supported_mime_type, CollectedFile,
+use crate::core::{
+    build_summary_prompt,
+    clients::openai::{OpenAiClient, ResponsesFileInput},
+    display_relative_path, infer_supported_mime_type,
+    models::document::{ParsedFileData, ParsedFileData2},
+    parsers::gen_parsed_file,
+    CollectedFile,
 };
-use crate::models::document::{ParsedFileData, ParsedFileData2};
-use crate::parsers::gen_parsed_file;
 use crate::prompts::{
     DATA_ROOM_TECH_DILIGENCE_SUMMARY_PROMPT, DOCUMENT_SUMMARY_SYSTEM_PROMPT,
     PRODUCT_AND_APPLICATION_DEEP_DIVE_PROMPT,
@@ -46,7 +48,7 @@ pub struct SummarizableFile {
 }
 
 pub fn parse_docx_file(path: &Path) -> Result<String, String> {
-    crate::parsers::docx::parse_docx_file(path)
+    crate::core::parsers::docx::parse_docx_file(path)
 }
 
 pub async fn summarize_dir(path: String) -> Result<String, String> {

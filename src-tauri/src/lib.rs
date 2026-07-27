@@ -1,15 +1,12 @@
-pub mod clients;
 pub mod commands;
+pub mod core;
 pub mod errors;
-pub mod models;
-pub mod parsers;
 pub mod prompts;
 pub mod repository;
 pub mod services;
 pub mod state;
 pub mod utils;
 
-pub mod common;
 mod events;
 
 use tauri::{

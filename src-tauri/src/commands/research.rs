@@ -1,6 +1,6 @@
 use crate::{
     commands::{CommandResult, CommandResultExt},
-    common::write_summary,
+    core::write_summary,
     services::research_service::{
         list_summarizable_files, summarize_dir, summarize_paths, SummarizableFile,
     },

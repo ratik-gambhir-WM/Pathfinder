@@ -1,7 +1,7 @@
 use std::{env, process};
 
-use pathfinder_lib::clients::helix::{AddFileChunkInput, HelixClient};
-use pathfinder_lib::clients::openai::OpenAiClient;
+use pathfinder_lib::core::clients::helix::{AddFileChunkInput, HelixClient};
+use pathfinder_lib::core::clients::openai::OpenAiClient;
 use serde_json::Value;
 
 const APP_NAME: &str = "DataRoomCLI";

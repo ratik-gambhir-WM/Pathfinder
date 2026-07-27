@@ -3,7 +3,7 @@ use std::path::Path;
 use rusqlite::Connection;
 use tauri::AppHandle;
 
-use crate::clients::{helix::HelixClient, sqlite::SqliteClient};
+use crate::core::clients::{helix::HelixClient, sqlite::SqliteClient};
 
 pub struct AppState {
     helix_client: HelixClient,

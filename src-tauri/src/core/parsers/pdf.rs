@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{clients::openai::OpenAiClient, parsers::image::describe_image};
+use crate::core::{clients::openai::OpenAiClient, parsers::image::describe_image};
 use image::{codecs::png::PngEncoder, ColorType, ImageEncoder};
 use pdf_extract::{xobject::PdfImage, Document, Error as PdfError, Stream};
 

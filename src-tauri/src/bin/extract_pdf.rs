@@ -1,6 +1,8 @@
 use pathfinder_lib::{
-    clients::openai::OpenAiClient,
-    parsers::pdf::{extract_pdf_image_descriptions, extract_pdf_text},
+    core::{
+        clients::openai::OpenAiClient,
+        parsers::pdf::{extract_pdf_image_descriptions, extract_pdf_text},
+    },
     utils::openai_api_key,
 };
 use std::{env, path::Path, process};

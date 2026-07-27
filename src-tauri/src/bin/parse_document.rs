@@ -1,11 +1,13 @@
 use base64::{engine::general_purpose, Engine as _};
 use pathfinder_lib::{
-    clients::openai::{OpenAiClient, ResponsesFileInput},
-    parsers::docx::parse_docx_file,
+    core::{
+        clients::openai::{OpenAiClient, ResponsesFileInput},
+        parsers::docx::parse_docx_file,
+        CollectedFile,
+    },
     utils::openai_api_key,
 };
 
-use pathfinder_lib::common::CollectedFile;
 use std::{
     env, fs,
     path::{Path, PathBuf},
