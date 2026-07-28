@@ -1,4 +1,4 @@
-use pathfinder_lib::{
+use quarry_lib::{
     core::{
         clients::openai::OpenAiClient,
         parsers::pdf::{extract_pdf_image_descriptions, extract_pdf_text},

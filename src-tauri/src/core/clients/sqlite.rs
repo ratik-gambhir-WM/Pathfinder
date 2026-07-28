@@ -3,7 +3,7 @@ use std::{fs, path::PathBuf, sync::Mutex, time::Duration};
 use rusqlite::{Connection, Params, Row};
 use tauri::{AppHandle, Manager};
 
-const DATABASE_FILE_NAME: &str = "pathfinder.sqlite3";
+const DATABASE_FILE_NAME: &str = "quarry.sqlite3";
 
 pub struct SqliteClient {
     pub db: Mutex<Connection>,
@@ -73,7 +73,7 @@ impl SqliteClient {
 }
 
 fn database_path(app: &AppHandle) -> Result<PathBuf, String> {
-    if let Ok(path) = std::env::var("PATHFINDER_DATABASE_PATH") {
+    if let Ok(path) = std::env::var("QUARRY_DATABASE_PATH") {
         if !path.trim().is_empty() {
             return Ok(PathBuf::from(path));
         }

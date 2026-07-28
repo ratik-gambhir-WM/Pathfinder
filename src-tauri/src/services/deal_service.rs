@@ -690,7 +690,7 @@ mod tests {
                 .unwrap()
                 .as_nanos();
             let path = std::env::temp_dir().join(format!(
-                "pathfinder-deal-service-{name}-{}-{nanos}",
+                "quarry-deal-service-{name}-{}-{nanos}",
                 std::process::id()
             ));
             fs::create_dir_all(&path).unwrap();

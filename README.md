@@ -1,4 +1,4 @@
-# Pathfinder
+# Quarry
 
 This template should help get you started developing with Tauri, React and Typescript in Vite.
 
@@ -10,7 +10,9 @@ This template should help get you started developing with Tauri, React and Types
 
 Create a local `.env` file from `.env.example` and set `OPENAI_API_KEY` before using the OpenAI-backed parsing features.
 
-`PATHFINDER_DATABASE_PATH` is optional. When it is unset, the Rust app creates `pathfinder.sqlite3` in the platform app data directory.
+`QUARRY_DATABASE_PATH` is optional. When it is unset, the Rust app creates `quarry.sqlite3` in the platform app data directory.
+
+`QUARRY_SOFFICE` can point to a LibreOffice executable when document preview conversion cannot discover it automatically.
 
 ## SQLite
 

@@ -27,7 +27,7 @@ export function AccountPage() {
           </div>
           <div className="space-y-2">
             <h1 className="type-display text-text-main">Account Info</h1>
-            <p className="type-subtle max-w-3xl text-muted">Workspace profile details stored locally in Pathfinder.</p>
+            <p className="type-subtle max-w-3xl text-muted">Workspace profile details stored locally in Quarry.</p>
           </div>
         </header>
 

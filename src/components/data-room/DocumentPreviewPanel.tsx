@@ -11,7 +11,7 @@ import PdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?worker&inline";
 import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import previewLoadingMark from "../../assets/pathfinder-preview-mark.svg";
+import previewLoadingMark from "../../assets/quarry-preview-mark.svg";
 import type { DataRoomTreeNode } from "../../data/dataRoom";
 import type { DocumentPreviewResponse } from "../../data/dataRoomPreview";
 import { Icon } from "../ui/Icon";
@@ -204,7 +204,7 @@ function PdfViewer({ response }: { response: DocumentPreviewResponse }) {
       </div>
 
       <div
-        className="workspace-scrollbar-hidden min-h-0 min-w-0 flex-1 overflow-auto bg-surface-container"
+        className="workspace-scrollbar-hidden min-h-0 min-w-0 flex-1 overflow-auto bg-surface-container [html[data-theme=dark]_&]:bg-black"
         ref={setViewportNode}
       >
         {"message" in decodedPdf ? (
@@ -268,14 +268,14 @@ function PreviewLoading({ detail }: { detail: string }) {
   return (
     <div
       aria-live="polite"
-      className="flex min-h-0 flex-1 items-center justify-center bg-surface-container p-8"
+      className="flex min-h-0 flex-1 items-center justify-center bg-surface-container p-8 [html[data-theme=dark]_&]:bg-black"
       role="status"
     >
       <div className="text-center">
         <img
           alt=""
           aria-hidden="true"
-          className="mx-auto h-14 w-14 animate-spin motion-reduce:animate-none [animation-duration:1.4s]"
+          className="mx-auto h-14 w-14 animate-spin motion-reduce:animate-none [animation-duration:1.4s] [html[data-theme=dark]_&]:brightness-0 [html[data-theme=dark]_&]:invert"
           src={previewLoadingMark}
         />
         <p className="mt-5 text-base font-semibold text-text-main">Loading preview</p>

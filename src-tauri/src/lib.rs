@@ -28,7 +28,7 @@ use crate::{
     state::AppState,
 };
 
-const APP_NAME: &str = "Pathfinder";
+const APP_NAME: &str = "Quarry";
 
 fn build_app_menu<R: tauri::Runtime>(
     app: &tauri::AppHandle<R>,

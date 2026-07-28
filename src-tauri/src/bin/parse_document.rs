@@ -1,5 +1,5 @@
 use base64::{engine::general_purpose, Engine as _};
-use pathfinder_lib::{
+use quarry_lib::{
     core::{
         clients::openai::{OpenAiClient, ResponsesFileInput},
         parsers::docx::parse_docx_file,

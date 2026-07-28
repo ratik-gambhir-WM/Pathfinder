@@ -28,12 +28,9 @@ export function SidebarFrame({ children, email, navigationState, profileDeal, pr
             to="/hub"
           >
             <WestMonroeMark framed />
-            <div>
-              <h1 className="text-[1.1rem] font-bold leading-tight text-text-main [font-family:var(--font-heading)]">
-                West Monroe
-              </h1>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">Diligence</p>
-            </div>
+            <h1 className="text-[1.1rem] font-bold leading-tight text-text-main [font-family:var(--font-heading)]">
+              Quarry
+            </h1>
           </NavLink>
 
           {children}

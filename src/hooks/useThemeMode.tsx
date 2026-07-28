@@ -7,7 +7,7 @@ type ThemeModeContextValue = {
   themeMode: ThemeMode;
 };
 
-const THEME_STORAGE_KEY = "pathfinder-theme-mode";
+const THEME_STORAGE_KEY = "quarry-theme-mode";
 const ThemeModeContext = createContext<ThemeModeContextValue | null>(null);
 
 function getStoredThemeMode(): ThemeMode {

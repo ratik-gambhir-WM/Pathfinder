@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { WorkspaceLocationState } from "../data/workspace";
 
-const workspaceEmailStorageKey = "pathfinder.workspace.email";
+const workspaceEmailStorageKey = "quarry.workspace.email";
 
 export function persistWorkspaceEmail(email: string) {
   if (typeof window === "undefined" || !email) {

@@ -346,7 +346,7 @@ fn read_pdf(path: &Path) -> Result<Vec<u8>, String> {
 
 fn convert_office_to_pdf(path: &Path) -> Result<Vec<u8>, String> {
     let converter = find_soffice().ok_or_else(|| {
-        "Office preview conversion is unavailable because LibreOffice/soffice was not found. Install LibreOffice or set PATHFINDER_SOFFICE to its executable path.".to_string()
+        "Office preview conversion is unavailable because LibreOffice/soffice was not found. Install LibreOffice or set QUARRY_SOFFICE to its executable path.".to_string()
     })?;
     let temp_root = unique_preview_temp_dir();
     let output_dir = temp_root.join("output");
@@ -412,7 +412,7 @@ fn convert_office_to_pdf(path: &Path) -> Result<Vec<u8>, String> {
 }
 
 fn find_soffice() -> Option<PathBuf> {
-    if let Some(configured) = env::var_os("PATHFINDER_SOFFICE") {
+    if let Some(configured) = env::var_os("QUARRY_SOFFICE") {
         let path = PathBuf::from(configured);
         if path.is_file() {
             return Some(path);
@@ -451,7 +451,7 @@ fn unique_preview_temp_dir() -> PathBuf {
         .unwrap_or_default()
         .as_nanos();
     env::temp_dir().join(format!(
-        "pathfinder-document-preview-{}-{timestamp}",
+        "quarry-document-preview-{}-{timestamp}",
         std::process::id()
     ))
 }
