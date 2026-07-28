@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use crate::core::{models::document::Chunk, text_chunking::token_bounded_ranges};
 use docx_rust::{
     app::{App, AppNoApNamespace, AppWithApNamespace},
     core::{Core, CoreNamespace, CoreNoNamespace},
@@ -11,28 +12,70 @@ use docx_rust::{
     formatting::SectionProperty,
     Docx, DocxFile,
 };
+use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeSet, HashMap},
     path::Path,
 };
 
-pub fn parse_docx_file(path: &Path) -> Result<String, String> {
-    println!("parse_docx_file");
+pub fn extract_docx_text(path: &Path) -> Result<String, String> {
+    println!("extract_docx_text");
     let file = DocxFile::from_file(path).map_err(|err| err);
     match file {
         Ok(file) => {
-            println!("parse_docx_file - ok");
-            extract_docx_text(&file)
+            println!("extract_docx_text - ok");
+            extract_docx_file_text(&file)
         }
         Err(err) => {
-            println!("parse_docx_file - error {}", err.to_string());
+            println!("extract_docx_text - error {}", err.to_string());
             Err(err.to_string())
         }
     }
 }
 
-fn extract_docx_text(file: &DocxFile) -> Result<String, String> {
-    println!("extract_docx_text");
+/// Parses a DOCX using the canonical plain-text extractor and divides that exact
+/// text into chunks. Offsets are UTF-8 byte offsets into the string returned by
+/// [`extract_docx_text`], with an exclusive `end_offset`.
+pub fn extract_docx_chunks(path: &Path) -> Result<Vec<Chunk>, String> {
+    extract_docx_text(path).map(|text| chunks_from_text(&text))
+}
+
+fn chunks_from_text(text: &str) -> Vec<Chunk> {
+    token_bounded_ranges(text)
+        .into_iter()
+        .enumerate()
+        .map(|(sequence_number, range)| {
+            let start_offset = range.start_offset;
+            let end_offset = range.end_offset;
+            let chunk_text = &text[start_offset..end_offset];
+            let content_hash = content_hash(chunk_text);
+
+            Chunk {
+                chunk_id: format!("{content_hash}-{}", sequence_number + 1),
+                text: chunk_text.to_string(),
+                embedding: None,
+                sequence_number: sequence_number + 1,
+                page_number: None,
+                section_title: None,
+                start_offset,
+                end_offset,
+                token_count: range.token_count,
+                content_hash,
+                user_id: None,
+            }
+        })
+        .collect()
+}
+
+fn content_hash(text: &str) -> String {
+    Sha256::digest(text.as_bytes())
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+fn extract_docx_file_text(file: &DocxFile) -> Result<String, String> {
+    println!("extract_docx_file_text");
 
     let docx = file.parse().map_err(|err| err.to_string())?;
     let full_text = collect_docx_text(&docx);
@@ -669,5 +712,60 @@ fn non_empty(value: String) -> Option<String> {
         None
     } else {
         Some(value)
+    }
+}
+
+#[cfg(test)]
+mod chunk_tests {
+    use super::*;
+    use crate::core::text_chunking::MAX_TOKEN_CHUNK;
+
+    #[test]
+    fn chunks_reconstruct_text_and_have_contiguous_offsets() {
+        let text = format!(
+            "{}🙂\n{}",
+            "first paragraph ".repeat(MAX_TOKEN_CHUNK),
+            "second paragraph ".repeat(MAX_TOKEN_CHUNK)
+        );
+
+        let chunks = chunks_from_text(&text);
+
+        assert!(chunks.len() > 1);
+        assert_eq!(
+            chunks
+                .iter()
+                .map(|chunk| chunk.text.as_str())
+                .collect::<String>(),
+            text
+        );
+
+        for (index, chunk) in chunks.iter().enumerate() {
+            assert_eq!(chunk.sequence_number, index + 1);
+            assert_eq!(&text[chunk.start_offset..chunk.end_offset], chunk.text);
+            assert!(chunk.token_count <= MAX_TOKEN_CHUNK);
+            assert_eq!(
+                chunk.start_offset,
+                chunks
+                    .get(index.wrapping_sub(1))
+                    .map(|previous| previous.end_offset)
+                    .unwrap_or(0)
+            );
+        }
+        assert_eq!(chunks.last().unwrap().end_offset, text.len());
+    }
+
+    #[test]
+    fn chunk_metadata_is_stable_and_embedding_serializes_as_null() {
+        let chunks = chunks_from_text("A short DOCX body.");
+        let chunk = chunks.first().unwrap();
+        let json = serde_json::to_value(chunk).unwrap();
+
+        assert_eq!(chunk.start_offset, 0);
+        assert_eq!(chunk.end_offset, chunk.text.len());
+        assert_eq!(chunk.content_hash.len(), 64);
+        assert!(chunk.chunk_id.starts_with(&chunk.content_hash));
+        assert!(json["embedding"].is_null());
+        assert!(json["page_number"].is_null());
+        assert!(json["user_id"].is_null());
     }
 }

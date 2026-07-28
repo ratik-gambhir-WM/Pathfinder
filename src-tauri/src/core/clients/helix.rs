@@ -47,52 +47,17 @@ impl HelixClient {
         Ok(Self { client })
     }
 
-    pub async fn add_file_chunk<R>(&self, input: AddFileChunkInput) -> Result<R, String>
+    pub async fn execute_dynamic_query<R, F>(&self, build_query: F) -> Result<R, String>
     where
         R: DeserializeOwned,
+        F: FnOnce() -> DynamicQueryRequest,
     {
         self.client
             .query()
-            .dynamic(add_file_chunk(
-                input.chunk_id,
-                input.file_id,
-                input.file_name,
-                input.file_path,
-                input.text,
-                input.text_hash,
-                input.chunk_index,
-                input.token_count,
-                input.page_start,
-                input.page_end,
-                input.embedded_at.unwrap_or_default(),
-            ))
+            .dynamic(build_query())
             .send()
             .await
-            .map_err(|err| format!("failed to add Helix file chunk: {err}"))
-    }
-
-    pub async fn file_chunk_by_chunk_id<R>(&self, chunk_id: String) -> Result<R, String>
-    where
-        R: DeserializeOwned,
-    {
-        self.client
-            .query()
-            .dynamic(file_chunk_by_chunk_id(chunk_id))
-            .send()
-            .await
-            .map_err(|err| format!("failed to query Helix file chunk by chunk_id: {err}"))
-    }
-
-    pub async fn file_chunks_by_file_id<R>(&self, file_id: String) -> Result<R, String>
-    where
-        R: DeserializeOwned,
-    {
-        self.client
-            .query()
-            .dynamic(file_chunks_by_file_id(file_id))
-            .send()
-            .await
-            .map_err(|err| format!("failed to query Helix file chunks by file_id: {err}"))
+            .map_err(|err| format!("failed to execute Helix query: {err}"))
     }
 }
 

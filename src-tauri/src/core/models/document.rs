@@ -1,6 +1,21 @@
 use crate::core::parsers::TextChunk;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Chunk {
+    pub chunk_id: String,
+    pub text: String,
+    pub embedding: Option<Vec<f64>>,
+    pub sequence_number: usize,
+    pub page_number: Option<usize>,
+    pub section_title: Option<String>,
+    pub start_offset: usize,
+    pub end_offset: usize,
+    pub token_count: usize,
+    pub content_hash: String,
+    pub user_id: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ParsedFileData {
     pub file_id: String,

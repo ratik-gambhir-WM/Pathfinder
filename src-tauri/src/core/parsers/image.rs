@@ -7,14 +7,11 @@ use base64::{engine::general_purpose, Engine as _};
 
 const DEFAULT_IMAGE_DESCRIPTION_MODEL: &str = "gpt-5.4";
 
-const IMAGE_DESCRIPTION_PROMPT: &str = r#"Create a dense, retrieval-optimized description of this image for vector search.
+const IMAGE_DESCRIPTION_PROMPT: &str = r#"Create a dense, retrieval-optimized description of this image for semantic and keyword search. Explain what the image is, its context, its apparent purpose, and the main idea or information it is trying to convey. Prioritize meaningful domain concepts and relationships over a catalog of purely visual details. Use concrete terminology, visible names, and explicit relationships that someone might search for later.
 
-Focus on stable visual facts that would help someone find this image later:
-- primary subjects, objects, people, setting, scene type, visible text, charts, document layout, brand/product clues, colors, style, and notable relationships
-- if the image is a screenshot, diagram, table, chart, form, or document page, describe its structure and any readable text
-- avoid speculation, filler, markdown, and generic phrases like "this image shows"
+Accurately capture relevant subjects, objects, people, settings, actions, screenshots, document structure, readable labels and text, diagrams, tables, charts, forms, product or brand clues, and meaningful visual relationships. For structured content, explain what it communicates, how it is organized, and how its labeled elements relate when those relationships are visible.
 
-Return one concise paragraph, roughly 80-160 words."#;
+Clearly distinguish directly visible facts from cautious interpretations. Qualify any inference and never invent details, behavior, labels, values, or relationships that are not visible or reasonably supported. Avoid filler, markdown, and generic phrases such as "this image shows." Write as much as necessary to preserve faithful, useful context for retrieval."#;
 
 pub async fn parse_image_file(
     image_path: &Path,

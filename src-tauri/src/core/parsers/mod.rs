@@ -6,19 +6,18 @@ pub mod spreadsheet;
 
 use crate::core::clients::openai::OpenAiClient;
 use crate::core::models::document::ParsedFileData2;
-use crate::core::parsers::docx::parse_docx_file;
+use crate::core::parsers::docx::extract_docx_text;
 use crate::core::parsers::image::parse_image_file;
 use crate::core::parsers::pdf::parse_pdf_file;
 use crate::core::parsers::powerpoint::parse_powerpoint_file;
 use crate::core::parsers::spreadsheet::parse_spreadsheet;
+use crate::core::text_chunking::MAX_TOKEN_CHUNK;
 use crate::utils::{get_token_count, openai_api_key};
 use base64::Engine;
 
 use std::fs;
 use std::path::Path;
 use walkdir::DirEntry;
-
-pub(crate) const MAX_TOKEN_CHUNK: usize = 800;
 
 pub struct TextChunk {
     chunk_index: i32,
@@ -105,7 +104,7 @@ pub fn gen_parsed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedFileData
     let path = file.path();
     let mut chunks: Vec<TextChunk> = Vec::new();
     if matches!(to_chunk, Some(true)) {
-        let parsed = parse_docx_file(&path);
+        let parsed = extract_docx_text(&path);
         chunks = parsed
             .map(|text| chunk_text(&text))
             .unwrap_or_else(|_| Vec::new())
@@ -120,7 +119,7 @@ pub async fn parse_typed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedF
     let mut chunks: Vec<TextChunk> = Vec::new();
     if matches!(to_chunk, Some(true)) {
         chunks = match typed_file {
-            Ok(DataFile::Docx) => parse_docx_file(path)
+            Ok(DataFile::Docx) => extract_docx_text(path)
                 .map(|text| chunk_text(&text))
                 .unwrap_or_else(|_| Vec::new()),
             Ok(DataFile::Pdf) => parse_pdf_file(path)

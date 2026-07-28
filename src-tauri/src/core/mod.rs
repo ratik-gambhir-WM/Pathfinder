@@ -1,6 +1,9 @@
 pub mod clients;
+pub mod data_room_helpers;
 pub mod models;
+pub mod nodes;
 pub mod parsers;
+pub mod text_chunking;
 
 use std::fs;
 use std::path::{Path, PathBuf};

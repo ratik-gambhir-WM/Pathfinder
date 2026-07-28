@@ -47,8 +47,8 @@ pub struct SummarizableFile {
     pub supported: bool,
 }
 
-pub fn parse_docx_file(path: &Path) -> Result<String, String> {
-    crate::core::parsers::docx::parse_docx_file(path)
+pub fn extract_docx_text(path: &Path) -> Result<String, String> {
+    crate::core::parsers::docx::extract_docx_text(path)
 }
 
 pub async fn summarize_dir(path: String) -> Result<String, String> {

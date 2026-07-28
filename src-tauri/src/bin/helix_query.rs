@@ -1,6 +1,8 @@
 use std::{env, process};
 
-use quarry_lib::core::clients::helix::{AddFileChunkInput, HelixClient};
+use quarry_lib::core::clients::helix::{
+    add_file_chunk, file_chunk_by_chunk_id, file_chunks_by_file_id, AddFileChunkInput, HelixClient,
+};
 use quarry_lib::core::clients::openai::OpenAiClient;
 use serde_json::Value;
 
@@ -33,15 +35,32 @@ async fn run(args: Vec<String>) -> Result<(), String> {
         Some("add-file-chunk") => match args.get(2) {
             Some(payload) => {
                 let input = parse_add_file_chunk_payload(payload)?;
-                let result: Value = helix_db.add_file_chunk(input).await?;
+                let result: Value = helix_db
+                    .execute_dynamic_query(move || {
+                        add_file_chunk(
+                            input.chunk_id,
+                            input.file_id,
+                            input.file_name,
+                            input.file_path,
+                            input.text,
+                            input.text_hash,
+                            input.chunk_index,
+                            input.token_count,
+                            input.page_start,
+                            input.page_end,
+                            input.embedded_at.unwrap_or_default(),
+                        )
+                    })
+                    .await?;
                 print_json(&result)
             }
             None => Err("missing file chunk JSON payload".to_string()),
         },
         Some("file-chunk") => match args.get(2) {
             Some(chunk_id) => {
+                let chunk_id = chunk_id.to_string();
                 let result: Value = helix_db
-                    .file_chunk_by_chunk_id(chunk_id.to_string())
+                    .execute_dynamic_query(move || file_chunk_by_chunk_id(chunk_id))
                     .await?;
                 print_json(&result)
             }
@@ -49,7 +68,10 @@ async fn run(args: Vec<String>) -> Result<(), String> {
         },
         Some("file-chunks") => match args.get(2) {
             Some(file_id) => {
-                let result: Value = helix_db.file_chunks_by_file_id(file_id.to_string()).await?;
+                let file_id = file_id.to_string();
+                let result: Value = helix_db
+                    .execute_dynamic_query(move || file_chunks_by_file_id(file_id))
+                    .await?;
                 print_json(&result)
             }
             None => Err("missing file_id".to_string()),
