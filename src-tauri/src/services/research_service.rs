@@ -3,14 +3,13 @@ use crate::core::{
     clients::openai::{OpenAiClient, ResponsesFileInput},
     display_relative_path, infer_supported_mime_type,
     models::document::{ParsedFileData, ParsedFileData2},
-    parsers::gen_parsed_file,
+    parsers::{docx::parse_docx_from_path as parse_docx_from_path_in_parser, gen_parsed_file},
     CollectedFile,
 };
 use crate::prompts::{
     DATA_ROOM_TECH_DILIGENCE_SUMMARY_PROMPT, DOCUMENT_SUMMARY_SYSTEM_PROMPT,
     PRODUCT_AND_APPLICATION_DEEP_DIVE_PROMPT,
 };
-use crate::utils::openai_api_key;
 use base64::engine::general_purpose;
 use base64::Engine;
 use serde::Serialize;
@@ -47,8 +46,8 @@ pub struct SummarizableFile {
     pub supported: bool,
 }
 
-pub fn extract_docx_text(path: &Path) -> Result<String, String> {
-    crate::core::parsers::docx::extract_docx_text(path)
+pub fn parse_docx_from_path(path: &Path) -> Result<String, String> {
+    parse_docx_from_path_in_parser(path)
 }
 
 pub async fn summarize_dir(path: String) -> Result<String, String> {
@@ -59,8 +58,7 @@ pub async fn summarize_dir(path: String) -> Result<String, String> {
     if !root.is_dir() {
         return Err(format!("path is not a directory: {}", root.display()));
     }
-    let api_key = openai_api_key()?;
-    let client = OpenAiClient::new(&api_key);
+    let client = OpenAiClient::new()?;
     let model = env::var("OPENAI_DOCUMENT_SUMMARY_MODEL")
         .unwrap_or_else(|_| DEFAULT_DOCUMENT_SUMMARY_MODEL.to_string());
     let (files, skipped_files) = collect_dir_content(&root)?;
@@ -142,8 +140,7 @@ pub async fn summarize_paths(paths: Vec<String>) -> Result<String, String> {
 
     let selected_paths = paths.into_iter().map(PathBuf::from).collect::<Vec<_>>();
     let root = common_parent_path(&selected_paths).unwrap_or_else(|| PathBuf::from(""));
-    let api_key = openai_api_key()?;
-    let client = OpenAiClient::new(&api_key);
+    let client = OpenAiClient::new()?;
     let model = env::var("OPENAI_DOCUMENT_SUMMARY_MODEL")
         .unwrap_or_else(|_| DEFAULT_DOCUMENT_SUMMARY_MODEL.to_string());
     let (files, skipped_files) = collect_paths_content(&root, &selected_paths)?;

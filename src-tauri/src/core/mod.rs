@@ -1,5 +1,6 @@
 pub mod clients;
 pub mod data_room_helpers;
+pub mod helix_queries;
 pub mod models;
 pub mod nodes;
 pub mod parsers;

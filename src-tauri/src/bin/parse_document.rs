@@ -1,11 +1,8 @@
 use base64::{engine::general_purpose, Engine as _};
-use quarry_lib::{
-    core::{
-        clients::openai::{OpenAiClient, ResponsesFileInput},
-        parsers::docx::extract_docx_text,
-        CollectedFile,
-    },
-    utils::openai_api_key,
+use quarry_lib::core::{
+    clients::openai::{OpenAiClient, ResponsesFileInput},
+    parsers::docx::parse_docx_from_path,
+    CollectedFile,
 };
 
 use std::{
@@ -79,7 +76,7 @@ Commands:
 
 async fn parse_docx(path: String) -> Result<(), String> {
     let path: &Path = Path::new(&path);
-    let text = extract_docx_text(path).map_err(|err| err.to_string())?;
+    let text = parse_docx_from_path(path).map_err(|err| err.to_string())?;
     println!("{text}");
     Ok(())
 }
@@ -100,8 +97,7 @@ async fn summarize_dir(path: String) -> Result<(), String> {
         return Err(format!("no supported files found in {}", root.display()));
     }
 
-    let api_key = openai_api_key()?;
-    let client = OpenAiClient::new(&api_key);
+    let client = OpenAiClient::new()?;
     let model = env::var("OPENAI_DOCUMENT_SUMMARY_MODEL")
         .unwrap_or_else(|_| DEFAULT_DOCUMENT_SUMMARY_MODEL.to_string());
     let prompt = build_summary_prompt(&root, &files, &skipped_files);

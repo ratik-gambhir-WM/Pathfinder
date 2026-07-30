@@ -14,7 +14,6 @@ use crate::{
         UpsertDealMetadataRecord,
     },
     state::AppState,
-    utils::openai_api_key,
 };
 
 const DEFAULT_DEAL_EXTRACTION_MODEL: &str = "gpt-5.6-luna";
@@ -502,8 +501,7 @@ async fn extract_deal_questions_and_thesis_from_files(
         });
     }
 
-    let api_key = openai_api_key()?;
-    let client = OpenAiClient::new(&api_key);
+    let client = OpenAiClient::new()?;
     let model = env::var("OPENAI_DEAL_EXTRACTION_MODEL")
         .unwrap_or_else(|_| DEFAULT_DEAL_EXTRACTION_MODEL.to_string());
     let prompt = build_deal_extraction_prompt(deal, &attachable_files);

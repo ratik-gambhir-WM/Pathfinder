@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
-use crate::core::{models::document::Chunk, text_chunking::token_bounded_ranges};
+use crate::core::{
+    nodes::document_node::{ChunkNode, DocumentNode},
+    text_chunking::token_bounded_ranges,
+};
 use docx_rust::{
     app::{App, AppNoApNamespace, AppWithApNamespace},
     core::{Core, CoreNamespace, CoreNoNamespace},
@@ -12,70 +15,201 @@ use docx_rust::{
     formatting::SectionProperty,
     Docx, DocxFile,
 };
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     collections::{BTreeSet, HashMap},
-    path::Path,
+    fs::{self, File},
+    io::{Cursor, Read},
+    path::{Path, PathBuf},
 };
 
-pub fn extract_docx_text(path: &Path) -> Result<String, String> {
-    println!("extract_docx_text");
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DocxAssembly {
+    pub document: DocumentNode,
+    pub chunks: Vec<ChunkNode>,
+}
+
+/// Parses raw DOCX bytes into a DOCX package.
+pub fn parse_docx_file_from_bytes(bytes: Vec<u8>) -> Result<DocxFile, String> {
+    let docx_file = DocxFile::from_reader(Cursor::new(bytes)).map_err(|err| err.to_string())?;
+
+    Ok(docx_file)
+}
+
+/// Parses plain text directly from raw DOCX file bytes.
+pub fn parse_docx_from_bytes(bytes: Vec<u8>) -> Result<String, String> {
+    let docx_file = parse_docx_file_from_bytes(bytes)?;
+
+    parse_docx_file(&docx_file)
+}
+
+pub fn parse_docx_from_path(path: &Path) -> Result<String, String> {
+    println!("parse_docx_from_path");
     let file = DocxFile::from_file(path).map_err(|err| err);
     match file {
         Ok(file) => {
-            println!("extract_docx_text - ok");
-            extract_docx_file_text(&file)
+            println!("parse_docx_from_path - ok");
+            parse_docx_file(&file)
         }
         Err(err) => {
-            println!("extract_docx_text - error {}", err.to_string());
+            println!("parse_docx_from_path - error {}", err.to_string());
             Err(err.to_string())
         }
     }
 }
 
-/// Parses a DOCX using the canonical plain-text extractor and divides that exact
+/// Parses a DOCX using the canonical plain-text parser and divides that exact
 /// text into chunks. Offsets are UTF-8 byte offsets into the string returned by
-/// [`extract_docx_text`], with an exclusive `end_offset`.
-pub fn extract_docx_chunks(path: &Path) -> Result<Vec<Chunk>, String> {
-    extract_docx_text(path).map(|text| chunks_from_text(&text))
+/// [`parse_docx_from_path`], with an exclusive `end_offset`.
+pub fn parse_docx_chunks_from_path(
+    path: &Path,
+    user_id: impl Into<String>,
+) -> Result<DocxAssembly, String> {
+    let text = parse_docx_from_path(path)?;
+    let source_path = path.canonicalize().unwrap_or_else(|_| PathBuf::from(path));
+    let file_size_bytes = fs::metadata(&source_path)
+        .map_err(|err| {
+            format!(
+                "failed to read DOCX metadata for {}: {err}",
+                source_path.display()
+            )
+        })?
+        .len();
+    let content_hash = sha256_file(&source_path)?;
+
+    Ok(parse_docx_file_with_metadata(
+        Some(&source_path),
+        &user_id.into(),
+        &text,
+        file_size_bytes,
+        content_hash,
+    ))
 }
 
-fn chunks_from_text(text: &str) -> Vec<Chunk> {
+/// Parses and chunks raw DOCX bytes into the same graph-ready assembly as the
+/// path-based parser. An optional path provides the document's filename and
+/// stable local-path identity; when omitted, `local_path` remains `None`.
+pub fn parse_docx_chunks_from_bytes(
+    bytes: Vec<u8>,
+    path: Option<&Path>,
+    user_id: impl Into<String>,
+) -> Result<DocxAssembly, String> {
+    let file_size_bytes = u64::try_from(bytes.len())
+        .map_err(|_| format!("DOCX byte length `{}` does not fit in u64", bytes.len()))?;
+    let content_hash = sha256_bytes(&bytes);
+    let text = parse_docx_from_bytes(bytes)?;
+    let source_path = path.map(|path| path.canonicalize().unwrap_or_else(|_| PathBuf::from(path)));
+
+    Ok(parse_docx_file_with_metadata(
+        source_path.as_deref(),
+        &user_id.into(),
+        &text,
+        file_size_bytes,
+        content_hash,
+    ))
+}
+
+fn parse_docx_file_with_metadata(
+    path: Option<&Path>,
+    user_id: &str,
+    text: &str,
+    file_size_bytes: u64,
+    content_hash: String,
+) -> DocxAssembly {
+    let local_path = path.map(|path| path.to_string_lossy().into_owned());
+    let document_identity = local_path.as_deref().unwrap_or(&content_hash);
+    let document_id = content_hash_for_text(&format!("{user_id}\0docx\0{document_identity}"));
+    let chunks = chunk_nodes_from_text(text, &document_id, user_id);
+    let token_count = chunks
+        .iter()
+        .map(|chunk| u64::from(chunk.token_count))
+        .sum();
+    let document = DocumentNode {
+        document_id,
+        user_id: user_id.to_string(),
+        file_name: path
+            .and_then(Path::file_name)
+            .and_then(|name| name.to_str())
+            .unwrap_or("Document.docx")
+            .to_string(),
+        source_type: "docx".to_string(),
+        local_path,
+        file_size_bytes,
+        token_count,
+        content_hash,
+        rendered_pdf_path: None,
+    };
+
+    DocxAssembly { document, chunks }
+}
+
+fn chunk_nodes_from_text(text: &str, document_id: &str, user_id: &str) -> Vec<ChunkNode> {
     token_bounded_ranges(text)
         .into_iter()
         .enumerate()
-        .map(|(sequence_number, range)| {
+        .map(|(sequence_index, range)| {
+            let sequence_number =
+                u32::try_from(sequence_index + 1).expect("DOCX chunk count should fit in u32");
             let start_offset = range.start_offset;
             let end_offset = range.end_offset;
             let chunk_text = &text[start_offset..end_offset];
-            let content_hash = content_hash(chunk_text);
+            let content_hash = content_hash_for_text(chunk_text);
+            let chunk_id = content_hash_for_text(&format!(
+                "{user_id}\0{document_id}\0{sequence_number}\0{content_hash}"
+            ));
 
-            Chunk {
-                chunk_id: format!("{content_hash}-{}", sequence_number + 1),
+            ChunkNode {
+                chunk_id,
+                document_id: document_id.to_string(),
+                user_id: user_id.to_string(),
                 text: chunk_text.to_string(),
                 embedding: None,
-                sequence_number: sequence_number + 1,
-                page_number: None,
+                sequence_number,
+                page_numbers: None,
                 section_title: None,
                 start_offset,
                 end_offset,
-                token_count: range.token_count,
+                token_count: u32::try_from(range.token_count)
+                    .expect("DOCX chunk token count should fit in u32"),
                 content_hash,
-                user_id: None,
             }
         })
         .collect()
 }
 
-fn content_hash(text: &str) -> String {
-    Sha256::digest(text.as_bytes())
+fn content_hash_for_text(text: &str) -> String {
+    sha256_bytes(text.as_bytes())
+}
+
+fn sha256_bytes(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect()
 }
 
-fn extract_docx_file_text(file: &DocxFile) -> Result<String, String> {
-    println!("extract_docx_file_text");
+fn sha256_file(path: &Path) -> Result<String, String> {
+    let mut file = File::open(path)
+        .map_err(|err| format!("failed to open DOCX for hashing {}: {err}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+
+    loop {
+        let bytes_read = file
+            .read(&mut buffer)
+            .map_err(|err| format!("failed to hash DOCX {}: {err}", path.display()))?;
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
+    }
+
+    Ok(format!("{:x}", hasher.finalize()))
+}
+
+pub fn parse_docx_file(file: &DocxFile) -> Result<String, String> {
+    println!("parse_docx_file");
 
     let docx = file.parse().map_err(|err| err.to_string())?;
     let full_text = collect_docx_text(&docx);
@@ -721,6 +855,21 @@ mod chunk_tests {
     use crate::core::text_chunking::MAX_TOKEN_CHUNK;
 
     #[test]
+    fn parses_docx_file_from_bytes_with_the_canonical_parser() {
+        let mut empty_docx = Docx::default();
+        let bytes = empty_docx
+            .write(Cursor::new(Vec::new()))
+            .unwrap()
+            .into_inner();
+
+        assert!(parse_docx_file_from_bytes(bytes.clone()).is_ok());
+        assert_eq!(
+            parse_docx_from_bytes(bytes).unwrap_err(),
+            "DOCX did not contain readable text"
+        );
+    }
+
+    #[test]
     fn chunks_reconstruct_text_and_have_contiguous_offsets() {
         let text = format!(
             "{}🙂\n{}",
@@ -728,7 +877,7 @@ mod chunk_tests {
             "second paragraph ".repeat(MAX_TOKEN_CHUNK)
         );
 
-        let chunks = chunks_from_text(&text);
+        let chunks = chunk_nodes_from_text(&text, "document-1", "user-1");
 
         assert!(chunks.len() > 1);
         assert_eq!(
@@ -740,9 +889,12 @@ mod chunk_tests {
         );
 
         for (index, chunk) in chunks.iter().enumerate() {
-            assert_eq!(chunk.sequence_number, index + 1);
+            assert_eq!(chunk.sequence_number, u32::try_from(index + 1).unwrap());
             assert_eq!(&text[chunk.start_offset..chunk.end_offset], chunk.text);
-            assert!(chunk.token_count <= MAX_TOKEN_CHUNK);
+            assert!(chunk.token_count as usize <= MAX_TOKEN_CHUNK);
+            assert_eq!(chunk.document_id, "document-1");
+            assert_eq!(chunk.user_id, "user-1");
+            assert!(chunk.page_numbers.is_none());
             assert_eq!(
                 chunk.start_offset,
                 chunks
@@ -756,16 +908,71 @@ mod chunk_tests {
 
     #[test]
     fn chunk_metadata_is_stable_and_embedding_serializes_as_null() {
-        let chunks = chunks_from_text("A short DOCX body.");
+        let chunks = chunk_nodes_from_text("A short DOCX body.", "document-1", "user-1");
+        let repeated = chunk_nodes_from_text("A short DOCX body.", "document-1", "user-1");
         let chunk = chunks.first().unwrap();
         let json = serde_json::to_value(chunk).unwrap();
 
         assert_eq!(chunk.start_offset, 0);
         assert_eq!(chunk.end_offset, chunk.text.len());
         assert_eq!(chunk.content_hash.len(), 64);
-        assert!(chunk.chunk_id.starts_with(&chunk.content_hash));
+        assert_eq!(chunk.chunk_id.len(), 64);
+        assert_eq!(chunk.chunk_id, repeated[0].chunk_id);
         assert!(json["embedding"].is_null());
-        assert!(json["page_number"].is_null());
-        assert!(json["user_id"].is_null());
+        assert!(json["page_numbers"].is_null());
+        assert_eq!(json["user_id"], "user-1");
+    }
+
+    #[test]
+    fn docx_assembly_contains_document_and_chunk_nodes() {
+        let text = "A short DOCX body.";
+        let assembly = parse_docx_file_with_metadata(
+            Some(Path::new("/documents/report.docx")),
+            "user-1",
+            text,
+            4_096,
+            "file-content-hash".to_string(),
+        );
+
+        assert_eq!(assembly.document.user_id, "user-1");
+        assert_eq!(assembly.document.file_name, "report.docx");
+        assert_eq!(assembly.document.source_type, "docx");
+        assert_eq!(
+            assembly.document.local_path.as_deref(),
+            Some("/documents/report.docx")
+        );
+        assert_eq!(assembly.document.file_size_bytes, 4_096);
+        assert_eq!(assembly.document.content_hash, "file-content-hash");
+        assert!(assembly.document.rendered_pdf_path.is_none());
+        assert_eq!(assembly.chunks.len(), 1);
+        assert_eq!(
+            assembly.chunks[0].document_id,
+            assembly.document.document_id
+        );
+        assert!(assembly.chunks[0].page_numbers.is_none());
+        assert_eq!(
+            assembly.document.token_count,
+            u64::from(assembly.chunks[0].token_count)
+        );
+    }
+
+    #[test]
+    fn docx_bytes_assembly_supports_no_local_path() {
+        let mut docx = Docx::default();
+        docx.document
+            .push(Paragraph::default().push_text("Generated DOCX body."));
+        let bytes = docx.write(Cursor::new(Vec::new())).unwrap().into_inner();
+        let expected_size = u64::try_from(bytes.len()).unwrap();
+        let expected_hash = sha256_bytes(&bytes);
+
+        let assembly = parse_docx_chunks_from_bytes(bytes, None, "user-1").unwrap();
+
+        assert_eq!(assembly.document.file_name, "Document.docx");
+        assert!(assembly.document.local_path.is_none());
+        assert_eq!(assembly.document.file_size_bytes, expected_size);
+        assert_eq!(assembly.document.content_hash, expected_hash);
+        assert_eq!(assembly.chunks.len(), 1);
+        assert_eq!(assembly.chunks[0].text, "Generated DOCX body.");
+        assert!(assembly.chunks[0].page_numbers.is_none());
     }
 }

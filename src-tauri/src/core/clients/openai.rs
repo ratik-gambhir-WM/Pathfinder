@@ -4,13 +4,15 @@ use base64::{engine::general_purpose, Engine as _};
 use chrono::Utc;
 use serde_json::{json, Value};
 
+use crate::utils::openai_api_key;
+
 const DEFAULT_RESPONSES_MODEL: &str = "gpt-5.5";
 const DEFAULT_RESPONSES_PROMPT: &str = "Provide a helpful response.";
 const DEFAULT_SYSTEM_INSTRUCTIONS: &str = "You are a helpful assistant.";
 const DEFAULT_EMBEDDING_MODEL: &str = "text-embedding-3-small";
 
-pub struct OpenAiClient<'a> {
-    api_key: &'a str,
+pub struct OpenAiClient {
+    api_key: String,
 }
 
 #[derive(Debug)]
@@ -62,9 +64,11 @@ struct ResolvedResponsesRequest<'a> {
     max_output_tokens: Option<u32>,
 }
 
-impl<'a> OpenAiClient<'a> {
-    pub fn new(api_key: &'a str) -> Self {
-        OpenAiClient { api_key }
+impl OpenAiClient {
+    pub fn new() -> Result<Self, String> {
+        Ok(Self {
+            api_key: openai_api_key()?,
+        })
     }
 
     pub async fn gen_model_response(
@@ -128,7 +132,7 @@ impl<'a> OpenAiClient<'a> {
 
         let response = openai_client
             .post("https://api.openai.com/v1/responses")
-            .bearer_auth(self.api_key)
+            .bearer_auth(&self.api_key)
             .json(&request_body)
             .send()
             .await
@@ -218,7 +222,7 @@ impl<'a> OpenAiClient<'a> {
 
         let mut response = openai_client
             .post("https://api.openai.com/v1/responses")
-            .bearer_auth(self.api_key)
+            .bearer_auth(&self.api_key)
             .json(&request_body)
             .send()
             .await
@@ -294,25 +298,29 @@ impl<'a> OpenAiClient<'a> {
         content: &str,
         model: Option<&str>,
     ) -> Result<Vec<f64>, String> {
-        let openai_client: reqwest::Client = reqwest::Client::new();
-        let model = model.unwrap_or(DEFAULT_EMBEDDING_MODEL).trim();
-
         if content.trim().is_empty() {
             return Err("cannot embed empty document content".to_string());
         }
 
-        if model.is_empty() {
-            return Err("model cannot be empty".to_string());
-        }
+        let contents = [content];
+        let mut embeddings = self.gen_embeddings(&contents, model).await?;
+        Ok(embeddings
+            .pop()
+            .expect("a successful single-input embedding request should return one embedding"))
+    }
+
+    pub async fn gen_embeddings(
+        &self,
+        contents: &[&str],
+        model: Option<&str>,
+    ) -> Result<Vec<Vec<f64>>, String> {
+        let openai_client: reqwest::Client = reqwest::Client::new();
+        let request_body = build_embeddings_request_body(contents, model)?;
 
         let response = openai_client
             .post("https://api.openai.com/v1/embeddings")
-            .bearer_auth(self.api_key)
-            .json(&json!({
-                "model": model,
-                "input": content,
-                "encoding_format": "float"
-            }))
+            .bearer_auth(&self.api_key)
+            .json(&request_body)
             .send()
             .await
             .map_err(|err| format!("failed to call OpenAI embeddings API: {err}"))?;
@@ -332,8 +340,35 @@ impl<'a> OpenAiClient<'a> {
         let response_json: Value = serde_json::from_str(&response_body)
             .map_err(|err| format!("failed to parse OpenAI embeddings response: {err}"))?;
 
-        extract_embedding(&response_json)
+        extract_embeddings(&response_json, contents.len())
     }
+}
+
+fn build_embeddings_request_body(contents: &[&str], model: Option<&str>) -> Result<Value, String> {
+    let model = model.unwrap_or(DEFAULT_EMBEDDING_MODEL).trim();
+
+    if contents.is_empty() {
+        return Err("cannot embed an empty list of document contents".to_string());
+    }
+
+    if let Some(index) = contents
+        .iter()
+        .position(|content| content.trim().is_empty())
+    {
+        return Err(format!(
+            "cannot embed empty document content at input index {index}"
+        ));
+    }
+
+    if model.is_empty() {
+        return Err("model cannot be empty".to_string());
+    }
+
+    Ok(json!({
+        "model": model,
+        "input": contents,
+        "encoding_format": "float"
+    }))
 }
 
 fn resolve_responses_request_options<'a>(
@@ -669,18 +704,52 @@ fn extract_response_text(response_json: &Value) -> Option<String> {
     }
 }
 
-fn extract_embedding(response_json: &Value) -> Result<Vec<f64>, String> {
-    let embedding_values = response_json["data"]
-        .get(0)
-        .and_then(|item| item["embedding"].as_array())
-        .ok_or_else(|| "OpenAI embeddings response did not include an embedding".to_string())?;
+fn extract_embeddings(
+    response_json: &Value,
+    expected_count: usize,
+) -> Result<Vec<Vec<f64>>, String> {
+    let embedding_items = response_json["data"]
+        .as_array()
+        .ok_or_else(|| "OpenAI embeddings response did not include embeddings".to_string())?;
+    let mut embeddings = vec![None; expected_count];
 
-    embedding_values
-        .iter()
-        .map(|value| {
-            value
-                .as_f64()
-                .ok_or_else(|| "OpenAI embedding contained a non-number value".to_string())
+    for item in embedding_items {
+        let index = item["index"]
+            .as_u64()
+            .and_then(|index| usize::try_from(index).ok())
+            .ok_or_else(|| {
+                "OpenAI embeddings response included an invalid embedding index".to_string()
+            })?;
+        let destination = embeddings.get_mut(index).ok_or_else(|| {
+            format!("OpenAI embeddings response included out-of-range embedding index {index}")
+        })?;
+        if destination.is_some() {
+            return Err(format!(
+                "OpenAI embeddings response included duplicate embedding index {index}"
+            ));
+        }
+
+        let embedding_values = item["embedding"].as_array().ok_or_else(|| {
+            format!("OpenAI embeddings response did not include embedding at index {index}")
+        })?;
+        let embedding = embedding_values
+            .iter()
+            .map(|value| {
+                value
+                    .as_f64()
+                    .ok_or_else(|| "OpenAI embedding contained a non-number value".to_string())
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        *destination = Some(embedding);
+    }
+
+    embeddings
+        .into_iter()
+        .enumerate()
+        .map(|(index, embedding)| {
+            embedding.ok_or_else(|| {
+                format!("OpenAI embeddings response did not include embedding at index {index}")
+            })
         })
         .collect()
 }
@@ -964,5 +1033,73 @@ data: {"type":"response.output_text.delta","delta":"Hello"}
         assert_eq!(streamed_text, "Hi");
         assert_eq!(deltas, vec!["Hi"]);
         assert_eq!(completed_text, None);
+    }
+
+    #[test]
+    fn build_embeddings_request_body_uses_one_bulk_input_array() {
+        let request_body = build_embeddings_request_body(
+            &["first PDF chunk", "second PDF chunk"],
+            Some(" text-embedding-3-small "),
+        )
+        .unwrap();
+
+        assert_eq!(
+            request_body,
+            json!({
+                "model": "text-embedding-3-small",
+                "input": ["first PDF chunk", "second PDF chunk"],
+                "encoding_format": "float",
+            })
+        );
+    }
+
+    #[test]
+    fn build_embeddings_request_body_rejects_empty_bulk_inputs() {
+        assert_eq!(
+            build_embeddings_request_body(&[], None).unwrap_err(),
+            "cannot embed an empty list of document contents"
+        );
+        assert_eq!(
+            build_embeddings_request_body(&["first", "  "], None).unwrap_err(),
+            "cannot embed empty document content at input index 1"
+        );
+    }
+
+    #[test]
+    fn extract_embeddings_orders_vectors_by_response_index() {
+        let response_json = json!({
+            "data": [
+                {
+                    "index": 1,
+                    "embedding": [0.3, 0.4],
+                },
+                {
+                    "index": 0,
+                    "embedding": [0.1, 0.2],
+                },
+            ]
+        });
+
+        assert_eq!(
+            extract_embeddings(&response_json, 2).unwrap(),
+            vec![vec![0.1, 0.2], vec![0.3, 0.4]]
+        );
+    }
+
+    #[test]
+    fn extract_embeddings_rejects_missing_vectors() {
+        let response_json = json!({
+            "data": [
+                {
+                    "index": 1,
+                    "embedding": [0.3, 0.4],
+                }
+            ]
+        });
+
+        assert_eq!(
+            extract_embeddings(&response_json, 2).unwrap_err(),
+            "OpenAI embeddings response did not include embedding at index 0"
+        );
     }
 }

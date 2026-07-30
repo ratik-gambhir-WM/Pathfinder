@@ -15,7 +15,7 @@ Clearly distinguish directly visible facts from cautious interpretations. Qualif
 
 pub async fn parse_image_file(
     image_path: &Path,
-    openai_client: &OpenAiClient<'_>,
+    openai_client: &OpenAiClient,
 ) -> Result<String, String> {
     let image = fs::read(image_path)
         .map_err(|err| format!("failed to read image file {}: {err}", image_path.display()))?;
@@ -27,7 +27,7 @@ pub async fn parse_image_file(
 pub async fn describe_image(
     image: &[u8],
     mime_type: &str,
-    openai_client: &OpenAiClient<'_>,
+    openai_client: &OpenAiClient,
 ) -> Result<String, String> {
     if image.is_empty() {
         return Err("cannot describe an empty image".to_string());

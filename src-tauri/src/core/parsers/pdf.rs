@@ -1,4 +1,8 @@
-use std::path::{Path, PathBuf};
+use std::{
+    fs::{self, File},
+    io::Read,
+    path::{Path, PathBuf},
+};
 
 use crate::core::{
     clients::openai::OpenAiClient,
@@ -51,6 +55,13 @@ pub fn extract_pdf_text(path: &Path) -> Result<String, String> {
         .join("\n\n"))
 }
 
+pub fn extract_pdf_text_from_bytes(bytes: &[u8]) -> Result<Vec<PdfPage>, String> {
+    let pages = pdf_extract::extract_text_from_mem_by_pages(bytes)
+        .map_err(|err| format!("failed to extract text from PDF bytes: {err}"))?;
+
+    Ok(pdf_pages_from_texts(&pages))
+}
+
 pub fn extract_pdf_pages(path: &Path) -> Result<Vec<PdfPage>, String> {
     ensure_supported_pdf_file(path)?;
 
@@ -63,42 +74,91 @@ pub fn extract_pdf_pages(path: &Path) -> Result<Vec<PdfPage>, String> {
     Ok(pdf_pages_from_texts(&pages))
 }
 
-/// Extracts and assembles a PDF into a graph-ready document and flat chunks.
+/// Parses a PDF into a graph-ready document and flat chunks.
 ///
 /// Chunk offsets are exclusive UTF-8 byte offsets into the document-wide text
 /// formed by joining non-empty page text with two newlines. Chunk sequence
 /// numbers are one-based across the document, and each chunk records every PDF
 /// page whose text it overlaps.
-pub fn assemble_pdf_document(
+pub fn parse_pdf_document(
     path: &Path,
     user_id: impl Into<String>,
 ) -> Result<PdfDocumentAssembly, String> {
     let pages = extract_pdf_pages(path)?;
     let source_path = path.canonicalize().unwrap_or_else(|_| PathBuf::from(path));
-    Ok(assemble_pdf_pages(&source_path, &user_id.into(), &pages))
+    let file_size_bytes = fs::metadata(&source_path)
+        .map_err(|err| {
+            format!(
+                "failed to read PDF metadata for {}: {err}",
+                source_path.display()
+            )
+        })?
+        .len();
+    let content_hash = sha256_file(&source_path)?;
+
+    Ok(parse_pdf_file_with_metadata(
+        Some(&source_path),
+        &user_id.into(),
+        &pages,
+        file_size_bytes,
+        content_hash,
+    ))
+}
+
+/// Parses and chunks raw PDF bytes into the same graph-ready assembly as the
+/// path-based parser. An optional path provides the document's filename and
+/// stable local-path identity; when omitted, `local_path` remains `None`.
+pub fn parse_pdf_by_bytes(
+    bytes: Vec<u8>,
+    path: Option<&Path>,
+    user_id: impl Into<String>,
+) -> Result<PdfDocumentAssembly, String> {
+    let file_size_bytes = u64::try_from(bytes.len())
+        .map_err(|_| format!("PDF byte length `{}` does not fit in u64", bytes.len()))?;
+    let content_hash = sha256_bytes(&bytes);
+    let pages = extract_pdf_text_from_bytes(&bytes)?;
+    let source_path = path.map(|path| path.canonicalize().unwrap_or_else(|_| PathBuf::from(path)));
+
+    Ok(parse_pdf_file_with_metadata(
+        source_path.as_deref(),
+        &user_id.into(),
+        &pages,
+        file_size_bytes,
+        content_hash,
+    ))
 }
 
 pub fn parse_pdf_file(path: &Path) -> Result<String, String> {
     extract_pdf_text(path)
 }
 
-fn assemble_pdf_pages(path: &Path, user_id: &str, pages: &[PdfPage]) -> PdfDocumentAssembly {
-    let source_path = path.to_string_lossy();
-    let document_id = deterministic_id(&format!("{user_id}\0pdf\0{source_path}"));
+pub fn parse_pdf_from_bytes(bytes: &[u8]) -> Result<String, String> {
+    extract_pdf_text_from_bytes(bytes).map(|pages| {
+        pages
+            .into_iter()
+            .map(|page| page.text)
+            .collect::<Vec<_>>()
+            .join("\n\n")
+    })
+}
+
+fn parse_pdf_file_with_metadata(
+    path: Option<&Path>,
+    user_id: &str,
+    pages: &[PdfPage],
+    file_size_bytes: u64,
+    content_hash: String,
+) -> PdfDocumentAssembly {
+    let local_path = path.map(|path| path.to_string_lossy().into_owned());
+    let document_identity = local_path.as_deref().unwrap_or(&content_hash);
+    let document_id = deterministic_id(&format!("{user_id}\0pdf\0{document_identity}"));
     let file_name = path
-        .file_name()
+        .and_then(Path::file_name)
         .and_then(|name| name.to_str())
         .unwrap_or("Document.pdf")
         .to_string();
-    let document = DocumentNode {
-        document_id: document_id.clone(),
-        user_id: user_id.to_string(),
-        file_name,
-        source_type: "pdf".to_string(),
-        rendered_pdf_path: Some(source_path.to_string()),
-    };
     let (document_text, page_ranges) = document_text_with_page_ranges(pages);
-    let chunks = token_bounded_ranges(&document_text)
+    let chunks: Vec<ChunkNode> = token_bounded_ranges(&document_text)
         .into_iter()
         .enumerate()
         .map(|(sequence_index, range)| {
@@ -120,7 +180,7 @@ fn assemble_pdf_pages(path: &Path, user_id: &str, pages: &[PdfPage]) -> PdfDocum
                 text: text.to_string(),
                 embedding: None,
                 sequence_number,
-                page_numbers,
+                page_numbers: Some(page_numbers),
                 start_offset,
                 end_offset,
                 token_count: u32::try_from(range.token_count)
@@ -130,8 +190,59 @@ fn assemble_pdf_pages(path: &Path, user_id: &str, pages: &[PdfPage]) -> PdfDocum
             }
         })
         .collect();
+    let token_count = chunks
+        .iter()
+        .map(|chunk| u64::from(chunk.token_count))
+        .sum();
+    let document = DocumentNode {
+        document_id: document_id.clone(),
+        user_id: user_id.to_string(),
+        file_name,
+        source_type: "pdf".to_string(),
+        local_path: local_path.clone(),
+        file_size_bytes,
+        token_count,
+        content_hash,
+        rendered_pdf_path: local_path,
+    };
 
     PdfDocumentAssembly { document, chunks }
+}
+
+#[cfg(test)]
+fn assemble_pdf_pages(path: &Path, user_id: &str, pages: &[PdfPage]) -> PdfDocumentAssembly {
+    let (document_text, _) = document_text_with_page_ranges(pages);
+
+    parse_pdf_file_with_metadata(
+        Some(path),
+        user_id,
+        pages,
+        u64::try_from(document_text.len()).unwrap(),
+        deterministic_id(&document_text),
+    )
+}
+
+fn sha256_file(path: &Path) -> Result<String, String> {
+    let mut file = File::open(path)
+        .map_err(|err| format!("failed to open PDF for hashing {}: {err}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+
+    loop {
+        let bytes_read = file
+            .read(&mut buffer)
+            .map_err(|err| format!("failed to hash PDF {}: {err}", path.display()))?;
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
+    }
+
+    Ok(format!("{:x}", hasher.finalize()))
+}
+
+fn sha256_bytes(bytes: &[u8]) -> String {
+    format!("{:x}", Sha256::digest(bytes))
 }
 
 fn document_text_with_page_ranges(pages: &[PdfPage]) -> (String, Vec<PdfPageTextRange>) {
@@ -193,7 +304,7 @@ fn pdf_pages_from_texts(page_texts: &[String]) -> Vec<PdfPage> {
 
 pub async fn extract_pdf_image_descriptions(
     path: &Path,
-    openai_client: &OpenAiClient<'_>,
+    openai_client: &OpenAiClient,
 ) -> Result<Vec<String>, String> {
     let images = extract_pdf_images(path)?;
     let mut descriptions = Vec::with_capacity(images.len());
@@ -420,8 +531,91 @@ fn clean_pdf_page_text(page: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::{
+        env, process,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
     use super::*;
     use crate::core::text_chunking::MAX_TOKEN_CHUNK;
+    use pdf_extract::{
+        content::{Content, Operation},
+        dictionary, Object,
+    };
+
+    fn pdf_bytes_with_text(text: &str) -> Vec<u8> {
+        let mut document = Document::with_version("1.5");
+        let pages_id = document.new_object_id();
+        let font_id = document.add_object(dictionary! {
+            "Type" => "Font",
+            "Subtype" => "Type1",
+            "BaseFont" => "Courier",
+        });
+        let resources_id = document.add_object(dictionary! {
+            "Font" => dictionary! {
+                "F1" => font_id,
+            },
+        });
+        let content = Content {
+            operations: vec![
+                Operation::new("BT", vec![]),
+                Operation::new("Tf", vec!["F1".into(), 12.into()]),
+                Operation::new("Td", vec![100.into(), 700.into()]),
+                Operation::new("Tj", vec![Object::string_literal(text)]),
+                Operation::new("ET", vec![]),
+            ],
+        };
+        let content_id =
+            document.add_object(Stream::new(dictionary! {}, content.encode().unwrap()));
+        let page_id = document.add_object(dictionary! {
+            "Type" => "Page",
+            "Parent" => pages_id,
+            "Contents" => content_id,
+        });
+        document.objects.insert(
+            pages_id,
+            Object::Dictionary(dictionary! {
+                "Type" => "Pages",
+                "Kids" => vec![page_id.into()],
+                "Count" => 1,
+                "Resources" => resources_id,
+                "MediaBox" => vec![0.into(), 0.into(), 595.into(), 842.into()],
+            }),
+        );
+        let catalog_id = document.add_object(dictionary! {
+            "Type" => "Catalog",
+            "Pages" => pages_id,
+        });
+        document.trailer.set("Root", catalog_id);
+
+        let mut bytes = Vec::new();
+        document.save_to(&mut bytes).unwrap();
+        bytes
+    }
+
+    #[test]
+    fn parses_pdf_bytes_into_document_and_chunk_nodes_without_a_local_path() {
+        let bytes = pdf_bytes_with_text("Quarterly quarry report.");
+        let expected_size = u64::try_from(bytes.len()).unwrap();
+        let expected_hash = sha256_bytes(&bytes);
+
+        let assembly = parse_pdf_by_bytes(bytes, None, "user-1").unwrap();
+
+        assert_eq!(assembly.document.user_id, "user-1");
+        assert_eq!(assembly.document.file_name, "Document.pdf");
+        assert_eq!(assembly.document.source_type, "pdf");
+        assert_eq!(assembly.document.local_path, None);
+        assert_eq!(assembly.document.rendered_pdf_path, None);
+        assert_eq!(assembly.document.file_size_bytes, expected_size);
+        assert_eq!(assembly.document.content_hash, expected_hash);
+        assert_eq!(assembly.chunks.len(), 1);
+        assert_eq!(
+            assembly.chunks[0].document_id,
+            assembly.document.document_id
+        );
+        assert_eq!(assembly.chunks[0].text, "Quarterly quarry report.");
+        assert_eq!(assembly.chunks[0].page_numbers, Some(vec![1]));
+    }
 
     #[test]
     fn assembles_ordered_document_chunks_with_global_offsets() {
@@ -442,8 +636,28 @@ mod tests {
         assert_eq!(assembly.document.user_id, "user-1");
         assert_eq!(assembly.document.file_name, "report.pdf");
         assert_eq!(assembly.document.source_type, "pdf");
+        assert_eq!(
+            assembly.document.local_path.as_deref(),
+            Some("/documents/report.pdf")
+        );
         assert!(assembly.chunks.len() > 1);
         let expected_text = format!("{first_page_text}\n\nSecond page body.");
+        assert_eq!(
+            assembly.document.file_size_bytes,
+            u64::try_from(expected_text.len()).unwrap()
+        );
+        assert_eq!(
+            assembly.document.token_count,
+            assembly
+                .chunks
+                .iter()
+                .map(|chunk| u64::from(chunk.token_count))
+                .sum::<u64>()
+        );
+        assert_eq!(
+            assembly.document.content_hash,
+            deterministic_id(&expected_text)
+        );
         assert_eq!(
             assembly
                 .chunks
@@ -465,7 +679,10 @@ mod tests {
                 chunk.text
             );
             assert!(chunk.token_count as usize <= MAX_TOKEN_CHUNK);
-            assert!(!chunk.page_numbers.is_empty());
+            assert!(chunk
+                .page_numbers
+                .as_ref()
+                .is_some_and(|page_numbers| !page_numbers.is_empty()));
             assert_eq!(
                 chunk.start_offset,
                 assembly
@@ -501,7 +718,7 @@ mod tests {
             assembly.chunks[0].text,
             "End of page four.\n\nStart of page five."
         );
-        assert_eq!(assembly.chunks[0].page_numbers, vec![4, 5]);
+        assert_eq!(assembly.chunks[0].page_numbers, Some(vec![4, 5]));
         assert_eq!(assembly.chunks[0].start_offset, 0);
         assert_eq!(assembly.chunks[0].end_offset, assembly.chunks[0].text.len());
     }
@@ -521,9 +738,30 @@ mod tests {
         assert_eq!(first.document.document_id, second.document.document_id);
         assert_eq!(chunk.chunk_id, second.chunks[0].chunk_id);
         assert_eq!(chunk.content_hash.len(), 64);
-        assert_eq!(chunk.page_numbers, vec![1]);
+        assert_eq!(chunk.page_numbers, Some(vec![1]));
         assert_eq!(json["page_numbers"], serde_json::json!([1]));
         assert!(json["embedding"].is_null());
+    }
+
+    #[test]
+    fn hashes_actual_file_bytes_with_sha256() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = env::temp_dir().join(format!(
+            "quarry-pdf-hash-test-{}-{unique}.pdf",
+            process::id()
+        ));
+        fs::write(&path, b"mock pdf bytes").unwrap();
+
+        let hash = sha256_file(&path).unwrap();
+        fs::remove_file(&path).unwrap();
+
+        assert_eq!(
+            hash,
+            "58b499442dcfe0024d5b87c73d10cf3f43831f621a443f5c23532c49a8056761"
+        );
     }
 
     #[test]

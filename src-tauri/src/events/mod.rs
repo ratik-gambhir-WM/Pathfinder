@@ -1,3 +1,5 @@
+pub mod file;
+
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Listener, Runtime};
 

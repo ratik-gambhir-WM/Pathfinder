@@ -24,7 +24,7 @@ use crate::{
         },
         users::{create_user, create_wm_user, get_user_by_email, greet, user_exists_by_email},
     },
-    events::register_login_demo_events,
+    events::{file::register_file_events, register_login_demo_events},
     state::AppState,
 };
 
@@ -92,6 +92,7 @@ pub fn run() {
             app.set_menu(menu)?;
             app.manage(AppState::new(&app.handle())?);
             register_login_demo_events(&app.handle());
+            register_file_events(&app.handle());
             Ok(())
         })
         .plugin(tauri_plugin_dialog::init())

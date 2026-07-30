@@ -1,9 +1,6 @@
-use quarry_lib::{
-    core::{
-        clients::openai::OpenAiClient,
-        parsers::pdf::{extract_pdf_image_descriptions, extract_pdf_text},
-    },
-    utils::openai_api_key,
+use quarry_lib::core::{
+    clients::openai::OpenAiClient,
+    parsers::pdf::{extract_pdf_image_descriptions, extract_pdf_text},
 };
 use std::{env, path::Path, process};
 
@@ -33,8 +30,7 @@ fn print_pdf_text(path: &str) -> Result<(), String> {
 }
 
 async fn print_pdf_image_descriptions(path: &str) -> Result<(), String> {
-    let api_key = openai_api_key()?;
-    let openai_client = OpenAiClient::new(&api_key);
+    let openai_client = OpenAiClient::new()?;
     let descriptions = extract_pdf_image_descriptions(Path::new(path), &openai_client).await?;
 
     for (index, description) in descriptions.iter().enumerate() {

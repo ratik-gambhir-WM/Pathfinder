@@ -78,8 +78,7 @@ async fn run(args: Vec<String>) -> Result<(), String> {
         },
         Some("embed") => match args.get(2) {
             Some(content) => {
-                let api_key = openai_api_key()?;
-                let client = OpenAiClient::new(api_key.as_str());
+                let client = OpenAiClient::new()?;
                 match client.gen_embedding(content, None).await {
                     Ok(embedding) => match serde_json::to_string(&embedding) {
                         Ok(json) => {
@@ -94,8 +93,7 @@ async fn run(args: Vec<String>) -> Result<(), String> {
             None => Err("missing content to embed".to_string()),
         },
         Some("response") => {
-            let api_key = openai_api_key()?;
-            let client = OpenAiClient::new(api_key.as_str());
+            let client = OpenAiClient::new()?;
             client
                 .gen_model_response(
                     Option::from("What is capital of Ohio and how was it founded?"),
@@ -119,13 +117,6 @@ fn print_json(value: &Value) -> Result<(), String> {
         .map_err(|err| format!("failed to serialize Helix response: {err}"))?;
     println!("{pretty}");
     Ok(())
-}
-
-fn openai_api_key() -> Result<String, String> {
-    match env::var("OPENAI_API_KEY") {
-        Ok(value) if !value.trim().is_empty() => Ok(value),
-        _ => Err("OPENAI_API_KEY environment variable is not set".to_string()),
-    }
 }
 
 fn print_help() {

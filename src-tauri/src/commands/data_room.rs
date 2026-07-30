@@ -28,18 +28,17 @@ mod tests {
     use std::path::Path;
 
     use super::*;
+    use tauri::{
+        ipc::{CallbackFn, InvokeBody},
+        test::{get_ipc_response, mock_builder, mock_context, noop_assets, INVOKE_KEY},
+        webview::InvokeRequest,
+        WebviewWindowBuilder,
+    };
 
     const ACTUAL_PDF_RELATIVE_PATH: &str = "4 Security and Compliance/4.1 Cybersecurity/4.1.2 Cybersecurity testing and remediation/BetaNXT Standard - Application Security Testing.pdf";
 
     #[test]
     fn ipc_accepts_frontend_argument_names_and_returns_pdf_shape() {
-        use tauri::{
-            ipc::{CallbackFn, InvokeBody},
-            test::{get_ipc_response, mock_builder, mock_context, noop_assets, INVOKE_KEY},
-            webview::InvokeRequest,
-            WebviewWindowBuilder,
-        };
-
         let Ok(data_room) = list_deal_data_room_in_service("project-alpha".to_string()) else {
             return;
         };
