@@ -5,7 +5,7 @@ import { WorkspaceLayout } from "./WorkspaceLayout";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
 
 type WorkspaceHomeShellProps = {
-  activeHomeSection?: "account" | "hub" | "summarize" | "vault";
+  activeHomeSection?: "account" | "hub" | "summarize" | "tauri-playground" | "vault";
   children: ReactNode;
 };
 

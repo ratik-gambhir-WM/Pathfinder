@@ -1,4 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap");
 @import "tailwindcss";
 
 @theme inline {
@@ -32,8 +31,8 @@
   --color-tertiary-fixed: var(--theme-translucent-surface);
   --color-background: var(--theme-canvas);
 
-  --font-heading: "Quicksand", sans-serif;
-  --font-body: "Quicksand", sans-serif;
+  --font-heading: "Aptos", "Segoe UI", Arial, sans-serif;
+  --font-body: "Aptos", "Segoe UI", Arial, sans-serif;
 
   --radius-sm: 0.25rem;
   --radius-default: 0.5rem;

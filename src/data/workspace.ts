@@ -354,7 +354,7 @@ export const workspaceInitiatives: WorkspaceSidebarTool[] = [
 ];
 
 export const workspaceTools: WorkspaceSidebarTool[] = [
-  { icon: "timeline", name: "Deal Activity" },
+  { href: "/hub/tauri-playground", icon: "terminal", name: "Tauri Playground" },
 ];
 
 export function getDealById(dealId: string) {

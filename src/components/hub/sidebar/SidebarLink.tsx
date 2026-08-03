@@ -3,7 +3,7 @@ import { WorkspaceLocationState } from "../../../data/workspace";
 import { Icon } from "../../ui/Icon";
 
 type SidebarLinkProps = {
-  homeSection?: "account" | "hub" | "summarize" | "vault";
+  homeSection?: "account" | "hub" | "summarize" | "tauri-playground" | "vault";
   href?: string;
   icon: "personSearch" | "terminal" | "timeline" | "folderOpen" | "sparkles" | "search";
   label: string;

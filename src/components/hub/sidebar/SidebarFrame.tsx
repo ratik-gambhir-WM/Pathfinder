@@ -20,7 +20,7 @@ export function SidebarFrame({ children, email, navigationState, profileDeal, pr
   return (
     <aside className="hidden h-full w-72 shrink-0 border-r border-white/80 bg-white/40 backdrop-blur-md lg:flex [html[data-theme=dark]_&]:bg-[#070a1b]">
       <div className="flex h-full min-h-0 w-full flex-col p-4">
-        <div className="space-y-6">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <NavLink
             aria-label="Back to home page"
             className="flex items-center gap-4 rounded-[22px] px-2 py-2 transition hover:bg-white/40"
@@ -36,7 +36,7 @@ export function SidebarFrame({ children, email, navigationState, profileDeal, pr
           {children}
         </div>
 
-        <div className="mt-auto pt-6">
+        <div className="shrink-0 border-t border-white/45 pt-3">
           <div className="relative">
             {profileMenuOpen ? <ProfilePreferences email={email} navigationState={navigationState} /> : null}
             <button
