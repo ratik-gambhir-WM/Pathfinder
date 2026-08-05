@@ -35,6 +35,21 @@ impl SqliteClient {
         })
     }
 
+    #[cfg(test)]
+    pub fn new_in_memory() -> Result<Self, String> {
+        let connection = Connection::open_in_memory()
+            .map_err(|err| format!("failed to open in-memory sqlite database: {err}"))?;
+        connection
+            .busy_timeout(Duration::from_secs(5))
+            .map_err(|err| format!("failed to configure sqlite busy timeout: {err}"))?;
+        run_migrations(&connection)?;
+
+        Ok(Self {
+            db: Mutex::new(connection),
+            db_path: PathBuf::from(":memory:"),
+        })
+    }
+
     pub fn execute<P>(&self, sql: &str, params: P) -> Result<usize, String>
     where
         P: Params,

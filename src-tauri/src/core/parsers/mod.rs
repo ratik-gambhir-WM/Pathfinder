@@ -4,10 +4,7 @@ pub mod pdf;
 // pub mod powerpoint;
 // pub mod spreadsheet;
 
-use crate::core::models::document::ParsedFileData2;
-use crate::core::parsers::docx::{
-    parse_docx_chunks_from_bytes, parse_docx_from_path, DocxAssembly,
-};
+use crate::core::parsers::docx::{parse_docx_chunks_from_bytes, DocxAssembly};
 use crate::core::parsers::pdf::{parse_pdf_by_bytes, PdfDocumentAssembly};
 // use crate::core::clients::openai::OpenAiClient;
 // use crate::core::parsers::image::parse_image_file;
@@ -19,7 +16,6 @@ use base64::Engine;
 
 use std::fs::{self, File, Metadata};
 use std::path::{Path, PathBuf};
-use walkdir::DirEntry;
 
 pub struct TextChunk {
     chunk_index: i32,
@@ -57,7 +53,7 @@ pub fn generate_file_metadata(file: &File) -> Result<Metadata, String> {
 }
 
 impl QuarryFile {
-    pub fn from_path(path: impl Into<PathBuf>) -> Result<Self, String> {
+    pub fn from_local_path(path: impl Into<PathBuf>) -> Result<Self, String> {
         let path = path.into();
         let extension = path
             .extension()
@@ -103,91 +99,6 @@ impl QuarryFile {
 
 fn build_text_chunk(content: &str, chunk_index: i32) -> TextChunk {
     TextChunk::new(chunk_index, content.to_string())
-}
-
-fn get_file_type(path: Box<Path>) -> String {
-    let extension = path
-        .extension()
-        .and_then(|extension| extension.to_str())
-        .map(|extension| extension.to_ascii_lowercase());
-
-    extension.unwrap_or_else(|| String::new())
-}
-
-fn gen_file_metadata(path: &Path, chunks: Vec<TextChunk>) -> ParsedFileData2 {
-    let file_type = get_file_type(Box::from(path));
-    let metadata =
-        fs::metadata(&path).map_err(|err| format!("failed to read {}: {err}", path.display()));
-    let file_byte_size = metadata.unwrap().len();
-    let filename = path
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| format!("failed to derive filename from {}", path.display()))
-        .unwrap();
-    ParsedFileData2 {
-        file_id: "".to_string(),
-        file_name: filename.to_string(),
-        file_path: path.display().to_string(),
-        file_type: file_type.to_string(),
-        file_hash: "".to_string(),
-        file_size_bytes: file_byte_size as i64,
-        ingested_at: "".to_string(),
-        total_tokens: 0,
-        total_chunks: 0,
-        file_chunks: chunks,
-    }
-}
-
-#[allow(dead_code)]
-pub fn gen_parsed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedFileData2 {
-    let path = file.path();
-    let mut chunks: Vec<TextChunk> = Vec::new();
-    if matches!(to_chunk, Some(true)) {
-        let parsed = parse_docx_from_path(&path);
-        chunks = parsed
-            .map(|text| chunk_text(&text))
-            .unwrap_or_else(|_| Vec::new())
-    }
-    println!("{}", path.display());
-    gen_file_metadata(path, chunks)
-}
-
-pub async fn parse_typed_file(file: DirEntry, to_chunk: Option<bool>) -> ParsedFileData2 {
-    let path = file.path();
-    let mut chunks: Vec<TextChunk> = Vec::new();
-    if matches!(to_chunk, Some(true)) {
-        chunks = match QuarryFile::from_path(path) {
-            Ok(quarry_file) => quarry_file
-                .parse()
-                .await
-                .map(|parsed_file| match parsed_file {
-                    ParsedQuarryFile::Pdf(assembly) => assembly
-                        .chunks
-                        .into_iter()
-                        .map(|chunk| {
-                            TextChunk::new(
-                                i32::try_from(chunk.sequence_number).unwrap_or(i32::MAX),
-                                chunk.text,
-                            )
-                        })
-                        .collect(),
-                    ParsedQuarryFile::Docx(assembly) => assembly
-                        .chunks
-                        .into_iter()
-                        .map(|chunk| {
-                            TextChunk::new(
-                                i32::try_from(chunk.sequence_number).unwrap_or(i32::MAX),
-                                chunk.text,
-                            )
-                        })
-                        .collect(),
-                })
-                .unwrap_or_else(|_| Vec::new()),
-            Err(_) => Vec::new(),
-        };
-    }
-    println!("{}", path.display());
-    gen_file_metadata(path, chunks)
 }
 
 pub(crate) fn chunk_text(text_content: &str) -> Vec<TextChunk> {
@@ -277,12 +188,12 @@ mod tests {
     }
 
     #[test]
-    fn quarry_file_from_path_loads_bytes_and_maps_supported_extensions() {
+    fn quarry_file_from_local_path_loads_bytes_and_maps_supported_extensions() {
         let cases = [("report.DOCX", "docx"), ("report.pdf", "pdf")];
 
         for (name, expected_kind) in cases {
             let source = TestFile::new(name);
-            let quarry_file = QuarryFile::from_path(&source.path).unwrap();
+            let quarry_file = QuarryFile::from_local_path(&source.path).unwrap();
             let (kind, bytes, stored_path) = quarry_file_parts(&quarry_file);
 
             assert_eq!(kind, expected_kind);
@@ -292,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn quarry_file_from_path_rejects_unsupported_or_missing_extensions() {
+    fn quarry_file_from_local_path_rejects_unsupported_or_missing_extensions() {
         for path in [
             "notes.txt",
             "slides.pptx",
@@ -301,7 +212,7 @@ mod tests {
             "README",
         ] {
             assert_eq!(
-                QuarryFile::from_path(path).unwrap_err(),
+                QuarryFile::from_local_path(path).unwrap_err(),
                 "invalid file format"
             );
         }

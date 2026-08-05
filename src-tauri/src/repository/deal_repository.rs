@@ -1,7 +1,14 @@
 use rusqlite::{params, Row};
 use serde::Serialize;
+use serde_json::Value;
 
-use crate::state::AppState;
+use crate::{
+    core::{
+        helix_queries::deals::add_deal::{add_deal as build_add_deal_query, create_deal_indexes},
+        nodes::deal_node::DealNode,
+    },
+    state::AppState,
+};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -84,6 +91,20 @@ pub fn create_deal(state: &AppState, record: CreateDealRecord<'_>) -> Result<Dea
 
     get_deal_by_id(state, deal_id)?
         .ok_or_else(|| format!("failed to fetch deal after insert for id `{deal_id}`"))
+}
+
+/// Persists a complete deal row and its user relationship through Helix.
+pub async fn upsert_wm_deal(
+    state: &AppState,
+    deal: DealNode,
+    user_id: i64,
+) -> Result<Value, String> {
+    let query = build_add_deal_query(deal, user_id)?;
+    let helix = state.gen_helix_db_client();
+
+    let _: Value = helix.execute_dynamic_query(create_deal_indexes).await?;
+
+    helix.execute_dynamic_query(move || query).await
 }
 
 pub fn upsert_deal_metadata(

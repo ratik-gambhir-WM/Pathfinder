@@ -1,7 +1,17 @@
 use rusqlite::{params, Connection, OptionalExtension, Row};
 use serde::Serialize;
+use serde_json::Value;
 
-use crate::state::AppState;
+use crate::{
+    core::{
+        helix_queries::user::add_user::{
+            add_user as build_add_user_query, create_user_indexes,
+            get_user_by_email as build_get_user_by_email_query,
+        },
+        nodes::user_node::UserNode,
+    },
+    state::AppState,
+};
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -45,6 +55,26 @@ pub fn create_user(state: &AppState, record: CreateUserRecord<'_>) -> Result<Use
             record.email
         )
     })
+}
+
+/// Persists a complete user row through the parallel Helix flow.
+pub async fn upsert_wm_user(state: &AppState, user: UserNode) -> Result<Value, String> {
+    let query = build_add_user_query(user)?;
+    let helix = state.gen_helix_db_client();
+
+    let _: Value = helix.execute_dynamic_query(create_user_indexes).await?;
+
+    helix.execute_dynamic_query(move || query).await
+}
+
+/// Fetches one user from Helix by its exact email address.
+pub async fn get_wm_user_by_email(state: &AppState, email: &str) -> Result<Value, String> {
+    let query = build_get_user_by_email_query(email.to_string())?;
+
+    state
+        .gen_helix_db_client()
+        .execute_dynamic_query(move || query)
+        .await
 }
 
 pub fn get_user_by_email(state: &AppState, email: &str) -> Result<Option<User>, String> {

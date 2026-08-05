@@ -2,8 +2,8 @@ use crate::core::{
     build_summary_prompt,
     clients::openai::{OpenAiClient, ResponsesFileInput},
     display_relative_path, infer_supported_mime_type,
-    models::document::{ParsedFileData, ParsedFileData2},
-    parsers::{docx::parse_docx_from_path as parse_docx_from_path_in_parser, gen_parsed_file},
+    models::document::ParsedFileData,
+    parsers::docx::parse_docx_from_path as parse_docx_from_path_in_parser,
     CollectedFile,
 };
 use crate::prompts::{

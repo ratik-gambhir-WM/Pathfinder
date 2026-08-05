@@ -92,8 +92,19 @@ const commandPresets: CommandPreset[] = [
     risk: "Writes data",
   },
   {
-    args: { input: { apiKey: "replace-me", email: "analyst@westmonroe.com", firstName: "Quarry", lastName: "Tester", role: "Analyst" } },
-    description: "Creates a West Monroe user record.",
+    args: {
+      input: {
+        apiKey: "replace-me",
+        createdAt: "2026-08-03T15:00:00Z",
+        email: "analyst@westmonroe.com",
+        firstName: "Quarry",
+        id: 1001,
+        lastName: "Tester",
+        role: "Analyst",
+        updatedAt: "2026-08-03T15:00:00Z",
+      },
+    },
+    description: "Upserts a User node through the parallel Helix command flow.",
     name: TAURI_COMMANDS.createWmUser,
     risk: "Writes data",
   },

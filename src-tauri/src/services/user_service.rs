@@ -1,8 +1,11 @@
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::{
+    core::nodes::user_node::UserNode,
     repository::user_repository::{
-        create_user, get_user_by_email as fetch_user_by_email, CreateUserRecord,
+        create_user, get_user_by_email as fetch_user_by_email,
+        get_wm_user_by_email as fetch_wm_user_by_email, upsert_wm_user, CreateUserRecord,
     },
     state::AppState,
 };
@@ -20,7 +23,6 @@ pub struct AddUserInput {
 }
 
 pub fn add_user(state: &AppState, input: AddUserInput) -> Result<User, String> {
-    validate_user_input(&input)?;
     create_user(
         state,
         CreateUserRecord {
@@ -33,35 +35,16 @@ pub fn add_user(state: &AppState, input: AddUserInput) -> Result<User, String> {
     )
 }
 
-pub fn get_user_by_email(state: &AppState, email: &str) -> Result<Option<User>, String> {
-    let email = email.trim();
-    if email.is_empty() {
-        return Err("email is required".to_string());
-    }
-
-    fetch_user_by_email(state, email)
+/// Persists a complete user through the parallel Helix flow.
+pub async fn add_wm_user(state: &AppState, input: UserNode) -> Result<Value, String> {
+    upsert_wm_user(state, input).await
 }
 
-fn validate_user_input(input: &AddUserInput) -> Result<(), String> {
-    if input.first_name.trim().is_empty() {
-        return Err("first_name is required".to_string());
-    }
+/// Fetches the matching user from Helix.
+pub async fn get_wm_user_by_email(state: &AppState, email: &str) -> Result<Value, String> {
+    fetch_wm_user_by_email(state, email.trim()).await
+}
 
-    if input.last_name.trim().is_empty() {
-        return Err("last_name is required".to_string());
-    }
-
-    if input.email.trim().is_empty() {
-        return Err("email is required".to_string());
-    }
-
-    if input.api_key.trim().is_empty() {
-        return Err("api_key is required".to_string());
-    }
-
-    if input.role.trim().is_empty() {
-        return Err("role is required".to_string());
-    }
-
-    Ok(())
+pub fn get_user_by_email(state: &AppState, email: &str) -> Result<Option<User>, String> {
+    fetch_user_by_email(state, email.trim())
 }

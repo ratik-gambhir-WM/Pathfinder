@@ -2,7 +2,7 @@ use serde_json::Value;
 
 use crate::core::{
     clients::helix::HelixClient,
-    helix_queries::insert_quarry_file::{
+    helix_queries::files::insert_quarry_file::{
         create_document_indexes, insert_chunk_for_document, insert_quarry_file,
     },
     nodes::document_node::{ChunkNode, DocumentNode},

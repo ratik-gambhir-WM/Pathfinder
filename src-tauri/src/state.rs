@@ -18,6 +18,14 @@ impl AppState {
         })
     }
 
+    #[cfg(test)]
+    pub fn new_for_test() -> Result<Self, String> {
+        Ok(Self {
+            helix_client: HelixClient::new()?,
+            sqlite_client: SqliteClient::new_in_memory()?,
+        })
+    }
+
     pub fn gen_helix_db_client(&self) -> &HelixClient {
         &self.helix_client
     }

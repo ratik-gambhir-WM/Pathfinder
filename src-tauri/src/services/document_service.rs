@@ -20,6 +20,12 @@ pub async fn process_files<R: Runtime>(app: AppHandle<R>, request: ProcessFilesE
             succeeded += 1;
         }
 
+        // query embeddings from open ai here (use function in open ai client)
+
+        // after emdbeddings are recieved, insert to helix (use persist_chunks_for_document in document_repository )
+
+        // after saved helix is successful, sent an emit event with fileId (file path)
+
         let response = FileProcessedEvent {
             request_id: request.request_id.clone(),
             path,
@@ -47,7 +53,7 @@ pub async fn process_files<R: Runtime>(app: AppHandle<R>, request: ProcessFilesE
 }
 
 pub(crate) async fn process_file(path: &str) -> Result<(), String> {
-    let file = QuarryFile::from_path(path)?;
+    let file = QuarryFile::from_local_path(path)?;
     file.parse().await.map(|_| ())
 }
 

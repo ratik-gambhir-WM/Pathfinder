@@ -1,6 +1,7 @@
 export const TAURI_COMMANDS = {
   createUser: "create_user",
   createWmUser: "create_wm_user",
+  getWmUserByEmail: "get_wm_user_by_email",
   databaseStatus: "database_status",
   extractDealQuestionsAndThesis: "extract_deal_questions_and_thesis",
   getUserByEmail: "get_user_by_email",

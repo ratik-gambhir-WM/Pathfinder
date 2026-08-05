@@ -9,8 +9,6 @@ pub mod text_chunking;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use crate::core::models::document::{ParsedFileData, ParsedFileData2};
-
 pub struct CollectedFile {
     pub filename: String,
     pub relative_path: String,

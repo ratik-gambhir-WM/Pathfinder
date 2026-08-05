@@ -136,6 +136,7 @@ fn persist_deal_metadata(
     let (document_count, data_room_size_bytes) =
         measure_data_room(Path::new(&deal.main_data_room_folder))?;
 
+    //Chnange to Helix??
     upsert_deal_metadata(
         state,
         UpsertDealMetadataRecord {
